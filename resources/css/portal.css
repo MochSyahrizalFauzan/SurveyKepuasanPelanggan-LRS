@@ -1,0 +1,155 @@
+/* =========================================================================
+   PT. Len Railways Systems — Client Portal Design System
+   Corporate Blue: #003B73 | Modern Enterprise UI
+   ========================================================================= */
+
+:root {
+    --c-lrs-blue:       #003B73;
+    --c-lrs-blue-dark:  #002D59;
+    --c-lrs-blue-light: #EBF4FF;
+    --c-active-imp:     #2563EB; /* Biru Kepentingan */
+    --c-active-sat:     #F59E0B; /* Emas/Amber Kepuasan */
+}
+
+/* Base resets & typography */
+html { scroll-behavior: smooth; }
+body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Panel Switching */
+.panel { display: none; }
+.panel.active { display: block; animation: panelFade 0.25s ease-in-out; }
+
+@keyframes panelFade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Active State: Dual-Metric Buttons */
+.score-btn.active-imp {
+    background-color: #2563EB !important; /* bg-blue-600 */
+    border-color: #2563EB !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38) !important;
+    transform: translateY(-1px);
+}
+
+.score-btn.active-sat {
+    background-color: #F59E0B !important; /* bg-amber-500 */
+    border-color: #F59E0B !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.38) !important;
+    transform: translateY(-1px);
+}
+
+/* Conditional Keterangan Animation */
+.keterangan-wrap.visible {
+    display: block !important;
+    animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Validasi Error State */
+.q-card.error {
+    border-color: #EF4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+.q-card.error .error-hint {
+    display: block !important;
+}
+
+/* Ticket & Tracker Results */
+.ticket-result.visible { display: block !important; }
+.status-open     { background-color: #FEF2F2; border: 1px solid #FECACA; }
+.status-progress { background-color: #FFFBEB; border: 1px solid #FDE68A; }
+.status-resolved { background-color: #ECFDF5; border: 1px solid #A7F3D0; }
+.status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 9999px;
+}
+.badge-open     { background-color: #FEE2E2; color: #991B1B; }
+.badge-progress { background-color: #FEF3C7; color: #92400E; }
+.badge-resolved { background-color: #D1FAE5; color: #065F46; }
+
+/* Toast Notification Animation */
+#toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    z-index: 9999;
+    background: #001D3D;
+    color: white;
+    border-radius: 16px;
+    padding: 14px 20px;
+    min-width: 280px;
+    max-width: calc(100vw - 32px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Success Modal Overlay */
+#successOverlay {
+    display: none;
+    position: fixed; inset: 0;
+    z-index: 10000;
+    background: rgba(0, 20, 45, 0.75);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+#successOverlay.show {
+    display: flex;
+    animation: overlayFade 0.25s ease-out;
+}
+@keyframes overlayFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.success-card {
+    background: #FFFFFF;
+    border-radius: 24px;
+    padding: 32px 24px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+    animation: cardScale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes cardScale {
+    from { opacity: 0; transform: scale(0.9) translateY(16px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.btn-success-close {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: #003B73;
+    color: white;
+    font-size: 14px; font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.btn-success-close:hover { background: #002D59; }
+
+/* Star rating */
+.star-btn.active { color: #F59E0B !important; }
