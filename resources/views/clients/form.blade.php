@@ -64,17 +64,6 @@
                         {{ $totalQuestions ?? 21 }}
                     </span>
                 </button>
-
-                <button type="button"
-                        class="tab-btn shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 transition-all [&.active]:bg-[#003B73] [&.active]:text-white shadow-none [&.active]:shadow-sm"
-                        data-tab="masukan"
-                        role="tab"
-                        aria-selected="false"
-                        onclick="switchTab('masukan', this)">
-                    <span>💬</span>
-                    <span>Beri Masukan</span>
-                </button>
-
                 <button type="button"
                         class="tab-btn shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 transition-all [&.active]:bg-[#003B73] [&.active]:text-white shadow-none [&.active]:shadow-sm"
                         data-tab="keluhan"
