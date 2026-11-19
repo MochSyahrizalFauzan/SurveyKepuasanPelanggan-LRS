@@ -37,7 +37,7 @@
                             id="tab-btn-overview"
                             onclick="switchAdminSection('overview')"
                             class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#003B73] text-white shadow-sm flex items-center gap-2">
-                        <span>Ringkasan Kepuasan</span>
+                        <span>Admin</span>
                     </button>
                 </div>
             </div>
@@ -49,7 +49,7 @@
          2. SUB-NAVIGASI TAB KLIEN (Isi Survei, Beri Masukan, Buat Keluhan)
          Tampil konsisten dan rapi di semua layar (Mobile, Tablet, Desktop)
          ========================================================================= --}}
-    <div class="bg-white/80 backdrop-blur-xs border-b border-slate-200 shadow-2xs sticky top-[65px] md:top-[69px] z-30">
+    <!-- <div class="bg-white/80 backdrop-blur-xs border-b border-slate-200 shadow-2xs sticky top-[65px] md:top-[69px] z-30">
         <div class="max-w-4xl mx-auto px-4 md:px-8 py-2">
             <nav class="flex items-center gap-2 overflow-x-auto scrollbar-none" role="tablist" aria-label="Navigasi Formulir Klien">
                 <button type="button"
@@ -75,7 +75,7 @@
                 </button>
             </nav>
         </div>
-    </div>
+    </div> -->
 
     {{-- =========================================================================
          3. AREA KONTEN UTAMA: max-w-4xl mx-auto
