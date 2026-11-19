@@ -4,7 +4,7 @@
 <div id="section-overview" class="admin-section space-y-6">
 
     {{-- 1. HEADER KONTROL INLINE --}}
-    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight">
                 Ringkasan Kepuasan & Layanan
@@ -20,7 +20,7 @@
             <div class="relative">
                 <select id="filter-overview-project"
                         onchange="onFilterChange()"
-                        class="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                        class="appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                     <option value="all">Semua Proyek</option>
                     <option value="LRT Jakarta Fase 1B">LRT Jakarta Fase 1B</option>
                     <option value="Kereta Cepat Jakarta-Bandung">Kereta Cepat Jakarta-Bandung (Whoosh)</option>
@@ -35,7 +35,7 @@
             <div class="relative">
                 <select id="filter-overview-period"
                         onchange="onFilterChange()"
-                        class="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                        class="appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                     <option value="all">Semua Periode</option>
                     <option value="2026-Q1">Kuartal 1 (Q1 2026)</option>
                     <option value="2026-Q2">Kuartal 2 (Q2 2026)</option>
@@ -48,7 +48,7 @@
             {{-- Tombol Unduh Laporan --}}
             <button type="button"
                     onclick="exportIsoReport()"
-                    class="bg-[#003B73] hover:bg-[#002B54] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 active:scale-95 focus:outline-none">
+                    class="bg-[#003B73] hover:bg-[#002B54] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm shadow-[#003B73]/20 hover:shadow-md hover:shadow-[#003B73]/30 flex items-center gap-2 active:scale-95 focus:outline-none">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
@@ -58,7 +58,7 @@
     </div>
 
     {{-- 2. KARTU UTAMA: INDEKS KEPUASAN PELANGGAN (FULL-WIDTH CARD) --}}
-    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 md:p-8 shadow-sm">
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 md:p-8 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.05),0_2px_6px_-1px_rgba(15,23,42,0.03)]">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 
             {{-- Kolom Kiri: Gauge Chart (Doughnut Setengah Lingkaran) --}}
@@ -87,7 +87,7 @@
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
                         Indeks Kepuasan Pelanggan
                     </span>
-                    <span id="csi-status-badge" class="px-3 py-1 rounded-full text-xs font-extrabold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <span id="csi-status-badge" class="px-3 py-1 rounded-full text-xs font-extrabold border bg-emerald-50 text-emerald-700 border-emerald-200 shadow-2xs">
                         Memenuhi Target
                     </span>
                 </div>
@@ -108,28 +108,28 @@
                 {{-- 4 Kotak Ringkasan Sejajar --}}
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
                     {{-- 1: Tingkat Harapan --}}
-                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+                    <div class="bg-slate-50/90 hover:bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-xs hover:border-slate-300 transition-all hover:-translate-y-0.5 text-center">
                         <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Tingkat Harapan</span>
                         <span id="avg-kepentingan-val" class="text-base md:text-lg font-black text-[#003B73]">4.62</span>
                         <span class="block text-[10px] text-slate-400 font-medium">dari skala 5.0</span>
                     </div>
 
                     {{-- 2: Tingkat Kepuasan --}}
-                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+                    <div class="bg-slate-50/90 hover:bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-xs hover:border-slate-300 transition-all hover:-translate-y-0.5 text-center">
                         <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Tingkat Kepuasan</span>
                         <span id="avg-kepuasan-val" class="text-base md:text-lg font-black text-amber-600">4.28</span>
                         <span class="block text-[10px] text-slate-400 font-medium">dari skala 5.0</span>
                     </div>
 
                     {{-- 3: Kesesuaian Harapan --}}
-                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+                    <div class="bg-slate-50/90 hover:bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-xs hover:border-slate-300 transition-all hover:-translate-y-0.5 text-center">
                         <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Kesesuaian Harapan</span>
                         <span id="gap-index-val" class="text-base md:text-lg font-black text-emerald-600">+0.08</span>
                         <span id="gap-label-text" class="block text-[10px] text-emerald-600 font-bold">(Melampaui Harapan)</span>
                     </div>
 
                     {{-- 4: Partisipasi Responden --}}
-                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+                    <div class="bg-slate-50/90 hover:bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-xs hover:border-slate-300 transition-all hover:-translate-y-0.5 text-center">
                         <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Partisipasi Responden</span>
                         <span id="participation-ratio-val" class="text-base md:text-lg font-black text-slate-800">6 dari 12 PIC (50%)</span>
                         <span id="participation-subtext" class="block text-[10px] text-slate-400 font-medium">dari 3 / 5 Proyek Aktif</span>
@@ -144,13 +144,13 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
         {{-- Dimensi A: Layanan & Dukungan --}}
-        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-[0_2px_10px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.09)] hover:-translate-y-0.5 hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3">
-                    <span class="w-9 h-9 rounded-xl bg-blue-50 text-[#003B73] font-bold flex items-center justify-center text-lg">
+                    <span class="w-9 h-9 rounded-xl bg-blue-50 text-[#003B73] font-bold flex items-center justify-center text-lg shadow-2xs border border-blue-100">
                         🤝
                     </span>
-                    <span id="dim-badge-A" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-emerald-700 bg-emerald-50 border-emerald-200">
+                    <span id="dim-badge-A" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-emerald-700 bg-emerald-50 border-emerald-200 shadow-2xs">
                         Sangat Memuaskan
                     </span>
                 </div>
@@ -161,24 +161,24 @@
                     <span id="dim-score-A" class="text-2xl md:text-3xl font-black text-[#003B73]">88.2%</span>
                 </div>
                 {{-- Mini Progress --}}
-                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/40">
                     <div id="dim-bar-A" class="h-full bg-blue-600 rounded-full transition-all duration-500" style="width: 88.2%;"></div>
                 </div>
             </div>
             {{-- Statistik Rasio Proyek & PIC --}}
-            <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
+            <div class="pt-2.5 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
                 <span id="dim-ratio-A" class="text-slate-500 font-semibold">3/5 Proyek • 6/12 PIC</span>
             </div>
         </div>
 
         {{-- Dimensi B: Pelaksanaan Proyek --}}
-        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-[0_2px_10px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.09)] hover:-translate-y-0.5 hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3">
-                    <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 font-bold flex items-center justify-center text-lg">
+                    <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 font-bold flex items-center justify-center text-lg shadow-2xs border border-amber-100">
                         🏗️
                     </span>
-                    <span id="dim-badge-B" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-blue-700 bg-blue-50 border-blue-200">
+                    <span id="dim-badge-B" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-blue-700 bg-blue-50 border-blue-200 shadow-2xs">
                         Memuaskan
                     </span>
                 </div>
@@ -188,23 +188,23 @@
                 <div class="flex items-baseline gap-2 mt-1 mb-2">
                     <span id="dim-score-B" class="text-2xl md:text-3xl font-black text-[#003B73]">84.6%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/40">
                     <div id="dim-bar-B" class="h-full bg-amber-500 rounded-full transition-all duration-500" style="width: 84.6%;"></div>
                 </div>
             </div>
-            <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
+            <div class="pt-2.5 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
                 <span id="dim-ratio-B" class="text-slate-500 font-semibold">3/5 Proyek • 6/12 PIC</span>
             </div>
         </div>
 
         {{-- Dimensi C: Masa Pemeliharaan --}}
-        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-[0_2px_10px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.09)] hover:-translate-y-0.5 hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3">
-                    <span class="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 font-bold flex items-center justify-center text-lg">
+                    <span class="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 font-bold flex items-center justify-center text-lg shadow-2xs border border-purple-100">
                         🔧
                     </span>
-                    <span id="dim-badge-C" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-blue-700 bg-blue-50 border-blue-200">
+                    <span id="dim-badge-C" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-blue-700 bg-blue-50 border-blue-200 shadow-2xs">
                         Memuaskan
                     </span>
                 </div>
@@ -214,23 +214,23 @@
                 <div class="flex items-baseline gap-2 mt-1 mb-2">
                     <span id="dim-score-C" class="text-2xl md:text-3xl font-black text-[#003B73]">83.5%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/40">
                     <div id="dim-bar-C" class="h-full bg-purple-600 rounded-full transition-all duration-500" style="width: 83.5%;"></div>
                 </div>
             </div>
-            <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
+            <div class="pt-2.5 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
                 <span id="dim-ratio-C" class="text-slate-500 font-semibold">3/5 Proyek • 6/12 PIC</span>
             </div>
         </div>
 
         {{-- Dimensi D: K3L --}}
-        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-[0_2px_10px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.09)] hover:-translate-y-0.5 hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3">
-                    <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center text-lg">
+                    <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center text-lg shadow-2xs border border-emerald-100">
                         🦺
                     </span>
-                    <span id="dim-badge-D" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-emerald-700 bg-emerald-50 border-emerald-200">
+                    <span id="dim-badge-D" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-emerald-700 bg-emerald-50 border-emerald-200 shadow-2xs">
                         Sangat Memuaskan
                     </span>
                 </div>
@@ -240,11 +240,11 @@
                 <div class="flex items-baseline gap-2 mt-1 mb-2">
                     <span id="dim-score-D" class="text-2xl md:text-3xl font-black text-[#003B73]">90.5%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/40">
                     <div id="dim-bar-D" class="h-full bg-emerald-600 rounded-full transition-all duration-500" style="width: 90.5%;"></div>
                 </div>
             </div>
-            <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
+            <div class="pt-2.5 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
                 <span id="dim-ratio-D" class="text-slate-500 font-semibold">3/5 Proyek • 6/12 PIC</span>
             </div>
         </div>
@@ -255,7 +255,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {{-- Kiri (lg:col-span-7): Grafik Harapan vs. Kenyataan --}}
-        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 p-5 md:p-6 shadow-sm flex flex-col justify-between">
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.05),0_1px_3px_rgba(15,23,42,0.03)] flex flex-col justify-between">
             <div>
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                     <div>
@@ -284,7 +284,7 @@
             </div>
 
             {{-- Kotak Kesimpulan Utama (Dihitung Otomatis oleh JavaScript) --}}
-            <div class="mt-4 bg-slate-50 border-l-4 border-amber-500 p-3 rounded-r-xl">
+            <div class="mt-4 bg-amber-50/80 border border-amber-200/80 border-l-4 border-l-amber-500 p-3.5 rounded-r-xl shadow-2xs">
                 <div class="flex items-start gap-2.5">
                     <span class="text-base">💡</span>
                     <div>
@@ -298,7 +298,7 @@
         </div>
 
         {{-- Kanan (lg:col-span-5): Pemantauan & Tindak Lanjut --}}
-        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 p-5 md:p-6 shadow-sm flex flex-col justify-between">
+        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.05),0_1px_3px_rgba(15,23,42,0.03)] flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-4">
                     <div>
@@ -309,13 +309,13 @@
                             Kecepatan penanganan keluhan dan daftar masalah prioritas
                         </p>
                     </div>
-                    <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-sm">
+                    <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-sm shadow-2xs border border-slate-200/80">
                         ⚡
                     </span>
                 </div>
 
                 {{-- Bagian Ketepatan Waktu Penanganan --}}
-                <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-4">
+                <div class="bg-slate-50/90 rounded-xl p-4 border border-slate-200/80 shadow-2xs mb-4">
                     <div class="flex items-center justify-between mb-1.5">
                         <span class="text-xs font-bold text-slate-700 uppercase tracking-wide">
                             Ketepatan Waktu Penanganan
@@ -344,7 +344,7 @@
                                 Keluhan mendesak atau penilaian tidak puas yang butuh solusi segera
                             </span>
                         </div>
-                        <span id="open-capa-count" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700 border border-red-200 shrink-0">
+                        <span id="open-capa-count" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700 border border-red-200 shrink-0 shadow-2xs">
                             0 Masalah
                         </span>
                     </div>

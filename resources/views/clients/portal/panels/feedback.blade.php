@@ -2,8 +2,8 @@
     <div class="space-y-6">
 
         {{-- Section Header --}}
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 shadow-sm">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#003B73] text-xs font-bold uppercase tracking-wider mb-2 border border-blue-100">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)]">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#003B73] text-xs font-bold uppercase tracking-wider mb-2 border border-blue-100 shadow-2xs">
                 <span>💬</span>
                 <span>Voice of Customer</span>
             </div>
@@ -16,7 +16,7 @@
         </div>
 
         {{-- Form Masukan --}}
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 shadow-sm">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)]">
             <form id="form-masukan" novalidate class="space-y-5">
 
                 {{-- Rating Bintang --}}
@@ -43,7 +43,7 @@
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide" for="f-kategori">
                         Kategori Masukan<span class="text-red-500 ml-1">*</span>
                     </label>
-                    <select class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs md:text-sm text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                    <select class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/80 text-xs md:text-sm text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-2xs outline-none transition-all"
                             id="f-kategori"
                             required>
                         <option value="">— Pilih kategori masukan —</option>
@@ -61,7 +61,7 @@
                         Subjek Masukan<span class="text-red-500 ml-1">*</span>
                     </label>
                     <input type="text"
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs md:text-sm text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/80 text-xs md:text-sm text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-2xs outline-none transition-all"
                            id="f-subjek"
                            placeholder="Contoh: Kecepatan respon tim teknis interlocking"
                            required>
@@ -72,14 +72,14 @@
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide" for="f-isi">
                         Detail Masukan & Apresiasi<span class="text-red-500 ml-1">*</span>
                     </label>
-                    <textarea class="w-full min-h-[110px] px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-y leading-relaxed"
+                    <textarea class="w-full min-h-[110px] px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/80 text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-2xs outline-none transition-all resize-y leading-relaxed"
                               id="f-isi"
                               placeholder="Tuliskan pengalaman atau saran spesifik Anda..."
                               required></textarea>
                 </div>
 
                 <button type="submit"
-                        class="w-full py-3.5 px-6 rounded-xl bg-[#003B73] hover:bg-[#002D59] text-white font-extrabold text-sm shadow-md shadow-[#003B73]/20 flex items-center justify-center gap-2 transition-all active:scale-[0.99] focus:outline-none">
+                        class="w-full py-3.5 px-6 rounded-xl bg-[#003B73] hover:bg-[#002D59] text-white font-extrabold text-sm shadow-md shadow-[#003B73]/25 hover:shadow-lg hover:shadow-[#003B73]/35 flex items-center justify-center gap-2 transition-all active:scale-[0.99] focus:outline-none">
                     <span>✉️</span>
                     <span>Kirim Masukan Anda</span>
                 </button>

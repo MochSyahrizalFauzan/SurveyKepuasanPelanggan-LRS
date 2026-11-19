@@ -1,6 +1,7 @@
 /* =========================================================================
-   PT. Len Railways Systems — Client Portal Design System
+   PT. Len Railways Systems — Client Portal & Admin Design System
    Corporate Blue: #003B73 | Modern Enterprise UI
+   Smooth, Clean, Professional & User-Friendly
    ========================================================================= */
 
 :root {
@@ -12,38 +13,104 @@
 }
 
 /* Base resets & typography */
-html { scroll-behavior: smooth; }
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     background-color: #F8FAFC;
     color: #0F172A;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* Smooth Focus Rings on Form Inputs */
+input:focus, select:focus, textarea:focus {
+    outline: none !important;
+    border-color: #003B73 !important;
+    box-shadow: 0 0 0 3px rgba(0, 59, 115, 0.12) !important;
+}
+
+/* =========================================================================
+   Clean, Smooth & Professional Elevations (Shadows & Borders)
+   Memberikan batas tegas namun lembut pada elemen yang sewarna
+   ========================================================================= */
+.elevated-card {
+    background-color: #FFFFFF;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.elevated-card:hover {
+    border-color: rgba(203, 213, 225, 1);
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 12px 28px -4px rgba(15, 23, 42, 0.08);
+}
+
+.elevated-tile {
+    background-color: rgba(248, 250, 252, 0.9);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+    transition: all 0.18s ease-in-out;
+}
+.elevated-tile:hover {
+    background-color: #FFFFFF;
+    border-color: rgba(203, 213, 225, 1);
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+}
+
+/* Smooth Interactive Elements */
+.interactive-lift {
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+}
+.interactive-lift:hover {
+    transform: translateY(-1.5px);
 }
 
 /* Panel Switching */
 .panel { display: none; }
-.panel.active { display: block; animation: panelFade 0.25s ease-in-out; }
+.panel.active {
+    display: block;
+    animation: panelFade 0.25s ease-in-out;
+}
 
 @keyframes panelFade {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Active State: Dual-Metric Buttons */
 .score-btn.active-imp {
     background-color: #2563EB !important; /* bg-blue-600 */
-    border-color: #2563EB !important;
+    border-color: #1D4ED8 !important;
     color: #FFFFFF !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38) !important;
-    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+    transform: translateY(-2px);
 }
 
 .score-btn.active-sat {
     background-color: #F59E0B !important; /* bg-amber-500 */
-    border-color: #F59E0B !important;
+    border-color: #D97706 !important;
     color: #FFFFFF !important;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.38) !important;
-    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;
+    transform: translateY(-2px);
 }
 
 /* Conditional Keterangan Animation */
@@ -60,7 +127,7 @@ body {
 /* Validasi Error State */
 .q-card.error {
     border-color: #EF4444 !important;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
 }
 .q-card.error .error-hint {
     display: block !important;
@@ -147,9 +214,12 @@ body {
     font-size: 14px; font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s, transform 0.15s;
 }
-.btn-success-close:hover { background: #002D59; }
+.btn-success-close:hover {
+    background: #002D59;
+    transform: translateY(-1px);
+}
 
 /* Star rating */
 .star-btn.active { color: #F59E0B !important; }

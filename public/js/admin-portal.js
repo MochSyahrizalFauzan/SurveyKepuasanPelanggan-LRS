@@ -861,10 +861,10 @@
                 `;
             } else {
                 containerEl.innerHTML = priorityIssues.map(item => `
-                    <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-white transition-all flex items-start justify-between gap-2">
+                    <div class="p-3 rounded-xl border border-slate-200/80 bg-slate-50/80 hover:bg-white hover:border-slate-300 shadow-2xs hover:shadow-xs transition-all flex items-start justify-between gap-2.5">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-1.5 mb-1">
-                                <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase rounded ${item.tagClass}">
+                                <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase rounded shadow-2xs ${item.tagClass}">
                                     ${item.tag}
                                 </span>
                                 <span class="text-[10px] font-semibold text-slate-400 truncate">
@@ -878,7 +878,7 @@
                         ${item.ticketId ? `
                             <button type="button"
                                     onclick="openTicketModal('${item.ticketId}')"
-                                    class="shrink-0 text-[10px] font-bold text-[#003B73] hover:underline px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 transition-colors">
+                                    class="shrink-0 text-[10px] font-bold text-[#003B73] hover:text-[#002B54] px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-2xs transition-colors">
                                 Lihat Detail
                             </button>
                         ` : ''}
@@ -1030,14 +1030,14 @@
                 : (ticket.urgency === 'Tinggi' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200');
 
             return `
-                <div class="kanban-card bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all cursor-grab active:cursor-grabbing select-none"
+                <div class="kanban-card bg-white rounded-xl p-3.5 border border-slate-200/90 shadow-[0_2px_6px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_20px_-2px_rgba(15,23,42,0.08)] hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-200 cursor-grab active:cursor-grabbing select-none"
                      draggable="true"
                      ondragstart="handleDragStart(event, '${ticket.ticket_id}')">
 
                     <div class="flex items-center justify-between gap-2 mb-1.5">
                         <span class="text-xs font-black text-[#003B73]">#${ticket.ticket_id}</span>
                         <div class="flex items-center gap-1">
-                            <span class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${priorityBadgeClass}">
+                            <span class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border shadow-2xs ${priorityBadgeClass}">
                                 ${ticket.urgency || 'Normal'}
                             </span>
                         </div>
@@ -1056,7 +1056,7 @@
                         ${slaBadgeHtml}
                         <button type="button"
                                 onclick="openTicketModal('${ticket.ticket_id}')"
-                                class="text-[11px] font-bold text-[#003B73] hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-50 transition-colors">
+                                class="text-[11px] font-bold text-[#003B73] hover:text-[#002B54] flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50/70 transition-colors">
                             <span>Detail</span>
                             <span>→</span>
                         </button>
