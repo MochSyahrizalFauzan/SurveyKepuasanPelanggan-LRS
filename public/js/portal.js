@@ -1,45 +1,477 @@
 /**
  * PT. Len Railways Systems — Client Voice & GRC Portal
- * Script Interaktivitas & Simulasi LocalStorage (Fase Prototipe)
+ * Script Interaktivitas Formulir Survei Progresif (2-Langkah) & LocalStorage
+ *
+ * Mengacu pada PRD: Integrated Client Voice & GRC Portal PT LRS
+ * 1. Alur 2 Langkah (Progressive Disclosure): Pilih Kategori -> Isi Indikator Kategori Terpilih
+ * 2. Penilaian Ganda (Dual-Metric): Kepentingan (1-5) & Kepuasan (1-5) tanpa kolom catatan tambahan
+ * 3. Upload File (Dummy) & Kirim Survei ke localStorage (lrs_survey_data)
+ * 4. Tampilan Sukses ("Terima Kasih") dengan tombol "Isi Kategori Lain" dan "Kembali ke Beranda"
  */
 
 (function () {
     'use strict';
 
-    // State kuesioner survei
-    // Format: { 'A1': { imp: 0, sat: 0, keterangan: '', text: '', category: '' }, ... }
+    // Metadata Kategori Sesuai PRD.md (3 Kategori, 21 Indikator Total)
+    const CATEGORY_MAP = {
+        'A': {
+            code: 'A',
+            name: 'Layanan & Dukungan',
+            total: 5,
+            desc: 'Evaluasi keramahan, komunikasi, pemahaman kebutuhan pelanggan, kualitas solusi, dan kejelasan teknis personel PT LRS.'
+        },
+        'B': {
+            code: 'B',
+            name: 'Pelaksanaan Proyek',
+            total: 11,
+            desc: 'Evaluasi ketepatan waktu, koordinasi tim, kompetensi teknis, kerapihan kerja, penanganan kendala, dan budaya K3L.'
+        },
+        'C': {
+            code: 'C',
+            name: 'Masa Pemeliharaan',
+            total: 5,
+            desc: 'Evaluasi keandalan fungsi produk, kemudahan operasi & pemeliharaan, respon after sales, dan durabilitas produk.'
+        }
+    };
+
+    // State Formulir Survei
+    let activeCategoryId = null;
+    let currentAttachmentName = null;
     const surveiState = {};
-    let totalInputsNeeded = 0;
     let toastTimer = null;
 
     /**
-     * Inisialisasi State dari DOM yang di-render oleh Blade
+     * Inisialisasi State Pertanyaan dari DOM
      */
     function initSurveiState() {
         const cards = document.querySelectorAll('.q-card');
-        totalInputsNeeded = cards.length * 2; // Setiap pertanyaan butuh 2 input (Kepentingan & Kepuasan)
 
         cards.forEach(card => {
             const id = card.dataset.id;
             const category = card.dataset.category || '';
+            const categoryCode = card.dataset.categoryCode || id.charAt(0);
             const text = card.dataset.text || '';
 
-            surveiState[id] = {
-                imp: 0,
-                sat: 0,
-                keterangan: '',
-                category: category,
-                text: text
-            };
+            if (!surveiState[id]) {
+                surveiState[id] = {
+                    imp: 0,
+                    sat: 0,
+                    category: category,
+                    categoryCode: categoryCode,
+                    text: text
+                };
+            }
         });
 
-        // Perbarui counter di header dari data localStorage sebelumnya
+        // Update indikator status kategori yang sudah diisi di Step 1
+        updateCategoryStatusBadges();
         updateHeaderCounters();
-        updateProgress();
     }
 
     /**
-     * Update counter ringkasan di header
+     * Perbarui Tanda Status Selesai pada Kartu Kategori di Langkah 1
+     */
+    function updateCategoryStatusBadges() {
+        try {
+            const surveys = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
+            const completedCategories = new Set(surveys.map(s => s.category_id));
+
+            ['A', 'B', 'C'].forEach(catCode => {
+                const badge = document.getElementById(`cat-status-${catCode}`);
+                if (badge) {
+                    if (completedCategories.has(catCode)) {
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            });
+        } catch (e) {
+            console.error('Gagal membaca data survei dari localStorage:', e);
+        }
+    }
+
+    /**
+     * LANGKAH 1 -> LANGKAH 2: Pilih Kategori Survei
+     */
+    window.selectCategory = function (catCode) {
+        if (!CATEGORY_MAP[catCode]) return;
+
+        activeCategoryId = catCode;
+        const catInfo = CATEGORY_MAP[catCode];
+
+        // Sembunyikan Langkah 1 (Pilih Kategori) dan Tampilan Sukses
+        const step1 = document.getElementById('survey-step-1-category');
+        const step2 = document.getElementById('survey-step-2-form');
+        const successContainer = document.getElementById('survey-success-container');
+
+        if (step1) step1.classList.add('hidden');
+        if (successContainer) successContainer.classList.add('hidden');
+        if (step2) step2.classList.remove('hidden');
+
+        // Perbarui Header & Badge Langkah 2
+        const badgeEl = document.getElementById('active-category-badge');
+        const titleEl = document.getElementById('active-category-title');
+        const descEl = document.getElementById('active-category-desc');
+
+        if (badgeEl) badgeEl.textContent = `Kategori ${catInfo.code}: ${catInfo.name}`;
+        if (titleEl) titleEl.textContent = `Kategori ${catInfo.code}. ${catInfo.name}`;
+        if (descEl) descEl.textContent = catInfo.desc;
+
+        // Tampilkan HANYA grup indikator milik kategori yang dipilih
+        document.querySelectorAll('.category-indicators-group').forEach(group => {
+            group.classList.add('hidden');
+        });
+
+        const activeGroup = document.getElementById(`category-group-${catCode}`);
+        if (activeGroup) {
+            activeGroup.classList.remove('hidden');
+        }
+
+        // Hitung dan perbarui progress kategori aktif
+        updateCategoryProgress();
+
+        // Scroll halus ke atas formulir langkah 2
+        if (step2) {
+            step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    /**
+     * LANGKAH 2 -> LANGKAH 1: Tombol "Ganti Kategori"
+     */
+    window.backToCategorySelection = function () {
+        const step1 = document.getElementById('survey-step-1-category');
+        const step2 = document.getElementById('survey-step-2-form');
+        const successContainer = document.getElementById('survey-success-container');
+
+        if (step2) step2.classList.add('hidden');
+        if (successContainer) successContainer.classList.add('hidden');
+        if (step1) step1.classList.remove('hidden');
+
+        // Perbarui tanda centang/badge kategori yang sudah terisi
+        updateCategoryStatusBadges();
+
+        if (step1) {
+            step1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    /**
+     * Handler Pemilihan Skor Dual-Metric (Kepentingan / Kepuasan)
+     */
+    window.setScore = function (id, type, val) {
+        if (!surveiState[id]) return;
+
+        surveiState[id][type] = val;
+
+        // Update tampilan tombol di baris yang diklik
+        const container = document.getElementById(`${type}-${id}`);
+        if (container) {
+            const buttons = container.querySelectorAll('.score-btn');
+            buttons.forEach(btn => {
+                const btnVal = parseInt(btn.dataset.val, 10);
+                btn.classList.remove('active-imp', 'active-sat');
+                if (btnVal === val) {
+                    btn.classList.add(type === 'imp' ? 'active-imp' : 'active-sat');
+                }
+            });
+        }
+
+        // Hapus highlight error jika kedua nilai (Kepentingan & Kepuasan) sudah terisi
+        if (surveiState[id].imp > 0 && surveiState[id].sat > 0) {
+            const card = document.getElementById(`card-${id}`);
+            const errHint = document.getElementById(`err-${id}`);
+            if (card) card.classList.remove('error');
+            if (errHint) errHint.classList.add('hidden');
+        }
+
+        updateCategoryProgress();
+    };
+
+    /**
+     * Hitung & visualisasikan progress pengisian untuk kategori yang sedang aktif
+     */
+    function updateCategoryProgress() {
+        if (!activeCategoryId) return;
+
+        const activeCards = document.querySelectorAll(`#category-group-${activeCategoryId} .q-card`);
+        const totalCards = activeCards.length;
+        let fullyFilledCards = 0;
+
+        activeCards.forEach(card => {
+            const id = card.dataset.id;
+            const state = surveiState[id];
+            if (state && state.imp > 0 && state.sat > 0) {
+                fullyFilledCards++;
+            }
+        });
+
+        const percent = totalCards > 0 ? Math.round((fullyFilledCards / totalCards) * 100) : 0;
+
+        const elBar = document.getElementById('active-category-progress-bar');
+        const elCounter = document.getElementById('active-category-counter');
+
+        if (elBar) elBar.style.width = `${percent}%`;
+        if (elCounter) elCounter.textContent = `${fullyFilledCards} / ${totalCards} Terisi`;
+    }
+
+    /**
+     * Handler Input File Lampiran (Dummy)
+     */
+    window.handleSurveyFileChange = function (event) {
+        const input = event.target;
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            currentAttachmentName = file.name;
+
+            const nameEl = document.getElementById('attached-filename');
+            const sizeEl = document.getElementById('attached-filesize');
+            const dropzone = document.getElementById('survey-upload-dropzone');
+            const preview = document.getElementById('survey-file-preview');
+
+            const fileSizeFormatted = file.size > 1024 * 1024
+                ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+                : Math.round(file.size / 1024) + ' KB';
+
+            if (nameEl) nameEl.textContent = file.name;
+            if (sizeEl) sizeEl.textContent = `${fileSizeFormatted} · Siap dilampirkan`;
+
+            if (dropzone) dropzone.classList.add('hidden');
+            if (preview) {
+                preview.classList.remove('hidden');
+                preview.classList.add('flex');
+            }
+        }
+    };
+
+    /**
+     * Handler Hapus File Lampiran
+     */
+    window.removeSurveyFile = function (event) {
+        if (event) event.stopPropagation();
+
+        const input = document.getElementById('survey-attachment-input');
+        if (input) input.value = '';
+
+        currentAttachmentName = null;
+
+        const dropzone = document.getElementById('survey-upload-dropzone');
+        const preview = document.getElementById('survey-file-preview');
+
+        if (preview) {
+            preview.classList.add('hidden');
+            preview.classList.remove('flex');
+        }
+        if (dropzone) dropzone.classList.remove('hidden');
+    };
+
+    /**
+     * Validasi Formulir Survei untuk Kategori yang Aktif
+     */
+    function validateActiveCategory() {
+        if (!activeCategoryId) return false;
+
+        const activeCards = document.querySelectorAll(`#category-group-${activeCategoryId} .q-card`);
+        let isValid = true;
+        let firstIncompleteCard = null;
+
+        // Reset semua error pada kategori ini
+        activeCards.forEach(c => {
+            c.classList.remove('error');
+            const err = c.querySelector('.error-hint');
+            if (err) err.classList.add('hidden');
+        });
+
+        activeCards.forEach(card => {
+            const id = card.dataset.id;
+            const item = surveiState[id];
+
+            // Wajib terisi keduanya: Kepentingan (1-5) dan Kepuasan (1-5)
+            if (!item || item.imp === 0 || item.sat === 0) {
+                card.classList.add('error');
+                const err = document.getElementById(`err-${id}`);
+                if (err) err.classList.remove('hidden');
+
+                if (!firstIncompleteCard) {
+                    firstIncompleteCard = card;
+                }
+                isValid = false;
+            }
+        });
+
+        // Scroll halus ke indikator pertama yang belum lengkap
+        if (firstIncompleteCard) {
+            firstIncompleteCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        return isValid;
+    }
+
+    /**
+     * Setup Event Listener Submit Form Survei
+     */
+    function setupSurveyForm() {
+        const form = document.getElementById('form-survei');
+        if (!form) return;
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!activeCategoryId) {
+                window.showToast('⚠️', 'Pilih Kategori', 'Silakan pilih kategori survei terlebih dahulu.', '#DC2626');
+                window.backToCategorySelection();
+                return;
+            }
+
+            if (!validateActiveCategory()) {
+                window.showToast('⚠️', 'Formulir Belum Lengkap', 'Mohon lengkapi seluruh indikator (Kepentingan & Kepuasan).', '#DC2626');
+                return;
+            }
+
+            // Ambil sesi aktif pengguna dari localStorage (Zero-Login session)
+            let respondentId = 'PIC-001';
+            let projectName = 'Proyek Dummy';
+
+            try {
+                const rawSession = localStorage.getItem('lrs_active_session');
+                if (rawSession) {
+                    try {
+                        const parsed = JSON.parse(rawSession);
+                        if (typeof parsed === 'object' && parsed !== null) {
+                            respondentId = parsed.respondent_id || parsed.pic_id || parsed.contract_number || parsed.token || 'PIC-001';
+                            projectName = parsed.project_name || parsed.contract_number || 'Proyek Dummy';
+                        } else if (typeof parsed === 'string') {
+                            respondentId = parsed || 'PIC-001';
+                            projectName = parsed || 'Proyek Dummy';
+                        }
+                    } catch {
+                        respondentId = rawSession || 'PIC-001';
+                        projectName = rawSession || 'Proyek Dummy';
+                    }
+                }
+            } catch (err) {
+                console.error('Error membaca lrs_active_session:', err);
+            }
+
+            // Kumpulkan jawaban HANYA dari kategori yang dipilih
+            const activeCards = document.querySelectorAll(`#category-group-${activeCategoryId} .q-card`);
+            const answers = Array.from(activeCards).map(card => {
+                const id = card.dataset.id;
+                return {
+                    question_id: id,
+                    kepentingan: surveiState[id].imp,
+                    kepuasan: surveiState[id].sat
+                };
+            });
+
+            const catInfo = CATEGORY_MAP[activeCategoryId] || { name: `Kategori ${activeCategoryId}` };
+
+            // Buat struktur payload sesuai spesifikasi PRD & Prompt
+            const elSaran = document.getElementById('saran-umum');
+            const surveyPayload = {
+                respondent_id: respondentId,
+                project_name: projectName,
+                category_id: activeCategoryId,
+                category_name: catInfo.name,
+                attachment_name: currentAttachmentName || null,
+                general_notes: elSaran ? elSaran.value.trim() || null : null,
+                submitted_at: new Date().toISOString(),
+                answers: answers
+            };
+
+            // Simpan ke localStorage pada key 'lrs_survey_data' (append)
+            try {
+                const existing = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
+                existing.push(surveyPayload);
+                localStorage.setItem('lrs_survey_data', JSON.stringify(existing));
+
+                updateHeaderCounters();
+
+                // Tampilkan Tampilan Sukses ("Terima Kasih")
+                showSurveySuccessView(surveyPayload);
+
+                window.showToast('🎉', 'Survei Berhasil!', 'Data survei telah tersimpan di browser storage.', '#059669');
+            } catch (err) {
+                console.error('Gagal menyimpan ke localStorage:', err);
+                window.showToast('❌', 'Terjadi Kesalahan', 'Gagal menyimpan data ke browser storage.', '#DC2626');
+            }
+        });
+    }
+
+    /**
+     * Tampilkan Layar Sukses Pengisian Survei
+     */
+    function showSurveySuccessView(payload) {
+        const step2 = document.getElementById('survey-step-2-form');
+        const successContainer = document.getElementById('survey-success-container');
+
+        if (step2) step2.classList.add('hidden');
+        if (successContainer) successContainer.classList.remove('hidden');
+
+        // Isi Data Ringkasan
+        const elCatName = document.getElementById('success-category-name');
+        const elCatSummary = document.getElementById('success-category-summary');
+        const elRespId = document.getElementById('success-respondent-id');
+        const elProjName = document.getElementById('success-project-name');
+        const elAttach = document.getElementById('success-attachment-name');
+        const elTime = document.getElementById('success-submitted-time');
+
+        if (elCatName) elCatName.textContent = payload.category_name;
+        if (elCatSummary) elCatSummary.textContent = `${payload.category_id}. ${payload.category_name} (${payload.answers.length} Indikator)`;
+        if (elRespId) elRespId.textContent = payload.respondent_id;
+        if (elProjName) elProjName.textContent = payload.project_name;
+        if (elAttach) elAttach.textContent = payload.attachment_name || 'Tidak ada lampiran';
+        if (elTime) {
+            elTime.textContent = new Date(payload.submitted_at).toLocaleTimeString('id-ID', {
+                hour: '2-digit', minute: '2-digit'
+            }) + ' WIB';
+        }
+
+        // Scroll halus ke tampilan sukses
+        if (successContainer) {
+            successContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    /**
+     * Aksi Tombol Sukses: "Isi Kategori Lain"
+     * Mengembalikan pengguna ke Langkah 1 dengan kategori yang baru saja diisi ditandai sudah selesai.
+     */
+    window.actionFillOtherCategory = function () {
+        const step1 = document.getElementById('survey-step-1-category');
+        const step2 = document.getElementById('survey-step-2-form');
+        const successContainer = document.getElementById('survey-success-container');
+
+        if (successContainer) successContainer.classList.add('hidden');
+        if (step2) step2.classList.add('hidden');
+        if (step1) step1.classList.remove('hidden');
+
+        // Reset file attachment untuk kategori berikutnya
+        window.removeSurveyFile();
+
+        // Reset textarea saran umum jika ada
+        const elSaran = document.getElementById('saran-umum');
+        if (elSaran) elSaran.value = '';
+
+        // Update status badge kategori yang sudah terisi
+        updateCategoryStatusBadges();
+
+        if (step1) {
+            step1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    /**
+     * Aksi Tombol Sukses: "Kembali ke Beranda"
+     */
+    window.actionBackToHome = function () {
+        window.actionFillOtherCategory();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    /**
+     * Perbarui Counter di Header
      */
     function updateHeaderCounters() {
         try {
@@ -57,204 +489,7 @@
     }
 
     /**
-     * Handler pemilihan skor Dual-Metric (Kepentingan / Kepuasan)
-     */
-    window.setScore = function (id, type, val) {
-        if (!surveiState[id]) return;
-
-        surveiState[id][type] = val;
-
-        // Update tampilan tombol di baris terkait
-        const container = document.getElementById(`${type}-${id}`);
-        if (container) {
-            const buttons = container.querySelectorAll('.score-btn');
-            buttons.forEach(btn => {
-                const btnVal = parseInt(btn.dataset.val, 10);
-                btn.classList.remove('active-imp', 'active-sat');
-                if (btnVal === val) {
-                    btn.classList.add(type === 'imp' ? 'active-imp' : 'active-sat');
-                }
-            });
-        }
-
-        // Logika Conditional "Keterangan":
-        // Muncul & wajib diisi HANYA jika Kepuasan <= 2 (Sangat Tidak Puas / Tidak Puas)
-        if (type === 'sat') {
-            const ketWrap = document.getElementById(`ket-wrap-${id}`);
-            const ketInput = document.getElementById(`ket-${id}`);
-            const card = document.getElementById(`card-${id}`);
-
-            if (val <= 2) {
-                if (ketWrap) ketWrap.classList.add('visible');
-                if (card) card.classList.add('has-low-score');
-                if (ketInput) {
-                    setTimeout(() => ketInput.focus(), 150);
-                }
-            } else {
-                if (ketWrap) ketWrap.classList.remove('visible');
-                if (card) card.classList.remove('has-low-score');
-                if (ketInput) ketInput.value = '';
-                surveiState[id].keterangan = '';
-            }
-        }
-
-        // Hapus highlight error jika indikator sudah terisi
-        const card = document.getElementById(`card-${id}`);
-        if (card) card.classList.remove('error');
-
-        updateProgress();
-    };
-
-    /**
-     * Update nilai keterangan saat user mengetik
-     */
-    window.updateKeterangan = function (id, value) {
-        if (surveiState[id]) {
-            surveiState[id].keterangan = value.trim();
-        }
-    };
-
-    /**
-     * Hitung & visualisasikan progress pengisian survei
-     */
-    function updateProgress() {
-        let filled = 0;
-        Object.values(surveiState).forEach(item => {
-            if (item.imp > 0) filled++;
-            if (item.sat > 0) filled++;
-        });
-
-        const percent = totalInputsNeeded > 0 ? Math.round((filled / totalInputsNeeded) * 100) : 0;
-
-        const elBar = document.getElementById('progress-bar');
-        const elText = document.getElementById('progress-text');
-        const elHdrProgress = document.getElementById('hdr-progress');
-
-        if (elBar) elBar.style.width = `${percent}%`;
-        if (elText) elText.textContent = `${filled} / ${totalInputsNeeded} diisi`;
-        if (elHdrProgress) elHdrProgress.textContent = `${percent}%`;
-    }
-
-    /**
-     * Validasi kelengkapan form survei
-     */
-    function validateSurvei() {
-        let isValid = true;
-        let firstFailingId = null;
-
-        // Reset semua error
-        document.querySelectorAll('.q-card').forEach(c => c.classList.remove('error'));
-
-        Object.entries(surveiState).forEach(([id, item]) => {
-            let hasError = false;
-
-            // 1. Kepentingan & Kepuasan harus terisi
-            if (item.imp === 0 || item.sat === 0) {
-                hasError = true;
-            }
-
-            // 2. Keterangan wajib diisi jika Kepuasan bernilai 1 atau 2
-            if (item.sat > 0 && item.sat <= 2 && !item.keterangan) {
-                hasError = true;
-            }
-
-            if (hasError) {
-                const card = document.getElementById(`card-${id}`);
-                if (card) card.classList.add('error');
-
-                if (!firstFailingId) {
-                    firstFailingId = id;
-                }
-                isValid = false;
-            }
-        });
-
-        // Scroll halus ke kartu yang belum lengkap
-        if (firstFailingId) {
-            const firstCard = document.getElementById(`card-${firstFailingId}`);
-            if (firstCard) {
-                firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-
-        return isValid;
-    }
-
-    /**
-     * Inisialisasi event listener submit Form Survei
-     */
-    function setupSurveyForm() {
-        const form = document.getElementById('form-survei');
-        if (!form) return;
-
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            if (!validateSurvei()) {
-                window.showToast('⚠️', 'Formulir Belum Lengkap', 'Mohon lengkapi semua penilaian dan keterangan wajib yang ditandai merah.', '#DC2626');
-                return;
-            }
-
-            // Generate ID Responden
-            const respondentId = 'PIC-' + Date.now().toString().slice(-6);
-
-            // Kumpulkan jawaban menjadi array JSON terstruktur
-            const answers = Object.entries(surveiState).map(([id, item]) => {
-                const ans = {
-                    question_id: id,
-                    category: item.category,
-                    pertanyaan: item.text,
-                    kepentingan: item.imp,
-                    kepuasan: item.sat
-                };
-                if (item.keterangan) {
-                    ans.keterangan = item.keterangan;
-                }
-                return ans;
-            });
-
-            // Ambil saran umum jika ada
-            const saranEl = document.getElementById('saran-umum');
-            const saranUmum = saranEl ? saranEl.value.trim() : '';
-
-            const surveyPayload = {
-                respondent_id: respondentId,
-                project_name: 'Proyek Prototipe LRS',
-                submitted_at: new Date().toISOString(),
-                saran_umum: saranUmum || null,
-                answers: answers
-            };
-
-            // Simpan ke localStorage dengan key 'lrs_survey_data'
-            try {
-                const existing = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
-                existing.push(surveyPayload);
-                localStorage.setItem('lrs_survey_data', JSON.stringify(existing));
-
-                updateHeaderCounters();
-
-                // Tampilkan Success Modal Overlay
-                const successIdEl = document.getElementById('success-id');
-                const overlay = document.getElementById('successOverlay');
-                if (successIdEl) successIdEl.textContent = respondentId;
-                if (overlay) overlay.classList.add('show');
-            } catch (err) {
-                console.error('Gagal menyimpan ke localStorage:', err);
-                window.showToast('❌', 'Terjadi Kesalahan', 'Gagal menyimpan data ke browser storage.', '#DC2626');
-            }
-        });
-    }
-
-    /**
-     * Tutup Success Overlay
-     */
-    window.closeSuccessOverlay = function () {
-        const overlay = document.getElementById('successOverlay');
-        if (overlay) overlay.classList.remove('show');
-    };
-
-    /**
-     * Handler Rating Bintang di panel Masukan
+     * Rating Bintang di panel Masukan
      */
     window.setFeedbackStar = function (val) {
         const ratingInput = document.getElementById('feedback-rating');
@@ -331,7 +566,6 @@
                 return;
             }
 
-            // Buat ID Tiket acak format TKT-XXXX (4 digit)
             const ticketId = 'TKT-' + String(Math.floor(1000 + Math.random() * 9000));
 
             const complaintPayload = {
@@ -351,7 +585,6 @@
 
                 updateHeaderCounters();
 
-                // Tampilkan kartu hasil tiket
                 const resultEl = document.getElementById('tiket-result');
                 if (resultEl) {
                     resultEl.className = 'ticket-result status-open visible';
@@ -408,8 +641,8 @@
 
         const statusMap = {
             'Open':        { cls: 'status-open',     badge: 'badge-open',     icon: '🔴', label: 'Open' },
-            'In Progress': { cls: 'status-progress',  badge: 'badge-progress', icon: '🟡', label: 'In Progress' },
-            'Resolved':    { cls: 'status-resolved',  badge: 'badge-resolved', icon: '🟢', label: 'Resolved' }
+            'In Progress': { cls: 'status-progress', badge: 'badge-progress', icon: '🟡', label: 'In Progress' },
+            'Resolved':    { cls: 'status-resolved', badge: 'badge-resolved', icon: '🟢', label: 'Resolved' }
         };
         const st = statusMap[tiket.status] || statusMap['Open'];
         const tgl = new Date(tiket.created_at).toLocaleString('id-ID', {
@@ -429,25 +662,21 @@
     };
 
     /**
-     * Perpindahan Navigasi Tab (Mendukung Desktop Sidebar & Mobile Top Nav)
+     * Navigasi Antar Tab (Isi Survei, Beri Masukan, Buat Keluhan)
      */
     window.switchTab = function (tabId, btn) {
-        // Sembunyikan semua panel
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
 
-        // Hapus kelas active dari SEMUA tombol tab (desktop & mobile)
         document.querySelectorAll('.tab-btn').forEach(b => {
             b.classList.remove('active');
             b.setAttribute('aria-selected', 'false');
         });
 
-        // Tampilkan panel yang dituju
         const targetPanel = document.getElementById(`panel-${tabId}`);
         if (targetPanel) {
             targetPanel.classList.add('active');
         }
 
-        // Tandai aktif pada tombol terkait di kedua navigasi (desktop & mobile)
         document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(b => {
             b.classList.add('active');
             b.setAttribute('aria-selected', 'true');

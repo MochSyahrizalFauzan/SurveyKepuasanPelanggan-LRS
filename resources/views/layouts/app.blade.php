@@ -22,7 +22,7 @@
 
     @stack('styles')
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased min-h-screen relative overflow-x-hidden selection:bg-[#003B73] selection:text-white">
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen relative overflow-x-hidden selection:bg-[#003B73] selection:text-white flex flex-col">
 
     {{-- =========================================================================
          HIASAN BACKGROUND GLOBAL (Senada di Halaman Klien & Admin)

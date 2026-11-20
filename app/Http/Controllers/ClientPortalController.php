@@ -32,4 +32,12 @@ class ClientPortalController extends Controller
             'totalInputs' => $totalInputs,
         ]);
     }
+
+    /**
+     * Tampilkan halaman Verifikasi Akses Klien (Zero-Login via Nomor Kontrak / Token).
+     */
+    public function verify(): View
+    {
+        return view('clients.verify');
+    }
 }

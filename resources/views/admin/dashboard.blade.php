@@ -3,10 +3,10 @@
 @section('title', 'Ringkasan Kepuasan & Layanan · PT. Len Railways Systems')
 
 @section('content')
-<div class="bg-transparent min-h-screen text-slate-800 antialiased selection:bg-[#003B73] selection:text-white">
+<div class="bg-transparent min-h-screen text-slate-800 antialiased selection:bg-[#003B73] selection:text-white flex flex-col justify-between w-full">
 
     {{-- Container Utama: max-w-7xl mx-auto p-4 md:p-8 --}}
-    <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
+    <main class="flex-1 max-w-7xl mx-auto p-4 md:p-8 space-y-6 w-full">
 
         {{-- =========================================================================
              TOP BAR: BRAND & 2 PILL TABS SWITCHER (Ringkasan & Daftar Keluhan)
@@ -75,7 +75,10 @@
              ========================================================================= --}}
         @include('admin.partials.kanban')
 
-    </div>
+    </main>
+
+    {{-- Global Footer PT Len Railway Systems --}}
+    <x-footer />
 
 </div>
 
