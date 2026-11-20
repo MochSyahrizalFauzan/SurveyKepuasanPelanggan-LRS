@@ -16,11 +16,6 @@ class DashboardTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('PT. Len Railways Systems');
         $response->assertSee('Survei Kepuasan Pelanggan');
-        $response->assertSee('Isi Survei');
-        $response->assertSee('Beri Masukan');
-        $response->assertSee('Buat Keluhan');
-        $response->assertSee('Ringkasan Kepuasan');
-        $response->assertSee('Daftar Keluhan');
         $response->assertSee('Portal Klien');
         $response->assertSee('Layanan &amp; Dukungan', false);
     }

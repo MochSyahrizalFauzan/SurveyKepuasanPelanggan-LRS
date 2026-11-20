@@ -58,7 +58,7 @@
                         <img src="{{ $cardImgUrl }}"
                              alt="Kategori {{ $cat['code'] }}: {{ $cat['name'] }}"
                              loading="lazy"
-                             class="absolute inset-0 w-full h-full object-cover object-top scale-105 blur-[1px] transition-all duration-700 ease-out group-hover:scale-110 group-hover:blur-0"
+                             class="category-card-img absolute inset-0 w-full h-full object-cover object-top"
                              onerror="this.onerror=null; this.src='{{ asset('images/bg-railway-control.jpg') }}'">
 
                         {{-- LAPISAN 2 — GRADIENT OVERLAY (KONTRAST TAJAM & MELEMBUT KE TENGAH) --}}

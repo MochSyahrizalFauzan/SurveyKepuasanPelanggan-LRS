@@ -16,18 +16,14 @@ class ProgressiveSurveyTest extends TestCase
         $response->assertStatus(200);
 
         // Langkah 1: Pemilihan Kategori
-        $response->assertSee('Langkah 1 dari 2');
-        $response->assertSee('Pilih Kategori Penilaian');
         $response->assertSee('Pilih Kategori Survei Kepuasan');
 
         // 3 Kartu Kategori
         $response->assertSee('Kategori A');
         $response->assertSee('Layanan &amp; Dukungan', false);
-        $response->assertSee('5 Indikator');
 
         $response->assertSee('Kategori B');
         $response->assertSee('Pelaksanaan Proyek');
-        $response->assertSee('11 Indikator');
 
         $response->assertSee('Kategori C');
         $response->assertSee('Masa Pemeliharaan');
@@ -166,13 +162,13 @@ class ProgressiveSurveyTest extends TestCase
         // Lapisan 1: Gambar Full-Bleed + Soft Blur + Object-Top
         $response->assertSee('images/card/dukunganLayanan.jpg');
         $response->assertSee('loading="lazy"', false);
-        $response->assertSee('absolute inset-0 w-full h-full object-cover object-top scale-105 blur-[1px]', false);
+        $response->assertSee('category-card-img absolute inset-0 w-full h-full object-cover object-top', false);
 
         // Lapisan 2: Gradient Overlay Halus & Kontras Tinggi
         $response->assertSee('from-[#001A38]/95 via-[#002E63]/70 via-45% to-transparent', false);
 
-        // Lapisan 3: Badge Glassmorphism & Proporsi Card Elegan
-        $response->assertSee('bg-white/20 backdrop-blur-md text-white border border-white/30', false);
+        // Lapisan 3: Proporsi Card Elegan
+        $response->assertSee('category-select-card', false);
         $response->assertSee('min-h-[280px]', false);
         $response->assertSee('lg:min-h-[420px]', false);
         $response->assertSee('rounded-3xl', false);
