@@ -177,7 +177,12 @@ class AdminDashboardTest extends TestCase
         // Modul Pengaturan (Target, Audio Toggle, WhatsApp Simulation Toggle, Log Table)
         $response->assertSee('Pengaturan & Preferensi Sistem', false);
         $response->assertSee('id="setting-target-score"', false);
+        $response->assertSee('Kontrol Notifikasi & Audio', false);
+        $response->assertSee('Aktifkan Efek Suara Notifikasi');
+        $response->assertSee('Bunyikan nada lembut saat survei atau keluhan baru masuk dari Portal Klien');
         $response->assertSee('id="setting-toggle-sound"', false);
+        $response->assertSee('id="btn-test-sound"', false);
+        $response->assertSee('Uji Suara');
         $response->assertSee('id="setting-toggle-whatsapp"', false);
         $response->assertSee('id="table-notif-logs-body"', false);
     }

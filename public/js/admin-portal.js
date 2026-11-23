@@ -66,6 +66,7 @@
         if (forceReset || !localStorage.getItem('lrs_admin_settings')) {
             const defaultSettings = {
                 target_score: DEFAULT_TARGET_SCORE,
+                audio_notification_enabled: true,
                 enable_sound: true,
                 enable_wa_simulation: true
             };
@@ -388,40 +389,117 @@
 
     /**
      * =========================================================================
-     * 2. AUDIO CHIME SINTETIS (WEB AUDIO API)
+     * 2. KONTROL AUDIO & SYNTHESIZER CHIME (WEB AUDIO API)
      * =========================================================================
      */
-    function playNotificationChime() {
+    let sharedAudioCtx = null;
+
+    function getAudioContext() {
+        if (!sharedAudioCtx) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                sharedAudioCtx = new AudioContextClass();
+            }
+        }
+        return sharedAudioCtx;
+    }
+
+    // Tangani kebijakan autoplay: resume AudioContext saat interaksi pertama pengguna di portal admin
+    function initAutoplayAudioUnlock() {
+        const unlockAudio = () => {
+            try {
+                const ctx = getAudioContext();
+                if (ctx && ctx.state === 'suspended') {
+                    ctx.resume().catch(() => {});
+                }
+            } catch (_) {}
+        };
+        window.addEventListener('click', unlockAudio, { once: true, passive: true });
+        window.addEventListener('keydown', unlockAudio, { once: true, passive: true });
+    }
+
+    /**
+     * Membunyikan nada lonceng ganda (two-tone chime) yang lembut, profesional,
+     * dan tidak mengagetkan murni berbasis Web Audio API (tanpa file eksternal).
+     * Nada 1: G5 (~784 Hz / 783.99 Hz)
+     * Nada 2: C6 (~1046.5 Hz / 1046.50 Hz)
+     * Fade-out halus: exponentialRampToValueAtTime, durasi total ~0.40 detik, volume moderat ~0.18.
+     *
+     * @param {boolean} force - Jika true, paksa bunyikan (misal saat tombol 'Uji Suara' diklik)
+     */
+    window.playNotificationChime = function (force = false) {
         try {
             const settings = JSON.parse(localStorage.getItem('lrs_admin_settings') || '{}');
-            if (settings.enable_sound === false) return;
+            const isAudioEnabled = (settings.audio_notification_enabled !== false) && (settings.enable_sound !== false);
 
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return;
-            const ctx = new AudioCtx();
+            if (!force && !isAudioEnabled) {
+                return;
+            }
 
+            const ctx = getAudioContext();
+            if (!ctx) return;
+
+            if (ctx.state === 'suspended') {
+                ctx.resume().catch(() => {});
+            }
+
+            const now = ctx.currentTime;
+            const totalDuration = 0.40; // durasi 0.35 - 0.45 detik
+
+            // Oscillator (Sine wave untuk nada lembut korporat)
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
 
             osc.type = 'sine';
-            const now = ctx.currentTime;
-            // 2-tone melodic chime: D5 (587.33Hz) -> A5 (880.00Hz)
-            osc.frequency.setValueAtTime(587.33, now);
-            osc.frequency.setValueAtTime(880.00, now + 0.12);
 
-            gain.gain.setValueAtTime(0.01, now);
-            gain.gain.exponentialRampToValueAtTime(0.2, now + 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+            // Two-tone sequence: G5 (~784Hz) -> C6 (~1046.5Hz)
+            osc.frequency.setValueAtTime(783.99, now);
+            osc.frequency.setValueAtTime(1046.50, now + 0.12);
+
+            // Envelope ADSR halus dengan fade-out eksponensial (volume moderat ~0.18)
+            const maxVolume = 0.18;
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(maxVolume, now + 0.04);
+            gain.gain.setValueAtTime(maxVolume * 0.9, now + 0.12);
+            gain.gain.exponentialRampToValueAtTime(maxVolume * 0.95, now + 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + totalDuration);
 
             osc.connect(gain);
             gain.connect(ctx.destination);
 
             osc.start(now);
-            osc.stop(now + 0.5);
-        } catch (e) {
-            console.log('Audio chime unavailable or blocked:', e);
+            osc.stop(now + totalDuration + 0.05);
+
+            // Cleanup node setelah selesai diputar
+            setTimeout(() => {
+                try {
+                    osc.disconnect();
+                    gain.disconnect();
+                } catch (_) {}
+            }, (totalDuration + 0.1) * 1000);
+        } catch (err) {
+            // Bungkus try/catch agar tidak pernah memunculkan uncaught error di console
+            console.warn('Audio chime omitted or blocked by browser policy:', err);
         }
-    }
+    };
+
+    /**
+     * Tombol Uji Suara: memicu bunyi chime langsung dan memberikan feedback toast
+     */
+    window.testNotificationChime = function () {
+        const settings = JSON.parse(localStorage.getItem('lrs_admin_settings') || '{}');
+        const isAudioEnabled = (settings.audio_notification_enabled !== false) && (settings.enable_sound !== false);
+
+        window.playNotificationChime(true);
+
+        if (typeof showAdminToast === 'function') {
+            if (isAudioEnabled) {
+                showAdminToast('Memutar nada lonceng notifikasi (Web Audio API)...');
+            } else {
+                showAdminToast('Uji nada diputar (Catatan: Efek suara sedang dinonaktifkan di toggle).');
+            }
+        }
+    };
 
     /**
      * =========================================================================
@@ -2437,7 +2515,8 @@
         const waToggle = document.getElementById('setting-toggle-whatsapp') || document.getElementById('setting-toggle-wa');
 
         if (targetInput) targetInput.value = (parseFloat(settings.target_score) || DEFAULT_TARGET_SCORE).toFixed(1);
-        if (soundToggle) soundToggle.checked = settings.enable_sound !== false;
+        const isAudioEnabled = (settings.audio_notification_enabled !== false) && (settings.enable_sound !== false);
+        if (soundToggle) soundToggle.checked = isAudioEnabled;
         if (waToggle) waToggle.checked = settings.enable_wa_simulation !== false;
     }
 
@@ -2463,21 +2542,24 @@
         const waToggle = document.getElementById('setting-toggle-whatsapp') || document.getElementById('setting-toggle-wa');
 
         const settings = JSON.parse(localStorage.getItem('lrs_admin_settings') || '{}');
-        settings.enable_sound = soundToggle ? soundToggle.checked : true;
+        const isAudioEnabled = soundToggle ? soundToggle.checked : true;
+        settings.audio_notification_enabled = isAudioEnabled;
+        settings.enable_sound = isAudioEnabled;
         settings.enable_wa_simulation = waToggle ? waToggle.checked : true;
         localStorage.setItem('lrs_admin_settings', JSON.stringify(settings));
 
-        showAdminToast('Preferensi notifikasi berhasil diperbarui.');
+        showAdminToast(isAudioEnabled ? 'Efek suara notifikasi diaktifkan.' : 'Efek suara notifikasi dinonaktifkan.');
     };
 
     window.toggleSoundSetting = function (isChecked) {
         const settings = JSON.parse(localStorage.getItem('lrs_admin_settings') || '{}');
+        settings.audio_notification_enabled = isChecked;
         settings.enable_sound = isChecked;
         localStorage.setItem('lrs_admin_settings', JSON.stringify(settings));
         if (isChecked) {
-            playNotificationChime();
+            window.playNotificationChime(true);
         }
-        showAdminToast(isChecked ? 'Nada notifikasi diaktifkan.' : 'Nada notifikasi dinonaktifkan.');
+        showAdminToast(isChecked ? 'Efek suara notifikasi diaktifkan.' : 'Efek suara notifikasi dinonaktifkan.');
     };
 
     window.toggleWaSimulationSetting = function (isChecked) {
@@ -2848,6 +2930,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         seedFallbackData();
         initSidebarState();
+        initAutoplayAudioUnlock();
         populateOverviewProjectFilter();
         populateQrDropdowns();
         renderOverviewData();

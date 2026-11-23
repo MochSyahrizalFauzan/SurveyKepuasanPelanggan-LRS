@@ -60,47 +60,57 @@
             </form>
         </div>
 
-        {{-- KARTU 2: Preferensi Audio & Simulasi Notifikasi --}}
+        {{-- KARTU 2: Kontrol Notifikasi & Audio (Web Audio API Chime) --}}
         <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)] space-y-4">
             <div class="border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2">
+                    <x-ri-volume-up-line class="w-4 h-4 text-[#003B73] shrink-0" />
                     <h3 class="text-sm font-extrabold text-slate-800">
-                        Preferensi Audio & Notifikasi Real-Time
+                        Kontrol Notifikasi & Audio
                     </h3>
                 </div>
                 <p class="text-xs text-slate-400 mt-0.5">
-                    Pengaturan interaktivitas antarmuka admin saat data baru masuk.
+                    Pengaturan nada lonceng (Web Audio API) dan simulasi notifikasi otomatis saat data klien masuk.
                 </p>
             </div>
 
             <div class="space-y-3.5 text-xs">
-                {{-- Toggle 1: Suara Konfirmasi Singkat --}}
-                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <div class="pr-3">
-                        <span class="font-extrabold text-slate-800 block text-xs">Nada Konfirmasi Masuk</span>
-                        <span class="text-[11px] text-slate-400 block mt-0.5">
-                            Memutar nada lembut saat ada survei atau keluhan baru dikirim dari Tab Klien.
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button"
-                                onclick="playNotificationChime()"
-                                title="Uji Coba Suara"
-                                class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs text-slate-600 transition-colors cursor-pointer">
-                            🔊
-                        </button>
-                        <label class="relative inline-flex items-center cursor-pointer">
+                {{-- Toggle 1: Efek Suara Notifikasi & Tombol Uji Suara --}}
+                <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="pr-2">
+                            <span class="font-extrabold text-slate-800 block text-xs">Aktifkan Efek Suara Notifikasi</span>
+                            <span class="text-[11px] text-slate-500 block mt-0.5 leading-relaxed">
+                                Bunyikan nada lembut saat survei atau keluhan baru masuk dari Portal Klien.
+                            </span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" id="setting-toggle-sound" onchange="saveNotificationToggles()" class="sr-only peer" checked>
                             <div class="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#003B73]"></div>
                         </label>
                     </div>
+
+                    {{-- Tombol Uji Suara Sekunder --}}
+                    <div class="pt-2.5 border-t border-slate-200/60 flex items-center justify-between gap-2">
+                        <span class="text-[11px] text-slate-400">
+                            Synthesizer Web Audio API murni (tanpa file eksternal)
+                        </span>
+                        <button type="button"
+                                id="btn-test-sound"
+                                onclick="testNotificationChime()"
+                                title="Uji Suara Nada Lembut"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 hover:text-[#003B73] hover:border-blue-200 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95">
+                            <x-ri-volume-up-line class="w-3.5 h-3.5 text-[#003B73]" />
+                            <span>Uji Suara</span>
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Toggle 2: Simulasi Notifikasi WhatsApp ke Personel --}}
-                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <div class="pr-3">
+                <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 gap-3">
+                    <div class="pr-2">
                         <span class="font-extrabold text-slate-800 block text-xs">Simulasi WhatsApp Personel</span>
-                        <span class="text-[11px] text-slate-400 block mt-0.5">
+                        <span class="text-[11px] text-slate-500 block mt-0.5 leading-relaxed">
                             Kirim log simulasi notifikasi otomatis ke nomor WhatsApp Personel Pendamping yang bertugas.
                         </span>
                     </div>
@@ -119,9 +129,8 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="text-base">📬</span>
                     <h3 class="text-sm font-extrabold text-slate-800">
-                        Riwayat Pengiriman Notifikasi (Simulasi 3 Pihak)
+                        Riwayat Pengiriman Notifikasi
                     </h3>
                 </div>
                 <p class="text-xs text-slate-400 mt-0.5">
@@ -159,7 +168,7 @@
     </div>
 
     {{-- 4. BLOK UTILITAS DEMO: RESET KE DATA CONTOH AWAL --}}
-    <div class="bg-rose-50/60 rounded-2xl border border-rose-200/80 p-5 md:p-6 shadow-2xs space-y-3">
+    <!-- <div class="bg-rose-50/60 rounded-2xl border border-rose-200/80 p-5 md:p-6 shadow-2xs space-y-3">
         <div class="flex items-start gap-3">
             <span class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 font-bold flex items-center justify-center text-lg shrink-0">
                 🔄
@@ -181,6 +190,6 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
 </div>

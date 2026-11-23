@@ -99,7 +99,6 @@
                                 onclick="copyQrSurveyUrl()"
                                 title="Salin Tautan ke Clipboard"
                                 class="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer">
-                            <span>📋</span>
                             <span>Salin</span>
                         </button>
                     </div>
@@ -110,19 +109,16 @@
                     <button type="button"
                             onclick="saveQrToHistory()"
                             class="px-4 py-2.5 rounded-xl bg-[#003B73] hover:bg-[#002B54] text-white font-bold text-xs shadow-sm shadow-[#003B73]/20 hover:shadow-md transition-all flex items-center gap-2 cursor-pointer">
-                        <span>💾</span>
                         <span>Simpan ke Riwayat</span>
                     </button>
                     <button type="button"
                             onclick="downloadQrCardPng()"
                             class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 hover:shadow-md transition-all flex items-center gap-2 cursor-pointer">
-                        <span>📥</span>
                         <span>Unduh Kartu QR (PNG)</span>
                     </button>
                     <button type="button"
                             onclick="openQrSurveyPreview()"
                             class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer">
-                        <span>↗️</span>
                         <span>Buka Pratinjau</span>
                     </button>
                 </div>
