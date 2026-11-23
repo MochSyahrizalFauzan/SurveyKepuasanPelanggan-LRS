@@ -369,14 +369,26 @@
 
             // Buat struktur payload sesuai spesifikasi PRD & Prompt
             const elSaran = document.getElementById('saran-umum');
+            const refNo = `SRV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+            let personnelName = 'Ir. Dwi Suryanto, S.T.';
+            try {
+                const sess = JSON.parse(localStorage.getItem('lrs_active_session') || '{}');
+                if (sess.accompanying_personnel) personnelName = sess.accompanying_personnel;
+                else if (sess.personnel_name) personnelName = sess.personnel_name;
+            } catch (e) {}
+
             const surveyPayload = {
+                reference_no: refNo,
                 respondent_id: respondentId,
                 project_name: projectName,
                 category_id: activeCategoryId,
                 category_name: catInfo.name,
+                accompanying_personnel: personnelName,
+                personnel_wa_status: 'Terkirim',
                 attachment_name: currentAttachmentName || null,
                 general_notes: elSaran ? elSaran.value.trim() || null : null,
                 submitted_at: new Date().toISOString(),
+                is_read: false,
                 answers: answers
             };
 
@@ -385,6 +397,47 @@
                 const existing = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
                 existing.push(surveyPayload);
                 localStorage.setItem('lrs_survey_data', JSON.stringify(existing));
+
+                // Simulasi pencatatan log notifikasi ke 3 pihak jika diaktifkan
+                try {
+                    const settings = JSON.parse(localStorage.getItem('lrs_admin_settings') || '{}');
+                    if (settings.enable_wa_simulation !== false) {
+                        const logs = JSON.parse(localStorage.getItem('lrs_notification_logs') || '[]');
+                        const nowFormatted = new Date().toISOString().slice(0, 16).replace('T', ' ');
+                        logs.unshift(
+                            {
+                                id: 'notif-' + Date.now() + '-1',
+                                recipient: `Pelanggan (${respondentId})`,
+                                channel: 'WhatsApp',
+                                type: 'Tanda Terima Survei',
+                                timestamp: nowFormatted,
+                                status: 'Terkirim',
+                                reference_no: refNo
+                            },
+                            {
+                                id: 'notif-' + Date.now() + '-2',
+                                recipient: `Personel Pendamping (${personnelName})`,
+                                channel: 'WhatsApp',
+                                type: 'Notifikasi Konfirmasi Klien',
+                                timestamp: nowFormatted,
+                                status: 'Terkirim',
+                                reference_no: refNo
+                            },
+                            {
+                                id: 'notif-' + Date.now() + '-3',
+                                recipient: 'Administrator Sistem LRS',
+                                channel: 'Sistem Web & Email',
+                                type: 'Rekap Survei Masuk',
+                                timestamp: nowFormatted,
+                                status: 'Terkirim',
+                                reference_no: refNo
+                            }
+                        );
+                        localStorage.setItem('lrs_notification_logs', JSON.stringify(logs));
+                    }
+                } catch (eLog) {
+                    console.error('Error saat mencatat log notifikasi:', eLog);
+                }
 
                 updateHeaderCounters();
 
@@ -709,12 +762,51 @@
         }, 4000);
     };
 
+    /**
+     * Periksa Parameter URL Query (?proyek=...&personel=...&kategori=...)
+     */
+    function checkUrlQueryParams() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const proyek = params.get('proyek');
+            const personel = params.get('personel');
+            const kategori = params.get('kategori');
+
+            if (proyek || personel) {
+                let session = {};
+                try {
+                    session = JSON.parse(localStorage.getItem('lrs_active_session') || '{}');
+                } catch (e) {}
+
+                if (proyek) {
+                    session.projectName = proyek;
+                    session.project_code = proyek;
+                }
+                if (personel) {
+                    session.accompanying_personnel = personel;
+                    session.personnel_name = personel;
+                }
+                localStorage.setItem('lrs_active_session', JSON.stringify(session));
+
+                const projEl = document.getElementById('session-project-name');
+                if (projEl) projEl.textContent = proyek;
+            }
+
+            if (kategori && CATEGORY_MAP[kategori]) {
+                window.selectCategory(kategori);
+            }
+        } catch (e) {
+            console.error('Error saat memeriksa parameter query URL:', e);
+        }
+    }
+
     // Jalankan inisialisasi saat DOM siap
     document.addEventListener('DOMContentLoaded', function () {
         initSurveiState();
         setupSurveyForm();
         setupFeedbackForm();
         setupComplaintForm();
+        checkUrlQueryParams();
     });
 
 })();
