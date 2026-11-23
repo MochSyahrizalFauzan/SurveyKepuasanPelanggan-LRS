@@ -7,9 +7,6 @@
     <div class="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 font-bold flex items-center justify-center text-sm shadow-2xs border border-rose-100">
-                    🎫
-                </span>
                 <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight">
                     Daftar & Progres Keluhan
                 </h1>

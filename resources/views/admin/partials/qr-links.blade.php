@@ -6,9 +6,6 @@
     {{-- 1. HEADER KONTROL --}}
     <div class="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)]">
         <div class="flex items-center gap-2">
-            <span class="w-8 h-8 rounded-xl bg-blue-50 text-[#003B73] font-bold flex items-center justify-center text-sm shadow-2xs border border-blue-100">
-                📱
-            </span>
             <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight">
                 Generator QR Code & Tautan Survei
             </h1>

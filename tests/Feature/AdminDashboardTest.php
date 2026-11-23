@@ -123,6 +123,9 @@ class AdminDashboardTest extends TestCase
         $response->assertSee('id="tab-btn-proyek-personel"', false);
         $response->assertSee('id="tab-btn-pengaturan"', false);
 
+        // Verifikasi Ikon Sidebar dari Blade UI Kit (Remix Icon SVG viewBox)
+        $response->assertSee('viewBox="0 0 24 24"', false);
+
         // Mobile Drawer & Toggle
         $response->assertSee('id="btn-admin-mobile-menu"', false);
         $response->assertSee('id="admin-mobile-drawer"', false);

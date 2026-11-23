@@ -7,9 +7,6 @@
     <div class="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-blue-50 text-[#003B73] font-bold flex items-center justify-center text-sm shadow-2xs border border-blue-100">
-                    👥
-                </span>
                 <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight">
                     Proyek & Personel Pendamping
                 </h1>
@@ -25,14 +22,12 @@
                     id="subtab-btn-projects"
                     onclick="switchProyekPersonelSubtab('projects')"
                     class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#003B73] text-white shadow-sm flex items-center gap-1.5 cursor-pointer">
-                <span>🏗️</span>
                 <span>Daftar Proyek (<span id="count-subtab-projects">0</span>)</span>
             </button>
             <button type="button"
                     id="subtab-btn-personnel"
                     onclick="switchProyekPersonelSubtab('personnel')"
                     class="px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 flex items-center gap-1.5 cursor-pointer">
-                <span>👔</span>
                 <span>Personel Pendamping (<span id="count-subtab-personnel">0</span>)</span>
             </button>
         </div>

@@ -12,9 +12,6 @@
         {{-- Header Modal --}}
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
             <div class="flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-xl bg-blue-50 text-[#003B73] font-bold flex items-center justify-center text-sm border border-blue-100">
-                    🏗️
-                </span>
                 <h3 id="modal-project-title" class="text-sm font-black text-slate-800">
                     Tambah Proyek Baru
                 </h3>

@@ -74,10 +74,10 @@
                 </div>
                 <div class="sidebar-text-group min-w-0 transition-opacity duration-200">
                     <div class="flex items-center gap-1.5 flex-wrap">
-                        <span class="text-sm font-black text-[#003B73] tracking-tight truncate">PT. Len Railways Systems</span>
+                        <span class="text-sm font-black text-[#003B73] tracking-tight truncate">Len Railway Systems</span>
                     </div>
                     <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-[#003B73] border border-blue-100 shrink-0">ADMIN LAYANAN</span>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-[#003B73] border border-blue-100 shrink-0">ADMINISTRATOR</span>
                     </div>
                 </div>
             </div>
@@ -89,9 +89,7 @@
                     title="Beralih Mode Fokus (Sembunyikan/Buka Menu)"
                     aria-label="Toggle Sidebar"
                     class="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-[#003B73] hover:bg-slate-100 transition-colors shrink-0 cursor-pointer">
-                <svg id="sidebar-collapse-icon" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                </svg>
+                <x-ri-arrow-left-double-line id="sidebar-collapse-icon" class="w-5 h-5 transition-transform duration-300" />
             </button>
 
             {{-- Tombol Close di Mobile Drawer (< lg) --}}
@@ -99,9 +97,7 @@
                     onclick="closeAdminMobileSidebar()"
                     title="Tutup Menu"
                     class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <x-ri-close-line class="w-5 h-5" />
             </button>
         </div>
 
@@ -118,7 +114,7 @@
                     onclick="switchAdminSection('ringkasan'); onSidebarNavClick();"
                     title="Ringkasan Kepuasan & Layanan"
                     class="admin-nav-btn w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#003B73] text-white shadow-xs flex items-center gap-3 cursor-pointer group text-left">
-                <span class="text-base shrink-0">📊</span>
+                <x-ri-dashboard-3-line class="w-5 h-5 shrink-0" />
                 <span class="sidebar-nav-text whitespace-nowrap overflow-hidden transition-all duration-200">Dashboard</span>
             </button>
 
@@ -129,7 +125,7 @@
                     onclick="switchAdminSection('data-survei'); onSidebarNavClick();"
                     title="Rekap Data Survei Kepuasan"
                     class="admin-nav-btn w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 flex items-center gap-3 cursor-pointer group text-left">
-                <span class="text-base shrink-0">📋</span>
+                <x-ri-survey-line class="w-5 h-5 shrink-0" />
                 <span class="sidebar-nav-text whitespace-nowrap overflow-hidden transition-all duration-200">Data Survei</span>
             </button>
 
@@ -141,7 +137,7 @@
                     title="Daftar & Progres Keluhan"
                     class="admin-nav-btn w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 flex items-center justify-between gap-3 cursor-pointer group text-left">
                 <div class="flex items-center gap-3 min-w-0">
-                    <span class="text-base shrink-0">🎫</span>
+                    <x-ri-customer-service-2-line class="w-5 h-5 shrink-0" />
                     <span class="sidebar-nav-text whitespace-nowrap overflow-hidden transition-all duration-200">Keluhan</span>
                 </div>
                 <span id="tab-complaint-badge" class="hidden px-2 py-0.5 text-[10px] font-black rounded-full bg-rose-500 text-white leading-none shadow-xs shrink-0">0</span>
@@ -154,7 +150,7 @@
                     onclick="switchAdminSection('qr-tautan'); onSidebarNavClick();"
                     title="Generator QR Code & Tautan Survei"
                     class="admin-nav-btn w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 flex items-center gap-3 cursor-pointer group text-left">
-                <span class="text-base shrink-0">📱</span>
+                <x-ri-qr-code-line class="w-5 h-5 shrink-0" />
                 <span class="sidebar-nav-text whitespace-nowrap overflow-hidden transition-all duration-200">QR & Tautan</span>
             </button>
 
@@ -165,7 +161,7 @@
                     onclick="switchAdminSection('proyek-personel'); onSidebarNavClick();"
                     title="Kelola Proyek & Personel Pendamping"
                     class="admin-nav-btn w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 flex items-center gap-3 cursor-pointer group text-left">
-                <span class="text-base shrink-0">👥</span>
+                <x-ri-team-line class="w-5 h-5 shrink-0" />
                 <span class="sidebar-nav-text whitespace-nowrap overflow-hidden transition-all duration-200">Proyek & Personel</span>
             </button>
 
@@ -182,7 +178,7 @@
                     onclick="switchAdminSection('pengaturan'); onSidebarNavClick();"
                     title="Pengaturan & Target Perusahaan"
                     class="admin-nav-btn w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 flex items-center gap-3 cursor-pointer group text-left">
-                <span class="text-base shrink-0">⚙️</span>
+                <x-ri-settings-4-line class="w-5 h-5 shrink-0" />
                 <span class="sidebar-nav-text whitespace-nowrap overflow-hidden transition-all duration-200">Pengaturan</span>
             </button>
         </nav>
@@ -195,12 +191,10 @@
                target="_blank"
                rel="noopener"
                title="Buka Formulir Klien di Tab Baru"
-               class="flex items-center gap-2.5 w-full p-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200/80 hover:text-[#003B73] hover:border-blue-200 hover:bg-blue-50/50 transition-all shadow-2xs">
-                <span class="text-sm shrink-0">🌐</span>
+               class="flex items-center gap-2.5 w-full p-2.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200/80 hover:text-[#003B73] hover:border-blue-200 hover:bg-blue-50/50 transition-all shadow-2xs group">
+                <x-ri-global-line class="w-4 h-4 shrink-0 text-[#003B73]" />
                 <span class="sidebar-nav-text whitespace-nowrap overflow-hidden transition-all duration-200 truncate">Portal Klien</span>
-                <svg class="w-3.5 h-3.5 text-slate-400 ml-auto shrink-0 sidebar-text-group" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
+                <x-ri-external-link-line class="w-3.5 h-3.5 text-slate-400 group-hover:text-[#003B73] ml-auto shrink-0 sidebar-text-group transition-colors" />
             </a>
         </div>
 
@@ -230,9 +224,7 @@
                             title="Buka Menu Navigasi"
                             aria-label="Menu Navigasi"
                             class="lg:hidden p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-[#003B73] transition-all flex items-center justify-center shadow-2xs cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
+                        <x-ri-menu-line class="w-5 h-5" />
                     </button>
 
                     {{-- Desktop Sidebar Focus Toggle (lg+) --}}
@@ -242,9 +234,7 @@
                             title="Mode Fokus: Sembunyikan / Buka Sidebar"
                             aria-label="Toggle Fokus Sidebar"
                             class="hidden lg:flex p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-[#003B73] hover:border-slate-300 transition-all items-center justify-center shadow-2xs cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
-                        </svg>
+                        <x-ri-side-bar-line class="w-5 h-5" />
                     </button>
 
                     {{-- Dynamic Breadcrumb / Page Title --}}
@@ -269,9 +259,7 @@
                                 title="Notifikasi Survei & Keluhan Masuk"
                                 aria-label="Notifikasi Survei & Keluhan Masuk"
                                 class="relative p-2 sm:p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-[#003B73] hover:border-slate-300 transition-all flex items-center justify-center shadow-2xs hover:shadow-xs focus:outline-none cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                            </svg>
+                            <x-ri-notification-3-line class="w-4 h-4" />
 
                             {{-- Badge Notifikasi Unread dengan Animasi Ping --}}
                             <span id="bell-unread-badge"
@@ -332,9 +320,6 @@
             {{-- Section 6: Pengaturan & Preferensi Sistem --}}
             @include('admin.partials.settings')
         </main>
-
-        <!-- {{-- Global Footer PT Len Railways Systems --}}
-        <x-footer /> -->
     </div>
 
 </div>
