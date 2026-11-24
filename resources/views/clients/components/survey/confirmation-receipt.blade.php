@@ -1,16 +1,9 @@
-{{-- =========================================================================
-     KOMPONEN BLADE: DIGITAL CONFIRMATION RECEIPT
-     PT Len Railway Systems — Bukti Konfirmasi Resmi & Detail Evaluasi
-     ========================================================================= --}}
 <div id="receipt-card-container"
      class="receipt-card bg-slate-50/95 rounded-2xl border border-slate-200/90 p-4 sm:p-5 flex flex-col justify-between text-xs space-y-4 shadow-2xs transition-transform duration-200 ease-out will-change-transform select-text">
 
     {{-- Header Receipt: Identitas & Waktu Submit --}}
     <div class="font-extrabold text-[#1a336e] uppercase tracking-wider text-[11px] pb-2.5 border-b border-slate-200/80 flex items-center justify-between">
-        <span id="txt-summary-title" class="flex items-center gap-1.5">
-            <span>🧾</span>
-            <span>Tanda Terima Digital Resmi</span>
-        </span>
+        <span id="txt-summary-title" class="flex items-center gap-1.5"></span>
         <span class="text-slate-400 font-semibold text-[11px]" id="success-submitted-time">-</span>
     </div>
 
@@ -57,30 +50,6 @@
             <dd id="success-attachment-name" class="font-bold text-slate-800 text-xs sm:text-sm truncate">-</dd>
         </div>
     </dl>
-
-    {{-- Aksi Tambahan Receipt: Simpan PDF & Unduh JSON --}}
-    <div class="pt-2 border-t border-slate-200/80 flex items-center justify-between gap-2">
-        <button type="button"
-                id="btn-print-receipt"
-                onclick="window.print()"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-[#1a336e] bg-white hover:bg-slate-100 border border-slate-200 transition-all shadow-2xs active:scale-95 cursor-pointer">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24-1.07-.367-2.18-.367-3.329 0-4.032 2.766-7.42 6.54-8.243.344-.075.698-.117 1.06-.117s.716.042 1.06.117c3.774.823 6.54 4.211 6.54 8.243 0 1.149-.127 2.259-.367 3.329m-14.466 0A9.02 9.02 0 0012 21a9.02 9.02 0 007.746-7.171m-15.492 0a9.046 9.046 0 010-3.329m15.492 3.329a9.046 9.046 0 000-3.329" />
-            </svg>
-            <span>Simpan PDF / Cetak</span>
-        </button>
-
-        <button type="button"
-                id="btn-download-json"
-                onclick="window.downloadSurveyReceiptJSON()"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 hover:text-[#1a336e] bg-white hover:bg-slate-100 border border-slate-200 transition-all shadow-2xs active:scale-95 cursor-pointer">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            <span>Unduh JSON</span>
-        </button>
-    </div>
-
 </div>
 
 {{-- Subtle 3D Tilt Script (Desktop Only) --}}

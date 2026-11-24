@@ -14,20 +14,32 @@
 
         <div class="p-5 sm:p-7 lg:p-9 text-center space-y-5 sm:space-y-6 relative z-10">
 
-            {{-- Baris Status Atas: Audio Chime & Status Badge --}}
-            <div class="flex items-center justify-between gap-3 flex-wrap">
-                <span id="txt-success-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-emerald-100/70 text-emerald-800 border border-emerald-200 shadow-2xs">
-                    ✓ Survei Berhasil Terkirim
-                </span>
+            {{-- Icon Sukses Checkmark Lembut & Indikator Skor (Animasi Dinamis & Interaktif) --}}
+            <div id="hero-icon-container"
+                 onclick="replayCheckmarkAnimation()"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();replayCheckmarkAnimation();}"
+                 role="button"
+                 tabindex="0"
+                 class="checkmark-pop group/check relative w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-emerald-50 ring-8 ring-emerald-50/80 hover:ring-12 hover:ring-emerald-100 text-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/10 cursor-pointer select-none transition-all duration-300 hover:scale-108 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400"
+                 title="Klik untuk memutar ulang animasi centang"
+                 aria-label="Status Survei Berhasil Terkirim - Klik untuk memutar ulang animasi">
 
-                {{-- Komponen Audio Chime --}}
-                <x-survey.confirmation-audio />
-            </div>
+                {{-- Gelombang Ambien Halus (Pulsing Halo) --}}
+                <span class="absolute inset-0 rounded-full bg-emerald-400/25 animate-ping opacity-60 pointer-events-none" style="animation-duration: 2.8s;"></span>
 
-            {{-- Icon Sukses Checkmark Lembut & Indikator Skor --}}
-            <div id="hero-icon-container" class="w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-full bg-emerald-50 ring-8 ring-emerald-50/60 text-emerald-600 flex items-center justify-center shadow-xs transition-transform duration-500 hover:scale-105">
-                <svg id="hero-icon-svg" class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                {{-- SVG Checkmark Dinamis dengan Efek Stroke Draw --}}
+                <svg id="hero-icon-svg"
+                     class="w-8 h-8 sm:w-10 sm:h-10 transition-transform duration-300 group-hover/check:scale-110 group-hover/check:rotate-6"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2.75"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
+                    <path id="hero-checkmark-path"
+                          class="checkmark-stroke"
+                          d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
             </div>
 
@@ -36,51 +48,14 @@
                 <h3 id="txt-success-title" class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                     Terima Kasih!
                 </h3>
-
-                {{-- Hero Dinamis Berdasarkan Skor --}}
-                <div id="hero-score-badge-wrap" class="pt-1">
-                    <div id="hero-score-badge" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200/90 shadow-2xs">
-                        <span id="hero-score-stars">⭐️⭐️⭐️⭐️⭐️</span>
-                        <span id="hero-score-text">Skor Kepuasan: 5.0 / 5.0 · Luar Biasa</span>
-                    </div>
-                </div>
-
                 <p id="txt-success-msg" class="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto leading-relaxed pt-1">
                     Penilaian Anda untuk kategori <strong id="success-category-name" class="text-slate-800 font-bold">Layanan & Dukungan</strong> telah berhasil disimpan dalam sistem kami.
                 </p>
             </div>
 
-            {{-- Grid 2 Kolom Berdampingan di Desktop (lg:grid-cols-12) / 1 Kolom di Mobile & Tablet --}}
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch text-left">
-                {{-- Kolom Kiri: Digital Confirmation Receipt --}}
-                <div class="lg:col-span-6 flex flex-col">
-                    <x-survey.confirmation-receipt />
-                </div>
-
-                {{-- Kolom Kanan: Kartu Informasi SMAP ISO 37001 & Ticker --}}
-                <div class="lg:col-span-6 flex flex-col justify-between">
-                    <x-survey.confirmation-smap-ticker />
-                </div>
-            </div>
-
-            {{-- 3 Tombol Aksi Hierarki Visual (Primary, Secondary, Tertiary) --}}
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 pt-2">
-                {{-- Primary: Solid Corporate Navy (#1a336e) --}}
-                <button type="button"
-                        id="btn-fill-other-category"
-                        onclick="actionFillOtherCategory()"
-                        class="w-full sm:w-auto min-h-[42px] sm:min-h-[44px] px-5 py-2.5 sm:py-3 rounded-xl bg-[#1a336e] hover:bg-[#12244f] text-white font-extrabold text-xs sm:text-sm shadow-md shadow-[#1a336e]/20 flex items-center justify-center gap-2 transition-all active:scale-95 focus:outline-none cursor-pointer">
-                    <span id="txt-btn-fill-other">Isi Kategori Lain</span>
-                </button>
-
-                {{-- Tertiary: Ghost / Slate Halus --}}
-                <button type="button"
-                        id="btn-back-to-home"
-                        onclick="actionBackToHome()"
-                        class="w-full sm:w-auto min-h-[42px] sm:min-h-[44px] px-5 py-2.5 sm:py-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-600 hover:text-slate-800 font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 active:scale-95 focus:outline-none cursor-pointer">
-                    <span class="text-sm">🏠</span>
-                    <span id="txt-btn-back-home">Kembali ke Beranda</span>
-                </button>
+            {{-- Tanda Terima Digital --}}
+            <div>
+                <x-survey.confirmation-receipt />
             </div>
         </div>
         
@@ -183,7 +158,7 @@
             if (stars) stars.textContent = '⭐️⭐️⭐️⭐️⭐️';
             if (text) text.textContent = isEnglish ? `Score: ${numScore.toFixed(1)} / 5.0 · Outstanding!` : `Skor Kepuasan: ${numScore.toFixed(1)} / 5.0 · Luar Biasa!`;
             if (iconContainer) {
-                iconContainer.className = 'w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-full bg-emerald-50 ring-8 ring-emerald-50/60 text-emerald-600 flex items-center justify-center shadow-xs transition-transform duration-500 hover:scale-105';
+                iconContainer.className = 'checkmark-pop group/check relative w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-emerald-50 ring-8 ring-emerald-50/80 hover:ring-12 hover:ring-emerald-100 text-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/10 cursor-pointer select-none transition-all duration-300 hover:scale-108 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400';
             }
             // Trigger Confetti khusus untuk skor maksimal!
             setTimeout(launchConfettiScore5, 300);
@@ -195,7 +170,7 @@
             if (stars) stars.textContent = '⭐️⭐️⭐️⭐️';
             if (text) text.textContent = isEnglish ? `Score: ${numScore.toFixed(1)} / 5.0 · Very Good` : `Skor Kepuasan: ${numScore.toFixed(1)} / 5.0 · Sangat Baik`;
             if (iconContainer) {
-                iconContainer.className = 'w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-full bg-blue-50 ring-8 ring-blue-50/60 text-blue-600 flex items-center justify-center shadow-xs transition-transform duration-500 hover:scale-105';
+                iconContainer.className = 'checkmark-pop group/check relative w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-blue-50 ring-8 ring-blue-50/80 hover:ring-12 hover:ring-blue-100 text-blue-600 flex items-center justify-center shadow-md shadow-blue-500/10 cursor-pointer select-none transition-all duration-300 hover:scale-108 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-400';
             }
         } else if (numScore >= 2.5) {
             // Tier 3: Neutral (3.0)
@@ -205,7 +180,7 @@
             if (stars) stars.textContent = '⭐️⭐️⭐️';
             if (text) text.textContent = isEnglish ? `Score: ${numScore.toFixed(1)} / 5.0 · Neutral` : `Skor Kepuasan: ${numScore.toFixed(1)} / 5.0 · Cukup / Netral`;
             if (iconContainer) {
-                iconContainer.className = 'w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-full bg-sky-50 ring-8 ring-sky-50/60 text-sky-600 flex items-center justify-center shadow-xs transition-transform duration-500 hover:scale-105';
+                iconContainer.className = 'checkmark-pop group/check relative w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-sky-50 ring-8 ring-sky-50/80 hover:ring-12 hover:ring-sky-100 text-sky-600 flex items-center justify-center shadow-md shadow-sky-500/10 cursor-pointer select-none transition-all duration-300 hover:scale-108 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-400';
             }
         } else {
             // Tier 4: Needs Improvement (1.0 - 2.0)
@@ -215,10 +190,30 @@
             if (stars) stars.textContent = '⭐️⭐️';
             if (text) text.textContent = isEnglish ? `Score: ${numScore.toFixed(1)} / 5.0 · Under Review` : `Skor Kepuasan: ${numScore.toFixed(1)} / 5.0 · Perlu Evaluasi`;
             if (iconContainer) {
-                iconContainer.className = 'w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-full bg-amber-50 ring-8 ring-amber-50/60 text-amber-600 flex items-center justify-center shadow-xs transition-transform duration-500 hover:scale-105';
+                iconContainer.className = 'checkmark-pop group/check relative w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-amber-50 ring-8 ring-amber-50/80 hover:ring-12 hover:ring-amber-100 text-amber-600 flex items-center justify-center shadow-md shadow-amber-500/10 cursor-pointer select-none transition-all duration-300 hover:scale-108 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400';
             }
         }
     }
+
+    /**
+     * Interaktivitas: Putar Ulang Animasi Centang saat Diklik atau Saat Form Disubmit
+     */
+    window.replayCheckmarkAnimation = function() {
+        const path = document.getElementById('hero-checkmark-path');
+        const container = document.getElementById('hero-icon-container');
+
+        if (path) {
+            path.style.animation = 'none';
+            void path.offsetWidth; // Force reflow
+            path.style.animation = 'lrsCheckmarkDraw 0.65s cubic-bezier(0.65, 0, 0.45, 1) forwards';
+        }
+
+        if (container) {
+            container.classList.remove('checkmark-pop');
+            void container.offsetWidth;
+            container.classList.add('checkmark-pop');
+        }
+    };
 
     /**
      * Handler Utama: Event 'lrs:survey-submitted'
@@ -268,6 +263,9 @@
             txtCopy.classList.remove('text-emerald-600');
         }
 
+        // Putar Animasi Centang saat Muncul
+        window.replayCheckmarkAnimation();
+
         // Perbarui Hero Dinamis Berdasarkan Skor
         updateHeroByScore(detail.score || 5);
 
@@ -281,3 +279,48 @@
     });
 })();
 </script>
+
+<style>
+/* Animasi Stroke Draw & Spring Pop Orisinal untuk Icon Centang (Clean & Modern) */
+@keyframes lrsCheckmarkDraw {
+    0% {
+        stroke-dashoffset: 32;
+        opacity: 0.2;
+    }
+    40% {
+        opacity: 1;
+    }
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+}
+
+@keyframes lrsCheckmarkPop {
+    0% {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.14);
+        opacity: 1;
+    }
+    85% {
+        transform: scale(0.96);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.checkmark-stroke {
+    stroke-dasharray: 32;
+    stroke-dashoffset: 0;
+    animation: lrsCheckmarkDraw 0.65s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-pop {
+    animation: lrsCheckmarkPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+</style>
