@@ -4,8 +4,12 @@
      id="card-{{ $indicator['code'] }}"
      data-id="{{ $indicator['code'] }}"
      data-category="{{ $category['name'] ?? '' }}"
+     data-category-id="{{ $category['name'] ?? '' }}"
+     data-category-en="{{ $category['name_en'] ?? ($category['name'] ?? '') }}"
      data-category-code="{{ $category['code'] ?? '' }}"
-     data-text="{{ $indicator['text'] }}">
+     data-text="{{ $indicator['text'] }}"
+     data-text-id="{{ $indicator['text'] }}"
+     data-text-en="{{ $indicator['text_en'] ?? $indicator['text'] }}">
 
     {{-- Header Pertanyaan / Indikator --}}
     <div class="flex items-start gap-3 mb-4">
@@ -13,7 +17,7 @@
             {{ $indicator['code'] }}
         </span>
         <div class="flex-1 min-w-0">
-            <h4 class="text-sm md:text-base font-bold text-slate-800 leading-snug">
+            <h4 class="indicator-text text-sm md:text-base font-bold text-slate-800 leading-snug">
                 {{ $indicator['text'] }}
             </h4>
         </div>
@@ -25,11 +29,11 @@
         {{-- Baris 1: Tingkat Kepentingan (1 = Sangat Tidak Penting, 5 = Sangat Penting) --}}
         <div class="space-y-1.5">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-700 tracking-wide flex items-center gap-1.5">
+                <span class="label-imp text-xs font-bold text-slate-700 tracking-wide flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-                    <span>Tingkat Kepentingan</span>
+                    <span class="label-imp-text">Tingkat Kepentingan</span>
                 </span>
-                <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">
+                <span class="sublabel-imp text-[11px] text-slate-400 font-medium hidden sm:inline">
                     1: Sangat Tidak Penting → 5: Sangat Penting
                 </span>
             </div>
@@ -50,22 +54,22 @@
             </div>
         </div>
 
-        {{-- Visualisasi Panduan Skala di Tengah (Kurang – Netral – Sangat) --}}
+        {{-- Visualisasi Panduan Skala di Tengah (Garis Gradasi Panah: Kurang – Netral – Sangat) --}}
         <div class="my-2 px-1 select-none" aria-hidden="true">
-            <div class="relative w-full h-1 bg-gradient-to-r from-red-400 via-slate-300 to-emerald-500 rounded-full">
+            <div class="relative w-full h-1 bg-gradient-to-r from-red-500 via-slate-300 to-emerald-500 rounded-full">
                 <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500 shadow-2xs"></div>
                 <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-slate-400 shadow-2xs"></div>
                 <div class="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500 shadow-2xs"></div>
             </div>
             <div class="flex justify-between items-center text-[10px] mt-1.5 font-bold tracking-tight">
-                <span class="text-red-500 flex items-center gap-1">
-                    <span>1: Kurang</span>
+                <span class="scale-label-left text-red-500 flex items-center gap-1">
+                    <span>Kurang Puas / Tidak Penting</span>
                 </span>
-                <span class="text-slate-400 font-semibold">
-                    3: Netral
+                <span class="scale-label-mid text-slate-400 font-semibold">
+                    Netral
                 </span>
-                <span class="text-emerald-600 flex items-center gap-1">
-                    <span>5: Sangat</span>
+                <span class="scale-label-right text-emerald-600 flex items-center gap-1">
+                    <span>Sangat Puas / Sangat Penting</span>
                 </span>
             </div>
         </div>
@@ -73,11 +77,11 @@
         {{-- Baris 2: Tingkat Kepuasan (1 = Sangat Tidak Puas, 5 = Sangat Puas) --}}
         <div class="space-y-1.5">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-700 tracking-wide flex items-center gap-1.5">
+                <span class="label-sat text-xs font-bold text-slate-700 tracking-wide flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                    <span>Tingkat Kepuasan</span>
+                    <span class="label-sat-text">Tingkat Kepuasan</span>
                 </span>
-                <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">
+                <span class="sublabel-sat text-[11px] text-slate-400 font-medium hidden sm:inline">
                     1: Sangat Tidak Puas → 5: Sangat Puas
                 </span>
             </div>
@@ -98,6 +102,23 @@
             </div>
         </div>
 
+        {{-- Blok Keterangan Wajib Kondisional (Muncul jika Skor Kepuasan < 4: 1, 2, atau 3) --}}
+        <div class="reason-block hidden mt-3 pt-3 border-t border-rose-100 transition-all duration-300" id="reason-block-{{ $indicator['code'] }}">
+            <label class="block text-xs font-bold text-rose-600 mb-1.5 flex items-center gap-1.5" for="reason-{{ $indicator['code'] }}">
+                <span class="reason-label-req text-rose-600 font-extrabold">*Keterangan Wajib Diisi</span>
+                <span class="reason-label-hint text-slate-400 font-normal text-[11px]">(nilai kepuasan rendah)</span>
+            </label>
+            <textarea id="reason-{{ $indicator['code'] }}"
+                      rows="2"
+                      oninput="handleReasonInput('{{ $indicator['code'] }}', this.value)"
+                      class="reason-textarea w-full rounded-xl border border-rose-300 bg-rose-50/30 p-3 text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-100 shadow-2xs outline-none transition-all resize-y leading-relaxed"
+                      placeholder="Mohon berikan penjelasan singkat mengenai kendala yang menyebabkan penilaian rendah ini..."></textarea>
+            <p class="reason-err hidden text-xs font-bold text-rose-600 mt-1 flex items-center gap-1" id="reason-err-{{ $indicator['code'] }}">
+                <span>⚠️</span>
+                <span class="reason-err-text">Penjelasan kendala wajib diisi untuk nilai kepuasan rendah.</span>
+            </p>
+        </div>
+
     </div>
 
     {{-- Pesan Validasi Error (Muncul jika ada penilaian yang belum dipilih) --}}
@@ -105,7 +126,8 @@
         <svg class="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
         </svg>
-        <span>Mohon pilih penilaian Kepentingan dan Kepuasan (skala 1-5).</span>
+        <span class="error-hint-text">Mohon pilih penilaian Kepentingan dan Kepuasan (skala 1-5).</span>
     </div>
 
 </div>
+

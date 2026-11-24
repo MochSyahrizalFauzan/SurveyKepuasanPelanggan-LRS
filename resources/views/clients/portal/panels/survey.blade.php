@@ -34,10 +34,10 @@
             <div class="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 md:p-7 shadow-[0_2px_12px_rgba(15,23,42,0.04)]">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight">
+                        <h3 id="txt-step-1-title" class="text-xl md:text-2xl font-black text-slate-800 tracking-tight">
                             Pilih Kategori Survei Kepuasan
                         </h3>
-                        <p class="text-xs md:text-sm text-slate-500 mt-1.5 leading-relaxed max-w-3xl">
+                        <p id="txt-step-1-subtitle" class="text-xs md:text-sm text-slate-500 mt-1.5 leading-relaxed max-w-3xl">
                             Silakan pilih kategori layanan yang ingin Anda evaluasi terlebih dahulu. Indikator pertanyaan penilaian ganda akan ditampilkan secara bertahap.
                         </p>
                     </div>
@@ -82,18 +82,24 @@
                         {{-- Bagian Tengah & Bawah: Informasi Kategori & Tombol Aksi --}}
                         <div class="relative z-10 mt-auto pt-6">
                             {{-- Judul Kategori --}}
-                            <h4 class="text-xl lg:text-2xl font-bold tracking-tight text-white mt-1 leading-snug">
+                            <h4 class="cat-card-title text-xl lg:text-2xl font-bold tracking-tight text-white mt-1 leading-snug"
+                                id="cat-title-{{ $cat['code'] }}"
+                                data-title-id="{{ $cat['name'] }}"
+                                data-title-en="{{ $cat['name_en'] ?? $cat['name'] }}">
                                 {{ $cat['name'] }}
                             </h4>
 
                             {{-- Deskripsi Singkat Kategori --}}
-                            <p class="text-sm text-slate-200/95 leading-relaxed mt-2 line-clamp-3">
+                            <p class="cat-card-desc text-sm text-slate-200/95 leading-relaxed mt-2 line-clamp-3"
+                               id="cat-desc-{{ $cat['code'] }}"
+                               data-desc-id="{{ $cat['description'] ?? '' }}"
+                               data-desc-en="{{ $cat['description_en'] ?? ($cat['description'] ?? '') }}">
                                 {{ $cat['description'] ?? 'Evaluasi performa mutu dan kepuasan pada aspek ' . $cat['name'] . '.' }}
                             </p>
 
                             {{-- Footer Tombol "Pilih Kategori Ini" + Panah Bulat --}}
                             <div class="border-t border-white/15 pt-4 mt-6 flex items-center justify-between">
-                                <span class="text-xs md:text-sm font-semibold text-white">
+                                <span class="cat-card-action-text text-xs md:text-sm font-semibold text-white">
                                     Pilih Kategori Ini
                                 </span>
                                 <div class="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 group-hover:translate-x-1.5 group-hover:bg-white group-hover:text-[#002E63] shadow-xs">
@@ -110,8 +116,8 @@
 
             {{-- Informasi Keamanan & Kerahasiaan Data --}}
             <div class="bg-blue-50/70 rounded-2xl border border-blue-150 p-4 sm:p-5 text-xs text-slate-600 flex items-center gap-3">
-                <p class="leading-relaxed">
-                    Data evaluasi Anda dilindungi dan digunakan secara internal oleh PT. Len Railways Systems untuk peningkatan keandalan produk dan layanan berkelanjutan.
+                <p id="txt-privacy-note" class="leading-relaxed">
+                    Data evaluasi Anda dilindungi dan digunakan secara internal oleh PT Len Railway Systems untuk peningkatan keandalan produk dan layanan berkelanjutan.
                 </p>
             </div>
 
@@ -134,12 +140,12 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
-                        <span>Ganti Kategori</span>
+                        <span id="txt-btn-change-cat">Ganti Kategori</span>
                     </button>
 
                     {{-- Badge Status Kategori Aktif --}}
                     <div class="flex items-center gap-2 self-start sm:self-auto">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Langkah 2:</span>
+                        <span id="txt-step-2-badge" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Langkah 2:</span>
                         <span id="active-category-badge" class="px-2.5 py-1 rounded-lg text-xs font-black bg-[#003B73] text-white">
                             Layanan & Dukungan
                         </span>
@@ -159,7 +165,7 @@
 
                     {{-- Counter Indikator Kategori Aktif --}}
                     <div class="shrink-0 flex items-center gap-2">
-                        <span class="text-xs font-bold text-slate-500">Progress:</span>
+                        <span id="txt-progress-label" class="text-xs font-bold text-slate-500">Progress:</span>
                         <span id="active-category-counter" class="text-xs font-black text-[#003B73] bg-slate-100 px-2.5 py-1 rounded-lg">
                             0 / 5 Terisi
                         </span>
@@ -193,19 +199,19 @@
 
                 {{-- =====================================================================
                      SARAN / INPUTAN UMUM (OPSIONAL)
-                     Textarea untuk saran, apresiasi, atau masukan umum kepada PT LRS
+                     Textarea untuk saran, apresiasi, atau masukan umum kepada PT Len Railway Systems
                      ===================================================================== --}}
                 <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)] space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h4 class="text-sm md:text-base font-extrabold text-slate-800">
+                            <h4 id="saran-umum-title" class="text-sm md:text-base font-extrabold text-slate-800">
                                 Saran / Inputan Umum
                             </h4>
-                            <p class="text-xs text-slate-500 mt-0.5">
-                                Sampaikan apresiasi, saran perbaikan, atau catatan strategis Anda kepada PT. Len Railways Systems (opsional).
+                            <p id="saran-umum-subtitle" class="text-xs text-slate-500 mt-0.5">
+                                Sampaikan apresiasi, saran perbaikan, atau catatan strategis Anda kepada PT Len Railway Systems (opsional).
                             </p>
                         </div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-lg">
+                        <span id="saran-umum-pill" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-lg">
                             Opsional
                         </span>
                     </div>
@@ -215,7 +221,7 @@
                         name="saran_umum"
                         rows="4"
                         class="w-full min-h-[110px] rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-[#003B73] focus:ring-2 focus:ring-blue-100 shadow-2xs outline-none transition-all resize-y leading-relaxed"
-                        placeholder="Tuliskan saran umum atau evaluasi bebas Anda kepada PT. Len Railways Systems di sini..."></textarea>
+                        placeholder="Tuliskan saran umum atau evaluasi bebas Anda kepada PT Len Railway Systems di sini..."></textarea>
                 </div>
 
                 {{-- =====================================================================
@@ -225,14 +231,14 @@
                 <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.04)] space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h4 class="text-sm md:text-base font-extrabold text-slate-800">
+                            <h4 id="upload-title" class="text-sm md:text-base font-extrabold text-slate-800">
                                 Upload File / Dokumen Pendukung (Dummy)
                             </h4>
-                            <p class="text-xs text-slate-500 mt-0.5">
+                            <p id="upload-subtitle" class="text-xs text-slate-500 mt-0.5">
                                 Lampirkan dokumen, berita acara, atau foto pendukung evaluasi (opsional).
                             </p>
                         </div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-lg">
+                        <span id="upload-pill" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-lg">
                             Opsional
                         </span>
                     </div>
@@ -251,10 +257,10 @@
                         <div class="w-10 h-10 mx-auto rounded-xl bg-blue-50 group-hover:bg-[#003B73] text-[#003B73] group-hover:text-white flex items-center justify-center text-xl mb-2 transition-all">
                             📎
                         </div>
-                        <div class="text-xs md:text-sm font-bold text-slate-700 group-hover:text-[#003B73] transition-colors">
+                        <div id="upload-dropzone-text" class="text-xs md:text-sm font-bold text-slate-700 group-hover:text-[#003B73] transition-colors">
                             Klik di sini untuk memilih file lampiran
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-1">
+                        <p id="upload-dropzone-hint" class="text-[11px] text-slate-400 mt-1">
                             Mendukung PDF, PNG, JPG, DOCX (Maks. 10 MB · Nama file akan dicatat)
                         </p>
                     </div>
@@ -275,6 +281,7 @@
                             </div>
                         </div>
                         <button type="button"
+                                id="btn-remove-file"
                                 onclick="removeSurveyFile(event)"
                                 class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors shrink-0">
                             Hapus File
@@ -289,90 +296,22 @@
                     <button type="submit"
                             id="btn-submit-survey"
                             class="w-full py-4 px-6 rounded-xl bg-[#003B73] hover:bg-[#002D59] text-white font-black text-sm md:text-base shadow-md shadow-[#003B73]/25 hover:shadow-lg hover:shadow-[#003B73]/35 flex items-center justify-center gap-2.5 transition-all duration-200 active:scale-[0.99] focus:outline-none">
-                        <span>Kirim Survei</span>
+                        <span id="txt-btn-submit-survey">Kirim Survei</span>
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                         </svg>
                     </button>
                 </div>
-
             </form>
 
         </div>
 
         {{-- =========================================================================
-             LANGKAH 3: TAMPILAN SUKSES ("TERIMA KASIH")
-             Muncul setelah submit berhasil disimpan ke localStorage (lrs_survey_data).
-             Menyediakan 2 tombol aksi: "Isi Kategori Lain" dan "Kembali ke Beranda".
+             LANGKAH 3: TAMPILAN SUKSES & KONFIRMASI ("TERIMA KASIH")
+             Modular Blade Component: Mendengarkan event 'lrs:survey-submitted'
              ========================================================================= --}}
-        <div id="survey-success-container" class="hidden">
-            <div class="bg-white rounded-3xl border border-slate-200/90 p-6 md:p-10 shadow-[0_4px_24px_rgba(15,23,42,0.06)] text-center max-w-2xl mx-auto space-y-6">
-
-                {{-- Icon Sukses --}}
-                <div class="w-20 h-20 mx-auto rounded-3xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-4xl shadow-sm text-emerald-600">
-                    🎉
-                </div>
-
-                {{-- Pesan Terima Kasih --}}
-                <div class="space-y-2">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-emerald-100/70 text-emerald-800 border border-emerald-200">
-                        ✓ Survei Berhasil Terkirim
-                    </span>
-                    <h3 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-                        Terima Kasih!
-                    </h3>
-                    <p class="text-xs md:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-                        Penilaian Anda untuk kategori <strong id="success-category-name" class="text-slate-800">Layanan & Dukungan</strong> telah berhasil disimpan dalam sistem kami.
-                    </p>
-                </div>
-
-                {{-- Ringkasan Payload yang Disimpan --}}
-                <div class="bg-slate-50 rounded-2xl border border-slate-200/80 p-5 text-left text-xs space-y-3">
-                    <div class="font-extrabold text-[#003B73] uppercase tracking-wider text-[11px] pb-2 border-b border-slate-200 flex items-center justify-between">
-                        <span>Ringkasan Data Survei</span>
-                        <span class="text-slate-400 font-semibold" id="success-submitted-time">-</span>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-600">
-                        <div>
-                            <span class="text-slate-400 font-semibold block text-[10px]">ID RESPONDEN</span>
-                            <span id="success-respondent-id" class="font-bold text-slate-800 text-sm">PIC-001</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 font-semibold block text-[10px]">PROYEK</span>
-                            <span id="success-project-name" class="font-bold text-slate-800 text-sm truncate block">Proyek Dummy</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 font-semibold block text-[10px]">KATEGORI</span>
-                            <span id="success-category-summary" class="font-bold text-slate-800 text-sm">A. Layanan & Dukungan</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 font-semibold block text-[10px]">FILE LAMPIRAN</span>
-                            <span id="success-attachment-name" class="font-bold text-slate-800 text-sm truncate block">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- 2 Tombol Aksi Sesuai Spesifikasi PRD --}}
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                    <button type="button"
-                            id="btn-fill-other-category"
-                            onclick="actionFillOtherCategory()"
-                            class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#003B73] hover:bg-[#002D59] text-white font-extrabold text-xs md:text-sm shadow-md shadow-[#003B73]/20 flex items-center justify-center gap-2 transition-all active:scale-95">
-                        <span>📋</span>
-                        <span>Isi Kategori Lain</span>
-                    </button>
-
-                    <button type="button"
-                            id="btn-back-to-home"
-                            onclick="actionBackToHome()"
-                            class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs md:text-sm transition-all flex items-center justify-center gap-2 active:scale-95">
-                        <span>🏠</span>
-                        <span>Kembali ke Beranda</span>
-                    </button>
-                </div>
-
-            </div>
-        </div>
+        <x-clients.survey.confirmation />
 
     </div>
 </div>
+

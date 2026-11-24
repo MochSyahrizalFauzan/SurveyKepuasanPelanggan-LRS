@@ -3,14 +3,14 @@
     {{-- Garis Gradasi Utama dengan Panah di Kedua Ujung --}}
     <div class="relative w-full h-0.5 bg-gradient-to-r from-red-500 via-slate-300 to-green-500 rounded-full">
         {{-- Ikon Panah Kiri Merah --}}
-        <svg class="absolute -left-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-red-800"
+        <svg class="absolute -left-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-red-500"
              viewBox="0 0 10 10"
              fill="currentColor">
             <polygon points="0,5 8,1.5 8,8.5" />
         </svg>
 
         {{-- Ikon Panah Kanan Hijau --}}
-        <svg class="absolute -right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-green-800"
+        <svg class="absolute -right-1 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-green-500"
              viewBox="0 0 10 10"
              fill="currentColor">
             <polygon points="10,5 2,1.5 2,8.5" />

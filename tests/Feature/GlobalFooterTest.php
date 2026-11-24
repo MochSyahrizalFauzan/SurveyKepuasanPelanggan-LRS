@@ -46,11 +46,11 @@ class GlobalFooterTest extends TestCase
     }
 
     /**
-     * Test bahwa Global Footer ter-render lengkap di halaman Admin Dashboard.
+     * Test bahwa Global Footer ter-render lengkap di halaman alias /dashboard.
      */
-    public function test_global_footer_renders_on_admin_dashboard_page(): void
+    public function test_global_footer_renders_on_client_dashboard_alias_page(): void
     {
-        $response = $this->get(route('admin.dashboard'));
+        $response = $this->get(route('dashboard'));
 
         $response->assertStatus(200);
 

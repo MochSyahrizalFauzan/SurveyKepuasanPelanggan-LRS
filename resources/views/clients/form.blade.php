@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Portal Survei Kepuasan Klien · PT. Len Railways Systems')
+@section('title', 'Portal Survei Kepuasan Klien · PT Len Railway Systems')
 
 @section('content')
 <div class="min-h-screen bg-transparent flex flex-col antialiased text-slate-800 w-full">
@@ -19,25 +19,41 @@
             <div class="flex items-center gap-3">
                 <div class="h-10 md:h-11 px-2.5 rounded-xl bg-white flex items-center justify-center shrink-0 border border-slate-200 shadow-xs">
                     <img src="{{ asset('images/logo.png') }}"
-                         alt="Logo PT. Len Railways Systems"
+                         alt="Logo PT Len Railway Systems"
                          class="h-7 w-auto object-contain">
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="text-sm md:text-base font-black text-[#003B73] tracking-tight">PT. Len Railways Systems</span>
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-[#003B73] border border-blue-100">Portal Klien</span>
+                        <span class="text-sm md:text-base font-black text-[#003B73] tracking-tight">PT Len Railway Systems</span>
+                        <span id="txt-portal-badge" class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-[#003B73] border border-blue-100">Portal Klien</span>
                     </div>
-                    <div class="text-[11px] font-semibold text-slate-400 hidden sm:block">
+                    <div id="txt-portal-subtitle" class="text-[11px] font-semibold text-slate-400 hidden sm:block">
                         Survei Kepuasan, Masukan & Pelaporan Kendala
                     </div>
                 </div>
             </div>
 
-            {{-- Tautan Singkat ke Admin Dashboard: Kompak di Mobile via Grid 2 Kolom --}}
-            <div class="w-full sm:w-auto">
-                <div class="grid grid-cols-2 gap-2 mt-2.5 sm:mt-0 sm:flex sm:items-center p-1 rounded-2xl bg-slate-200/70 border border-slate-200" role="tablist">
+            {{-- Tautan Singkat ke Admin Dashboard & Switcher Bahasa ID | EN --}}
+            <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-2.5">
+                {{-- Switcher Bahasa ID | EN --}}
+                <div class="inline-flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200/80 shadow-2xs" role="group" aria-label="Language Selector">
+                    <button type="button"
+                            id="btn-lang-id"
+                            onclick="setLanguage('id')"
+                            class="px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs">
+                        ID
+                    </button>
+                    <button type="button"
+                            id="btn-lang-en"
+                            onclick="setLanguage('en')"
+                            class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">
+                        EN
+                    </button>
+                </div>
+
+                <div class="flex items-center p-1 rounded-2xl bg-slate-200/70 border border-slate-200">
                     <a href="{{ route('admin.dashboard') }}#overview"
-                       class="text-xs px-3 py-1.5 w-full sm:w-auto justify-center rounded-xl font-bold transition-all bg-[#003B73] text-white shadow-sm flex items-center gap-1.5">
+                       class="text-xs px-3 py-1.5 justify-center rounded-xl font-bold transition-all bg-[#003B73] text-white shadow-sm flex items-center gap-1.5">
                         <span class="truncate">Admin Page</span>
                     </a>
                 </div>
@@ -53,7 +69,7 @@
 
         <div class="max-w-6xl mx-auto space-y-6 sm:space-y-8">
 
-            {{-- Header Perusahaan dengan Hiasan Ilustrasi Pusat Kendali OCC PT LRS --}}
+            {{-- Header Perusahaan dengan Hiasan Ilustrasi Pusat Kendali OCC PT Len Railway Systems --}}
             @include('clients.portal.partials.header')
 
             {{-- Kontainer Panel Konten Interaktif --}}

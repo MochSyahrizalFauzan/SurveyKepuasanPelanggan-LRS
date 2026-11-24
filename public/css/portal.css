@@ -105,12 +105,68 @@ input:focus, select:focus, textarea:focus {
     transform: translateY(-2px);
 }
 
-.score-btn.active-sat {
+/* Kepuasan 1, 2, 3: Warm Amber/Orange */
+.score-btn.active-sat,
+.score-btn.active-sat-low {
     background-color: #F59E0B !important; /* bg-amber-500 */
     border-color: #D97706 !important;
     color: #FFFFFF !important;
     box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;
     transform: translateY(-2px);
+}
+
+/* Kepuasan 4, 5: Emerald Green / High Sat */
+.score-btn.active-sat-high {
+    background-color: #059669 !important; /* bg-emerald-600 */
+    border-color: #047857 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4) !important;
+    transform: translateY(-2px);
+}
+
+/* Tab Navigation Buttons */
+.tab-btn {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tab-btn:hover:not(.active) {
+    background-color: #FFFFFF;
+    border-color: #CBD5E1;
+    transform: translateY(-1px);
+}
+.tab-btn.active {
+    background-color: #003B73 !important;
+    border-color: #002D59 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 6px 18px -2px rgba(0, 59, 115, 0.28) !important;
+    transform: translateY(-1px);
+}
+.tab-btn.active .tab-label-title {
+    color: #FFFFFF !important;
+}
+.tab-btn.active .tab-label-desc {
+    color: rgba(224, 238, 255, 0.85) !important;
+}
+.tab-btn.active span:first-child {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Conditional Reason Block Animation */
+.reason-block {
+    animation: reasonSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes reasonSlideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.reason-textarea.error {
+    border-color: #E11D48 !important;
+    background-color: #FFF1F2 !important;
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.2) !important;
 }
 
 /* Conditional Keterangan Animation */

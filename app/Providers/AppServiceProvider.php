@@ -26,5 +26,14 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Blade::anonymousComponentPath(resource_path('views/clients/components'));
+        Blade::anonymousComponentPath(resource_path('views/clients/components'), 'clients');
+        Blade::anonymousComponentPath(resource_path('views/admin/components'), 'admin');
+
+        Blade::component('clients.components.survey.confirmation', 'clients.survey.confirmation');
+        Blade::component('clients.components.survey.confirmation-receipt', 'clients.survey.confirmation-receipt');
+        Blade::component('clients.components.survey.confirmation-audio', 'clients.survey.confirmation-audio');
+        Blade::component('clients.components.survey.confirmation-smap-ticker', 'clients.survey.confirmation-smap-ticker');
+        Blade::component('clients.components.survey-card', 'clients.survey-card');
+        Blade::component('clients.components.footer', 'clients.footer');
     }
 }

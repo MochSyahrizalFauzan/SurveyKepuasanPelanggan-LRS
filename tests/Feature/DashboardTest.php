@@ -14,9 +14,11 @@ class DashboardTest extends TestCase
         $response = $this->get(route('dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('PT. Len Railways Systems');
+        $response->assertSee('PT Len Railway Systems');
         $response->assertSee('Survei Kepuasan Pelanggan');
         $response->assertSee('Portal Klien');
         $response->assertSee('Layanan &amp; Dukungan', false);
+        $response->assertSee('id="btn-lang-id"', false);
+        $response->assertSee('id="btn-lang-en"', false);
     }
 }

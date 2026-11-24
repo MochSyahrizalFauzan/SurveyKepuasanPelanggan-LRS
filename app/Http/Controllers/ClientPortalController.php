@@ -14,7 +14,7 @@ class ClientPortalController extends Controller
      */
     public function index(): View
     {
-        /** @var array<int, array{code: string, name: string, icon: string, badge_class: string, indicators: array<int, array{code: string, text: string}>}> $categories */
+        /** @var array<int, array{code: string, name: string, name_en?: string, icon: string, badge_class: string, description?: string, description_en?: string, indicators: array<int, array{code: string, text: string, text_en?: string}>}> $categories */
         $categories = config('survey.categories', []);
         $clientName = 'Bapak/Ibu PIC';
 

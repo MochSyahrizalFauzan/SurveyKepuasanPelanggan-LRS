@@ -147,9 +147,9 @@
                     </a>
                 </div>
 
-                <a href="mailto:wbs@lrs.co.id?subject=Laporan%20Whistleblowing%20System%20PT%20LRS"
+                <a href="mailto:wbs@lrs.co.id?subject=Laporan%20Whistleblowing%20System%20PT%20Len%20Railway%20Systems"
                    class="group inline-flex items-center justify-between w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-amber-900/20 hover:shadow-lg transition-all duration-300 ease-in-out">
-                    <span>Laporkan Pelanggaran (Report)</span>
+                    <span id="footer-wbs-btn-text">Laporkan Pelanggaran (Report)</span>
                     <svg class="w-4 h-4 transition-transform duration-300 ease-in-out group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                     </svg>

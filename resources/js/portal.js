@@ -1,44 +1,311 @@
 /**
- * PT. Len Railways Systems — Client Voice & GRC Portal
- * Script Interaktivitas Formulir Survei Progresif (2-Langkah) & LocalStorage
+ * PT Len Railway Systems — Client Voice & GRC Portal
+ * Script Interaktivitas Formulir Survei Progresif (2-Langkah), Sistem Bilingual (ID/EN) & LocalStorage
  *
- * Mengacu pada PRD: Integrated Client Voice & GRC Portal PT LRS
- * 1. Alur 2 Langkah (Progressive Disclosure): Pilih Kategori -> Isi Indikator Kategori Terpilih
- * 2. Penilaian Ganda (Dual-Metric): Kepentingan (1-5) & Kepuasan (1-5) tanpa kolom catatan tambahan
- * 3. Upload File (Dummy) & Kirim Survei ke localStorage (lrs_survey_data)
- * 4. Tampilan Sukses ("Terima Kasih") dengan tombol "Isi Kategori Lain" dan "Kembali ke Beranda"
+ * Mengacu pada PRD: Integrated Client Voice & GRC Portal PT Len Railway Systems (V4.0)
+ * 1. Standardisasi Nama: PT Len Railway Systems
+ * 2. Bilingual Instan: Indonesia & English tanpa reload halaman
+ * 3. 3 Menu Utama Layanan (Survei, Keluhan & Lacak Tiket, Masukan)
+ * 4. Dual-Metric: Kepentingan (1-5) & Kepuasan (1-5)
+ * 5. Keterangan Wajib Kondisional jika Kepuasan < 4 (1, 2, atau 3)
+ * 6. Tampilan Sukses ("Terima Kasih") Multi-Aksi & Komitmen SMAP ISO 37001 (link ke https://lrs.co.id/about-us/smap)
  */
 
 (function () {
     'use strict';
 
-    // Metadata Kategori Sesuai PRD.md (3 Kategori, 21 Indikator Total)
+    // Cegah inisialisasi ganda jika aset dimuat via Vite dan static script tag
+    if (window.__lrs_portal_initialized) return;
+    window.__lrs_portal_initialized = true;
+
+    // Metadata Kategori Sesuai PRD.md (3 Kategori, 21 Indikator Total) - Bilingual
     const CATEGORY_MAP = {
         'A': {
             code: 'A',
-            name: 'Layanan & Dukungan',
+            name_id: 'Layanan & Dukungan',
+            name_en: 'Services & Support',
             total: 5,
-            desc: 'Evaluasi keramahan, komunikasi, pemahaman kebutuhan pelanggan, kualitas solusi, dan kejelasan teknis personel PT LRS.'
+            desc_id: 'Evaluasi keramahan, komunikasi, pemahaman kebutuhan pelanggan, kualitas solusi, dan kejelasan teknis personel PT Len Railway Systems.',
+            desc_en: 'Evaluation of friendliness, communication, understanding of customer needs, solution quality, and technical clarity of PT Len Railway Systems personnel.'
         },
         'B': {
             code: 'B',
-            name: 'Pelaksanaan Proyek',
+            name_id: 'Pelaksanaan Proyek',
+            name_en: 'Project Execution',
             total: 11,
-            desc: 'Evaluasi ketepatan waktu, koordinasi tim, kompetensi teknis, kerapihan kerja, penanganan kendala, dan budaya K3L.'
+            desc_id: 'Evaluasi ketepatan waktu, koordinasi tim, kompetensi teknis, kerapihan kerja, penanganan kendala, dan budaya K3L.',
+            desc_en: 'Evaluation of timeliness, team coordination, technical competence, workmanship, issue handling, and HSE culture.'
         },
         'C': {
             code: 'C',
-            name: 'Masa Pemeliharaan',
+            name_id: 'Masa Pemeliharaan',
+            name_en: 'Maintenance Period',
             total: 5,
-            desc: 'Evaluasi keandalan fungsi produk, kemudahan operasi & pemeliharaan, respon after sales, dan durabilitas produk.'
+            desc_id: 'Evaluasi keandalan fungsi produk, kemudahan operasi & pemeliharaan, respon after sales, dan durabilitas produk.',
+            desc_en: 'Evaluation of product functional reliability, ease of operation & maintenance, after-sales responsiveness, and product durability.'
+        }
+    };
+
+    // Kamus Terjemahan Lengkap (Bilingual Dictionary)
+    const I18N = {
+        id: {
+            portalTitle: 'Portal Survei Kepuasan Klien · PT Len Railway Systems',
+            portalBadge: 'Portal Klien',
+            portalSubtitle: 'Survei Kepuasan, Masukan & Pelaporan Kendala',
+            adminPage: 'Admin Page',
+
+            // Tab Nav
+            tabSurveiTitle: 'Isi Survei Kepuasan',
+            tabSurveiDesc: 'Evaluasi 3 Kategori Layanan',
+            tabKeluhanTitle: 'Sampaikan Keluhan',
+            tabKeluhanDesc: 'Pelaporan & Lacak Tiket',
+            tabMasukanTitle: 'Masukan & Saran Umum',
+            tabMasukanDesc: 'Apresiasi & Evaluasi Strategis',
+
+            // Header Banner
+            headerTitle: 'Survei Kepuasan Pelanggan',
+            headerSubtitle: 'Setiap evaluasi dan masukan Anda sangat berharga bagi peningkatan keandalan sistem perkeretaapian dan mutu layanan kami.',
+
+            // Step 1
+            step1Title: 'Pilih Kategori Survei Kepuasan',
+            step1Subtitle: 'Silakan pilih kategori layanan yang ingin Anda evaluasi terlebih dahulu. Indikator pertanyaan penilaian ganda akan ditampilkan secara bertahap.',
+            catActionText: 'Pilih Kategori Ini',
+            privacyNote: 'Data evaluasi Anda dilindungi dan digunakan secara internal oleh PT Len Railway Systems untuk peningkatan keandalan produk dan layanan berkelanjutan.',
+
+            // Step 2
+            btnChangeCat: 'Ganti Kategori',
+            step2Badge: 'Langkah 2:',
+            progressLabel: 'Progress:',
+            filledSuffix: 'Terisi',
+            activeCatInstruction: 'Mohon berikan penilaian Kepentingan dan Kepuasan pada indikator di bawah ini:',
+
+            // Indicators
+            impLabel: 'Tingkat Kepentingan',
+            impSublabel: '1: Sangat Tidak Penting → 5: Sangat Penting',
+            satLabel: 'Tingkat Kepuasan',
+            satSublabel: '1: Sangat Tidak Puas → 5: Sangat Puas',
+            scaleLeft: 'Kurang Puas / Tidak Penting',
+            scaleMid: 'Netral',
+            scaleRight: 'Sangat Puas / Sangat Penting',
+
+            // Reason Block
+            reasonReq: '*Keterangan Wajib Diisi',
+            reasonHint: '(nilai kepuasan rendah)',
+            reasonPlaceholder: 'Mohon berikan penjelasan singkat mengenai kendala yang menyebabkan penilaian rendah ini...',
+            reasonError: 'Penjelasan kendala wajib diisi untuk nilai kepuasan rendah.',
+            cardErrorHint: 'Mohon pilih penilaian Kepentingan dan Kepuasan (skala 1-5).',
+
+            // General notes
+            saranTitle: 'Saran / Inputan Umum',
+            saranSubtitle: 'Sampaikan apresiasi, saran perbaikan, atau catatan strategis Anda kepada PT Len Railway Systems (opsional).',
+            optionalPill: 'Opsional',
+            saranPlaceholder: 'Tuliskan saran umum atau evaluasi bebas Anda kepada PT Len Railway Systems di sini...',
+
+            // File upload
+            uploadTitle: 'Upload File / Dokumen Pendukung (Dummy)',
+            uploadSubtitle: 'Lampirkan dokumen, berita acara, atau foto pendukung evaluasi (opsional).',
+            uploadDropzoneText: 'Klik di sini untuk memilih file lampiran',
+            uploadDropzoneHint: 'Mendukung PDF, PNG, JPG, DOCX (Maks. 10 MB · Nama file akan dicatat)',
+            btnRemoveFile: 'Hapus File',
+            fileReadyText: 'Siap dilampirkan',
+
+            // Submit
+            btnSubmitSurvey: 'Kirim Survei',
+
+            // Step 3 (Thank You)
+            successBadge: '✓ Survei Berhasil Terkirim',
+            successTitle: 'Terima Kasih!',
+            successMsgPrefix: 'Penilaian Anda untuk kategori',
+            successMsgSuffix: 'telah berhasil disimpan dalam sistem kami.',
+            refLabel: 'Nomor Referensi:',
+            copyRef: 'Salin',
+            copiedRef: 'Tersalin',
+            summaryTitle: 'Ringkasan Data Survei',
+            lblRespId: 'ID RESPONDEN',
+            lblProjName: 'PROYEK',
+            lblCatSummary: 'KATEGORI',
+            lblAttachName: 'FILE LAMPIRAN',
+            noAttachment: 'Tidak ada lampiran',
+
+            // SMAP Card
+            smapTitle: 'Komitmen Sistem Manajemen Anti Penyuapan (SMAP) ISO 37001:2016',
+            smapDesc: 'PT Len Railway Systems berkomitmen menerapkan prinsip 4 NOs (No Bribery, No Kickback, No Gift, No Luxurious Hospitality) serta menjamin seluruh proses evaluasi dan kerja sama bebas dari segala bentuk gratifikasi dan benturan kepentingan.',
+            smapLinkText: 'Pelajari Kebijakan SMAP',
+
+            // Success Actions
+            btnFillOther: 'Isi Kategori Lain',
+            btnGotoComplaint: 'Sampaikan Keluhan',
+            btnBackHome: 'Kembali ke Beranda',
+
+            // Complaint
+            complaintBadge: 'Incident & Complaint Center',
+            complaintTitle: 'Buat Keluhan & Laporan Kendala',
+            complaintSubtitle: 'Setiap kendala yang Anda sampaikan akan langsung diterbitkan nomor tiket dan ditangani oleh unit terkait PT Len Railway Systems.',
+            lblCompCategory: 'Kategori Kendala',
+            lblCompSubject: 'Judul Kendala / Keluhan',
+            lblCompUrgency: 'Tingkat Urgensi Penanganan',
+            lblCompDesc: 'Deskripsi Rinci Kendala',
+            lblCompUpload: 'Lampiran Berkas / Foto (Opsional)',
+            compUploadText: 'Klik untuk melampirkan dokumen / gambar kendala',
+            compUploadHint: 'Format JPG, PNG, PDF (Maks. 10 MB — nama file akan dicatat)',
+            btnSubmitComplaint: 'Submit Keluhan & Terbitkan Tiket',
+            trackHeader: '🔍 Pelacakan Status Tiket Keluhan',
+            btnTrack: 'Lacak Tiket',
+            trackPlaceholder: 'Contoh: #TKT-1234',
+
+            // Feedback
+            feedbackBadge: 'Voice of Customer',
+            feedbackTitle: 'Sampaikan Masukan & Saran',
+            feedbackSubtitle: 'Tanggapan, apresiasi, atau masukan strategis Anda menjadi bahan pertimbangan penting bagi peningkatan layanan berkelanjutan.',
+            lblFeedbackRating: 'Penilaian Keseluruhan Layanan PT Len Railway Systems',
+            lblFeedbackCategory: 'Kategori Masukan',
+            lblFeedbackSubject: 'Subjek Masukan',
+            lblFeedbackContent: 'Detail Masukan & Apresiasi',
+            btnSubmitFeedback: 'Kirim Masukan Anda',
+
+            // Footer
+            footerWbsBtn: 'Laporkan Pelanggaran (Report)'
+        },
+        en: {
+            portalTitle: 'Client Satisfaction Survey Portal · PT Len Railway Systems',
+            portalBadge: 'Client Portal',
+            portalSubtitle: 'Satisfaction Survey, Feedback & Incident Reporting',
+            adminPage: 'Admin Page',
+
+            // Tab Nav
+            tabSurveiTitle: 'Satisfaction Survey',
+            tabSurveiDesc: 'Evaluate 3 Service Categories',
+            tabKeluhanTitle: 'Submit a Complaint',
+            tabKeluhanDesc: 'Reporting & Ticket Tracking',
+            tabMasukanTitle: 'General Feedback',
+            tabMasukanDesc: 'Appreciation & Strategic Ideas',
+
+            // Header Banner
+            headerTitle: 'Customer Satisfaction Survey',
+            headerSubtitle: 'Every evaluation and feedback is invaluable for enhancing railway system reliability and our service quality.',
+
+            // Step 1
+            step1Title: 'Select Survey Category',
+            step1Subtitle: 'Please select the service category you wish to evaluate first. Dual-metric questions will be displayed progressively.',
+            catActionText: 'Select This Category',
+            privacyNote: 'Your evaluation data is protected and used internally by PT Len Railway Systems for continuous product and service reliability enhancement.',
+
+            // Step 2
+            btnChangeCat: 'Change Category',
+            step2Badge: 'Step 2:',
+            progressLabel: 'Progress:',
+            filledSuffix: 'Completed',
+            activeCatInstruction: 'Please rate your Importance and Satisfaction for the following indicators:',
+
+            // Indicators
+            impLabel: 'Importance Level',
+            impSublabel: '1: Very Unimportant → 5: Very Important',
+            satLabel: 'Satisfaction Level',
+            satSublabel: '1: Very Dissatisfied → 5: Very Satisfied',
+            scaleLeft: 'Dissatisfied / Unimportant',
+            scaleMid: 'Neutral',
+            scaleRight: 'Very Satisfied / Very Important',
+
+            // Reason Block
+            reasonReq: '*Required Explanation',
+            reasonHint: '(low satisfaction score)',
+            reasonPlaceholder: 'Please provide a brief explanation of the issue causing this low rating...',
+            reasonError: 'Explanation is required for low satisfaction score.',
+            cardErrorHint: 'Please select both Importance and Satisfaction ratings (scale 1-5).',
+
+            // General notes
+            saranTitle: 'General Feedback / Suggestions',
+            saranSubtitle: 'Provide your appreciation, constructive ideas, or strategic notes to PT Len Railway Systems (optional).',
+            optionalPill: 'Optional',
+            saranPlaceholder: 'Write your general feedback or overall evaluation to PT Len Railway Systems here...',
+
+            // File upload
+            uploadTitle: 'Upload Supporting Documents / Files (Dummy)',
+            uploadSubtitle: 'Attach documents, minutes of meeting, or photos supporting your evaluation (optional).',
+            uploadDropzoneText: 'Click here to select an attachment file',
+            uploadDropzoneHint: 'Supports PDF, PNG, JPG, DOCX (Max. 10 MB · File name will be recorded)',
+            btnRemoveFile: 'Remove File',
+            fileReadyText: 'Ready to attach',
+
+            // Submit
+            btnSubmitSurvey: 'Submit Survey',
+
+            // Step 3 (Thank You)
+            successBadge: '✓ Survey Successfully Submitted',
+            successTitle: 'Thank You!',
+            successMsgPrefix: 'Your evaluation for category',
+            successMsgSuffix: 'has been successfully recorded in our system.',
+            refLabel: 'Reference Number:',
+            copyRef: 'Copy',
+            copiedRef: 'Copied',
+            summaryTitle: 'Survey Summary',
+            lblRespId: 'RESPONDENT ID',
+            lblProjName: 'PROJECT',
+            lblCatSummary: 'CATEGORY',
+            lblAttachName: 'ATTACHED FILE',
+            noAttachment: 'No attachment',
+
+            // SMAP Card
+            smapTitle: 'Anti-Bribery Management System (ABMS) ISO 37001:2016 Commitment',
+            smapDesc: 'PT Len Railway Systems is committed to upholding the 4 NOs principles (No Bribery, No Kickback, No Gift, No Luxurious Hospitality) and ensuring all evaluation and business collaboration remain free from bribery and conflict of interest.',
+            smapLinkText: 'Learn More About SMAP Policy',
+
+            // Success Actions
+            btnFillOther: 'Fill Another Category',
+            btnGotoComplaint: 'Submit a Complaint',
+            btnBackHome: 'Back to Home',
+
+            // Complaint
+            complaintBadge: 'Incident & Complaint Center',
+            complaintTitle: 'Submit Complaint & Incident Report',
+            complaintSubtitle: 'Every issue you report will be immediately assigned a ticket number and addressed by PT Len Railway Systems.',
+            lblCompCategory: 'Issue Category',
+            lblCompSubject: 'Complaint / Issue Subject',
+            lblCompUrgency: 'Handling Urgency Level',
+            lblCompDesc: 'Detailed Issue Description',
+            lblCompUpload: 'Supporting Document / Photo (Optional)',
+            compUploadText: 'Click to attach problem document or picture',
+            compUploadHint: 'Format JPG, PNG, PDF (Max. 10 MB — file name will be recorded)',
+            btnSubmitComplaint: 'Submit Complaint & Issue Ticket',
+            trackHeader: '🔍 Complaint Ticket Status Tracking',
+            btnTrack: 'Track Ticket',
+            trackPlaceholder: 'e.g. #TKT-1234',
+
+            // Feedback
+            feedbackBadge: 'Voice of Customer',
+            feedbackTitle: 'Submit Feedback & Suggestions',
+            feedbackSubtitle: 'Your feedback, appreciation, or strategic advice is essential for our continuous service improvement.',
+            lblFeedbackRating: 'Overall Service Rating of PT Len Railway Systems',
+            lblFeedbackCategory: 'Feedback Category',
+            lblFeedbackSubject: 'Feedback Subject',
+            lblFeedbackContent: 'Detailed Feedback & Appreciation',
+            btnSubmitFeedback: 'Submit Your Feedback',
+
+            // Footer
+            footerWbsBtn: 'Report a Violation (WBS)'
         }
     };
 
     // State Formulir Survei
+    let currentLang = 'id';
     let activeCategoryId = null;
     let currentAttachmentName = null;
+    let currentComplaintAttachmentName = null;
     const surveiState = {};
     let toastTimer = null;
+
+    /**
+     * Helper Escape HTML untuk Mencegah Serangan XSS
+     */
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
 
     /**
      * Inisialisasi State Pertanyaan dari DOM
@@ -56,6 +323,7 @@
                 surveiState[id] = {
                     imp: 0,
                     sat: 0,
+                    reason: null,
                     category: category,
                     categoryCode: categoryCode,
                     text: text
@@ -63,10 +331,274 @@
             }
         });
 
-        // Update indikator status kategori yang sudah diisi di Step 1
         updateCategoryStatusBadges();
         updateHeaderCounters();
     }
+
+    /**
+     * BILINGUAL: Set Bahasa Aktif (ID / EN) secara Instan Tanpa Reload
+     */
+    window.setLanguage = function (lang) {
+        currentLang = (lang === 'en') ? 'en' : 'id';
+
+        try {
+            localStorage.setItem('lrs_client_lang', currentLang);
+        } catch (e) {}
+
+        // 1. Update State Tombol Toggle ID | EN
+        const btnId = document.getElementById('btn-lang-id');
+        const btnEn = document.getElementById('btn-lang-en');
+
+        if (btnId && btnEn) {
+            if (currentLang === 'en') {
+                btnEn.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs';
+                btnId.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+            } else {
+                btnId.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs';
+                btnEn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+            }
+        }
+
+        const t = I18N[currentLang];
+
+        // 2. Update Header, Brand & Title
+        document.title = t.portalTitle;
+        const elPortalBadge = document.getElementById('txt-portal-badge');
+        const elPortalSubtitle = document.getElementById('txt-portal-subtitle');
+        if (elPortalBadge) elPortalBadge.textContent = t.portalBadge;
+        if (elPortalSubtitle) elPortalSubtitle.textContent = t.portalSubtitle;
+
+        // 3. Update Nav Tab Labels
+        const tabSurvei = document.getElementById('tab-btn-survei');
+        if (tabSurvei) {
+            const titleEl = tabSurvei.querySelector('.tab-label-title');
+            const descEl = tabSurvei.querySelector('.tab-label-desc');
+            if (titleEl) titleEl.textContent = t.tabSurveiTitle;
+            if (descEl) descEl.textContent = t.tabSurveiDesc;
+        }
+
+        const tabKeluhan = document.getElementById('tab-btn-keluhan');
+        if (tabKeluhan) {
+            const titleEl = tabKeluhan.querySelector('.tab-label-title');
+            const descEl = tabKeluhan.querySelector('.tab-label-desc');
+            if (titleEl) titleEl.textContent = t.tabKeluhanTitle;
+            if (descEl) descEl.textContent = t.tabKeluhanDesc;
+        }
+
+        const tabMasukan = document.getElementById('tab-btn-masukan');
+        if (tabMasukan) {
+            const titleEl = tabMasukan.querySelector('.tab-label-title');
+            const descEl = tabMasukan.querySelector('.tab-label-desc');
+            if (titleEl) titleEl.textContent = t.tabMasukanTitle;
+            if (descEl) descEl.textContent = t.tabMasukanDesc;
+        }
+
+        // 4. Header Banner
+        const hdrTitle = document.getElementById('client-header-title');
+        const hdrSub = document.getElementById('client-header-subtitle');
+        if (hdrTitle) hdrTitle.textContent = t.headerTitle;
+        if (hdrSub) hdrSub.textContent = t.headerSubtitle;
+
+        // 5. Langkah 1 (Pilih Kategori)
+        const step1Title = document.getElementById('txt-step-1-title');
+        const step1Sub = document.getElementById('txt-step-1-subtitle');
+        const privNote = document.getElementById('txt-privacy-note');
+        if (step1Title) step1Title.textContent = t.step1Title;
+        if (step1Sub) step1Sub.textContent = t.step1Subtitle;
+        if (privNote) privNote.textContent = t.privacyNote;
+
+        // 3 Kartu Kategori
+        document.querySelectorAll('.category-select-card').forEach(card => {
+            const titleEl = card.querySelector('.cat-card-title');
+            const descEl = card.querySelector('.cat-card-desc');
+            const actionEl = card.querySelector('.cat-card-action-text');
+
+            if (titleEl) {
+                titleEl.textContent = (currentLang === 'en')
+                    ? (titleEl.dataset.titleEn || titleEl.dataset.titleId)
+                    : titleEl.dataset.titleId;
+            }
+            if (descEl) {
+                descEl.textContent = (currentLang === 'en')
+                    ? (descEl.dataset.descEn || descEl.dataset.descId)
+                    : descEl.dataset.descId;
+            }
+            if (actionEl) actionEl.textContent = t.catActionText;
+        });
+
+        // 6. Langkah 2 (Header Aktif & Form Indikator)
+        const btnChange = document.getElementById('txt-btn-change-cat');
+        const step2Badge = document.getElementById('txt-step-2-badge');
+        const progLabel = document.getElementById('txt-progress-label');
+        if (btnChange) btnChange.textContent = t.btnChangeCat;
+        if (step2Badge) step2Badge.textContent = t.step2Badge;
+        if (progLabel) progLabel.textContent = t.progressLabel;
+
+        if (activeCategoryId) {
+            const cat = CATEGORY_MAP[activeCategoryId];
+            const catName = (currentLang === 'en') ? cat.name_en : cat.name_id;
+            const catDesc = (currentLang === 'en') ? cat.desc_en : cat.desc_id;
+            const badgeEl = document.getElementById('active-category-badge');
+            const titleEl = document.getElementById('active-category-title');
+            const descEl = document.getElementById('active-category-desc');
+            if (badgeEl) badgeEl.textContent = (currentLang === 'en') ? `Category ${cat.code}: ${catName}` : `Kategori ${cat.code}: ${catName}`;
+            if (titleEl) titleEl.textContent = (currentLang === 'en') ? `Category ${cat.code}. ${catName}` : `Kategori ${cat.code}. ${catName}`;
+            if (descEl) descEl.textContent = catDesc;
+        }
+
+        // Teks Setiap Kartu Indikator
+        document.querySelectorAll('.q-card').forEach(card => {
+            const id = card.dataset.id;
+            const textEl = card.querySelector('.indicator-text');
+            if (textEl) {
+                textEl.textContent = (currentLang === 'en')
+                    ? (card.dataset.textEn || card.dataset.textId)
+                    : card.dataset.textId;
+            }
+
+            const impLabelText = card.querySelector('.label-imp-text');
+            const impSublabel = card.querySelector('.sublabel-imp');
+            const satLabelText = card.querySelector('.label-sat-text');
+            const satSublabel = card.querySelector('.sublabel-sat');
+            const scaleLeft = card.querySelector('.scale-label-left');
+            const scaleMid = card.querySelector('.scale-label-mid');
+            const scaleRight = card.querySelector('.scale-label-right');
+            const reasonReq = card.querySelector('.reason-label-req');
+            const reasonHint = card.querySelector('.reason-label-hint');
+            const reasonTextarea = card.querySelector('.reason-textarea');
+            const reasonErr = card.querySelector('.reason-err-text');
+            const errorHint = card.querySelector('.error-hint-text');
+
+            if (impLabelText) impLabelText.textContent = t.impLabel;
+            if (impSublabel) impSublabel.textContent = t.impSublabel;
+            if (satLabelText) satLabelText.textContent = t.satLabel;
+            if (satSublabel) satSublabel.textContent = t.satSublabel;
+            if (scaleLeft) scaleLeft.textContent = t.scaleLeft;
+            if (scaleMid) scaleMid.textContent = t.scaleMid;
+            if (scaleRight) scaleRight.textContent = t.scaleRight;
+            if (reasonReq) reasonReq.textContent = t.reasonReq;
+            if (reasonHint) reasonHint.textContent = t.reasonHint;
+            if (reasonTextarea) reasonTextarea.placeholder = t.reasonPlaceholder;
+            if (reasonErr) reasonErr.textContent = t.reasonError;
+            if (errorHint) errorHint.textContent = t.cardErrorHint;
+        });
+
+        // Saran / Inputan Umum
+        const saranTitle = document.getElementById('saran-umum-title');
+        const saranSub = document.getElementById('saran-umum-subtitle');
+        const saranPill = document.getElementById('saran-umum-pill');
+        const saranTextarea = document.getElementById('saran-umum');
+        if (saranTitle) saranTitle.textContent = t.saranTitle;
+        if (saranSub) saranSub.textContent = t.saranSubtitle;
+        if (saranPill) saranPill.textContent = t.optionalPill;
+        if (saranTextarea) saranTextarea.placeholder = t.saranPlaceholder;
+
+        // Upload File Dummy
+        const upTitle = document.getElementById('upload-title');
+        const upSub = document.getElementById('upload-subtitle');
+        const upPill = document.getElementById('upload-pill');
+        const upDropText = document.getElementById('upload-dropzone-text');
+        const upDropHint = document.getElementById('upload-dropzone-hint');
+        const btnRemove = document.getElementById('btn-remove-file');
+        if (upTitle) upTitle.textContent = t.uploadTitle;
+        if (upSub) upSub.textContent = t.uploadSubtitle;
+        if (upPill) upPill.textContent = t.optionalPill;
+        if (upDropText) upDropText.textContent = t.uploadDropzoneText;
+        if (upDropHint) upDropHint.textContent = t.uploadDropzoneHint;
+        if (btnRemove) btnRemove.textContent = t.btnRemoveFile;
+
+        // Tombol Submit
+        const btnSubSurvey = document.getElementById('txt-btn-submit-survey');
+        if (btnSubSurvey) btnSubSurvey.textContent = t.btnSubmitSurvey;
+
+        // Layar Sukses
+        const succBadge = document.getElementById('txt-success-badge');
+        const succTitle = document.getElementById('txt-success-title');
+        const refLabel = document.getElementById('txt-ref-label');
+        const txtCopyRef = document.getElementById('txt-copy-ref');
+        const summTitle = document.getElementById('txt-summary-title');
+        const lblResp = document.getElementById('lbl-resp-id');
+        const lblProj = document.getElementById('lbl-proj-name');
+        const lblCat = document.getElementById('lbl-cat-summary');
+        const lblAttach = document.getElementById('lbl-attach-name');
+        const btnFillOther = document.getElementById('txt-btn-fill-other');
+        const btnGotoComp = document.getElementById('txt-btn-goto-complaint');
+        const btnBackHome = document.getElementById('txt-btn-back-home');
+        if (succBadge) succBadge.textContent = t.successBadge;
+        if (succTitle) succTitle.textContent = t.successTitle;
+        if (refLabel) refLabel.textContent = t.refLabel;
+        if (txtCopyRef) txtCopyRef.textContent = t.copyRef;
+        if (summTitle) summTitle.textContent = t.summaryTitle;
+        if (lblResp) lblResp.textContent = t.lblRespId;
+        if (lblProj) lblProj.textContent = t.lblProjName;
+        if (lblCat) lblCat.textContent = t.lblCatSummary;
+        if (lblAttach) lblAttach.textContent = t.lblAttachName;
+        if (btnFillOther) btnFillOther.textContent = t.btnFillOther;
+        if (btnGotoComp) btnGotoComp.textContent = t.btnGotoComplaint;
+        if (btnBackHome) btnBackHome.textContent = t.btnBackHome;
+
+        // SMAP Card
+        const smapTitle = document.getElementById('smap-card-title');
+        const smapDesc = document.getElementById('smap-card-desc');
+        const smapLinkText = document.getElementById('smap-card-link-text');
+        if (smapTitle) smapTitle.textContent = t.smapTitle;
+        if (smapDesc) smapDesc.textContent = t.smapDesc;
+        if (smapLinkText) smapLinkText.textContent = t.smapLinkText;
+
+        // Panel Keluhan
+        const compBadge = document.getElementById('txt-complaint-badge');
+        const compTitle = document.getElementById('txt-complaint-title');
+        const compSub = document.getElementById('txt-complaint-subtitle');
+        const lblCompCategory = document.getElementById('lbl-complaint-category');
+        const lblCompSubject = document.getElementById('lbl-complaint-subject');
+        const lblCompUrgency = document.getElementById('lbl-complaint-urgency');
+        const lblCompDesc = document.getElementById('lbl-complaint-desc');
+        const lblCompUpload = document.getElementById('lbl-complaint-upload');
+        const compUpText = document.getElementById('complaint-upload-text');
+        const compUpHint = document.getElementById('complaint-upload-hint');
+        const btnSubComp = document.getElementById('txt-btn-submit-complaint');
+        const trackHdr = document.getElementById('txt-track-header');
+        const btnTrack = document.getElementById('txt-btn-track');
+        const trackInput = document.getElementById('track-input');
+
+        if (compBadge) compBadge.textContent = t.complaintBadge;
+        if (compTitle) compTitle.textContent = t.complaintTitle;
+        if (compSub) compSub.textContent = t.complaintSubtitle;
+        if (lblCompCategory) lblCompCategory.innerHTML = `${t.lblCompCategory}<span class="text-red-500 ml-1">*</span>`;
+        if (lblCompSubject) lblCompSubject.innerHTML = `${t.lblCompSubject}<span class="text-red-500 ml-1">*</span>`;
+        if (lblCompUrgency) lblCompUrgency.innerHTML = `${t.lblCompUrgency}<span class="text-red-500 ml-1">*</span>`;
+        if (lblCompDesc) lblCompDesc.innerHTML = `${t.lblCompDesc}<span class="text-red-500 ml-1">*</span>`;
+        if (lblCompUpload) lblCompUpload.textContent = t.lblCompUpload;
+        if (compUpText) compUpText.textContent = t.compUploadText;
+        if (compUpHint) compUpHint.textContent = t.compUploadHint;
+        if (btnSubComp) btnSubComp.textContent = t.btnSubmitComplaint;
+        if (trackHdr) trackHdr.textContent = t.trackHeader;
+        if (btnTrack) btnTrack.textContent = t.btnTrack;
+        if (trackInput) trackInput.placeholder = t.trackPlaceholder;
+
+        // Panel Masukan
+        const fbBadge = document.getElementById('txt-feedback-badge');
+        const fbTitle = document.getElementById('txt-feedback-title');
+        const fbSub = document.getElementById('txt-feedback-subtitle');
+        const lblFbRating = document.getElementById('lbl-feedback-rating');
+        const lblFbCat = document.getElementById('lbl-feedback-category');
+        const lblFbSub = document.getElementById('lbl-feedback-subject');
+        const lblFbCont = document.getElementById('lbl-feedback-content');
+        const btnSubFb = document.getElementById('txt-btn-submit-feedback');
+
+        if (fbBadge) fbBadge.textContent = t.feedbackBadge;
+        if (fbTitle) fbTitle.textContent = t.feedbackTitle;
+        if (fbSub) fbSub.textContent = t.feedbackSubtitle;
+        if (lblFbRating) lblFbRating.innerHTML = `${t.lblFeedbackRating}<span class="text-red-500 ml-1">*</span>`;
+        if (lblFbCat) lblFbCat.innerHTML = `${t.lblFeedbackCategory}<span class="text-red-500 ml-1">*</span>`;
+        if (lblFbSub) lblFbSub.innerHTML = `${t.lblFeedbackSubject}<span class="text-red-500 ml-1">*</span>`;
+        if (lblFbCont) lblFbCont.innerHTML = `${t.lblFeedbackContent}<span class="text-red-500 ml-1">*</span>`;
+        if (btnSubFb) btnSubFb.textContent = t.btnSubmitFeedback;
+
+        // Footer WBS Button
+        const ftrWbs = document.getElementById('footer-wbs-btn-text');
+        if (ftrWbs) ftrWbs.textContent = t.footerWbsBtn;
+    };
 
     /**
      * Perbarui Tanda Status Selesai pada Kartu Kategori di Langkah 1
@@ -99,6 +631,8 @@
 
         activeCategoryId = catCode;
         const catInfo = CATEGORY_MAP[catCode];
+        const catName = (currentLang === 'en') ? catInfo.name_en : catInfo.name_id;
+        const catDesc = (currentLang === 'en') ? catInfo.desc_en : catInfo.desc_id;
 
         // Sembunyikan Langkah 1 (Pilih Kategori) dan Tampilan Sukses
         const step1 = document.getElementById('survey-step-1-category');
@@ -114,9 +648,9 @@
         const titleEl = document.getElementById('active-category-title');
         const descEl = document.getElementById('active-category-desc');
 
-        if (badgeEl) badgeEl.textContent = `Kategori ${catInfo.code}: ${catInfo.name}`;
-        if (titleEl) titleEl.textContent = `Kategori ${catInfo.code}. ${catInfo.name}`;
-        if (descEl) descEl.textContent = catInfo.desc;
+        if (badgeEl) badgeEl.textContent = (currentLang === 'en') ? `Category ${catInfo.code}: ${catName}` : `Kategori ${catInfo.code}: ${catName}`;
+        if (titleEl) titleEl.textContent = (currentLang === 'en') ? `Category ${catInfo.code}. ${catName}` : `Kategori ${catInfo.code}. ${catName}`;
+        if (descEl) descEl.textContent = catDesc;
 
         // Tampilkan HANYA grup indikator milik kategori yang dipilih
         document.querySelectorAll('.category-indicators-group').forEach(group => {
@@ -128,10 +662,8 @@
             activeGroup.classList.remove('hidden');
         }
 
-        // Hitung dan perbarui progress kategori aktif
         updateCategoryProgress();
 
-        // Scroll halus ke atas formulir langkah 2
         if (step2) {
             step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -149,7 +681,6 @@
         if (successContainer) successContainer.classList.add('hidden');
         if (step1) step1.classList.remove('hidden');
 
-        // Perbarui tanda centang/badge kategori yang sudah terisi
         updateCategoryStatusBadges();
 
         if (step1) {
@@ -165,20 +696,55 @@
 
         surveiState[id][type] = val;
 
-        // Update tampilan tombol di baris yang diklik
         const container = document.getElementById(`${type}-${id}`);
         if (container) {
             const buttons = container.querySelectorAll('.score-btn');
             buttons.forEach(btn => {
                 const btnVal = parseInt(btn.dataset.val, 10);
-                btn.classList.remove('active-imp', 'active-sat');
+                btn.classList.remove('active-imp', 'active-sat', 'active-sat-low', 'active-sat-high');
                 if (btnVal === val) {
-                    btn.classList.add(type === 'imp' ? 'active-imp' : 'active-sat');
+                    if (type === 'imp') {
+                        btn.classList.add('active-imp');
+                    } else {
+                        // Kepuasan: 1, 2, 3 = Amber/Warm; 4, 5 = Emerald Green
+                        if (val < 4) {
+                            btn.classList.add('active-sat', 'active-sat-low');
+                        } else {
+                            btn.classList.add('active-sat', 'active-sat-high');
+                        }
+                    }
                 }
             });
         }
 
-        // Hapus highlight error jika kedua nilai (Kepentingan & Kepuasan) sudah terisi
+        // KETERANGAN WAJIB KONDISIONAL (Jika Kepuasan < 4: 1, 2, 3)
+        if (type === 'sat') {
+            const reasonBlock = document.getElementById(`reason-block-${id}`);
+            const reasonTextarea = document.getElementById(`reason-${id}`);
+            const reasonErr = document.getElementById(`reason-err-${id}`);
+
+            if (val < 4) {
+                // Munculkan input alasan jika kepuasan bernilai rendah
+                if (reasonBlock) {
+                    reasonBlock.classList.remove('hidden');
+                }
+                surveiState[id].reason = reasonTextarea ? reasonTextarea.value.trim() : (surveiState[id].reason || '');
+            } else {
+                // Sembunyikan jika kepuasan >= 4
+                if (reasonBlock) {
+                    reasonBlock.classList.add('hidden');
+                }
+                if (reasonErr) {
+                    reasonErr.classList.add('hidden');
+                }
+                if (reasonTextarea) {
+                    reasonTextarea.classList.remove('error');
+                }
+                surveiState[id].reason = null;
+            }
+        }
+
+        // Hapus highlight error jika indikator sudah terisi lengkap
         if (surveiState[id].imp > 0 && surveiState[id].sat > 0) {
             const card = document.getElementById(`card-${id}`);
             const errHint = document.getElementById(`err-${id}`);
@@ -187,6 +753,22 @@
         }
 
         updateCategoryProgress();
+    };
+
+    /**
+     * Handler Input Penjelasan Kendala (Keterangan Nilai < 4)
+     */
+    window.handleReasonInput = function (id, val) {
+        if (!surveiState[id]) return;
+        surveiState[id].reason = val.trim();
+
+        const reasonTextarea = document.getElementById(`reason-${id}`);
+        const reasonErr = document.getElementById(`reason-err-${id}`);
+
+        if (val.trim()) {
+            if (reasonTextarea) reasonTextarea.classList.remove('error');
+            if (reasonErr) reasonErr.classList.add('hidden');
+        }
     };
 
     /**
@@ -203,21 +785,28 @@
             const id = card.dataset.id;
             const state = surveiState[id];
             if (state && state.imp > 0 && state.sat > 0) {
-                fullyFilledCards++;
+                // Jika sat < 4, cek apakah reason sudah diisi
+                if (state.sat < 4) {
+                    if (state.reason && state.reason.trim()) {
+                        fullyFilledCards++;
+                    }
+                } else {
+                    fullyFilledCards++;
+                }
             }
         });
 
         const percent = totalCards > 0 ? Math.round((fullyFilledCards / totalCards) * 100) : 0;
-
         const elBar = document.getElementById('active-category-progress-bar');
         const elCounter = document.getElementById('active-category-counter');
 
+        const suffix = I18N[currentLang].filledSuffix;
         if (elBar) elBar.style.width = `${percent}%`;
-        if (elCounter) elCounter.textContent = `${fullyFilledCards} / ${totalCards} Terisi`;
+        if (elCounter) elCounter.textContent = `${fullyFilledCards} / ${totalCards} ${suffix}`;
     }
 
     /**
-     * Handler Input File Lampiran (Dummy)
+     * Handler Input File Lampiran Survei (Dummy)
      */
     window.handleSurveyFileChange = function (event) {
         const input = event.target;
@@ -235,7 +824,7 @@
                 : Math.round(file.size / 1024) + ' KB';
 
             if (nameEl) nameEl.textContent = file.name;
-            if (sizeEl) sizeEl.textContent = `${fileSizeFormatted} · Siap dilampirkan`;
+            if (sizeEl) sizeEl.textContent = `${fileSizeFormatted} · ${I18N[currentLang].fileReadyText}`;
 
             if (dropzone) dropzone.classList.add('hidden');
             if (preview) {
@@ -246,7 +835,7 @@
     };
 
     /**
-     * Handler Hapus File Lampiran
+     * Handler Hapus File Lampiran Survei
      */
     window.removeSurveyFile = function (event) {
         if (event) event.stopPropagation();
@@ -267,7 +856,7 @@
     };
 
     /**
-     * Validasi Formulir Survei untuk Kategori yang Aktif
+     * Validasi Formulir Survei untuk Kategori yang Aktif Termasuk Keterangan Wajib Nilai < 4
      */
     function validateActiveCategory() {
         if (!activeCategoryId) return false;
@@ -281,13 +870,18 @@
             c.classList.remove('error');
             const err = c.querySelector('.error-hint');
             if (err) err.classList.add('hidden');
+
+            const reasonTextarea = c.querySelector('.reason-textarea');
+            const reasonErr = c.querySelector('.reason-err');
+            if (reasonTextarea) reasonTextarea.classList.remove('error');
+            if (reasonErr) reasonErr.classList.add('hidden');
         });
 
         activeCards.forEach(card => {
             const id = card.dataset.id;
             const item = surveiState[id];
 
-            // Wajib terisi keduanya: Kepentingan (1-5) dan Kepuasan (1-5)
+            // 1. Cek Apakah Kepentingan (1-5) dan Kepuasan (1-5) sudah dipilih
             if (!item || item.imp === 0 || item.sat === 0) {
                 card.classList.add('error');
                 const err = document.getElementById(`err-${id}`);
@@ -297,10 +891,33 @@
                     firstIncompleteCard = card;
                 }
                 isValid = false;
+                return;
+            }
+
+            // 2. Keterangan Wajib jika Kepuasan < 4 (1, 2, atau 3)
+            if (item.sat < 4) {
+                const reasonVal = item.reason ? item.reason.trim() : '';
+                if (!reasonVal) {
+                    card.classList.add('error');
+                    const reasonBlock = document.getElementById(`reason-block-${id}`);
+                    const reasonTextarea = document.getElementById(`reason-${id}`);
+                    const reasonErr = document.getElementById(`reason-err-${id}`);
+
+                    if (reasonBlock) reasonBlock.classList.remove('hidden');
+                    if (reasonTextarea) {
+                        reasonTextarea.classList.add('error');
+                        reasonTextarea.focus();
+                    }
+                    if (reasonErr) reasonErr.classList.remove('hidden');
+
+                    if (!firstIncompleteCard) {
+                        firstIncompleteCard = card;
+                    }
+                    isValid = false;
+                }
             }
         });
 
-        // Scroll halus ke indikator pertama yang belum lengkap
         if (firstIncompleteCard) {
             firstIncompleteCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -319,13 +936,13 @@
             e.preventDefault();
 
             if (!activeCategoryId) {
-                window.showToast('⚠️', 'Pilih Kategori', 'Silakan pilih kategori survei terlebih dahulu.', '#DC2626');
+                window.showToast('⚠️', (currentLang === 'en' ? 'Select Category' : 'Pilih Kategori'), (currentLang === 'en' ? 'Please select a survey category first.' : 'Silakan pilih kategori survei terlebih dahulu.'), '#DC2626');
                 window.backToCategorySelection();
                 return;
             }
 
             if (!validateActiveCategory()) {
-                window.showToast('⚠️', 'Formulir Belum Lengkap', 'Mohon lengkapi seluruh indikator (Kepentingan & Kepuasan).', '#DC2626');
+                window.showToast('⚠️', (currentLang === 'en' ? 'Incomplete Form' : 'Formulir Belum Lengkap'), (currentLang === 'en' ? 'Please complete all indicators and required explanations for low scores.' : 'Mohon lengkapi seluruh indikator serta keterangan wajib untuk nilai kepuasan rendah.'), '#DC2626');
                 return;
             }
 
@@ -354,23 +971,26 @@
                 console.error('Error membaca lrs_active_session:', err);
             }
 
-            // Kumpulkan jawaban HANYA dari kategori yang dipilih
+            // Kumpulkan jawaban HANYA dari kategori yang dipilih, termasuk properti 'reason'
             const activeCards = document.querySelectorAll(`#category-group-${activeCategoryId} .q-card`);
             const answers = Array.from(activeCards).map(card => {
                 const id = card.dataset.id;
+                const st = surveiState[id];
                 return {
                     question_id: id,
-                    kepentingan: surveiState[id].imp,
-                    kepuasan: surveiState[id].sat
+                    kepentingan: st.imp,
+                    kepuasan: st.sat,
+                    reason: (st.sat < 4 && st.reason) ? st.reason : null
                 };
             });
 
-            const catInfo = CATEGORY_MAP[activeCategoryId] || { name: `Kategori ${activeCategoryId}` };
+            const catInfo = CATEGORY_MAP[activeCategoryId] || { name_id: `Kategori ${activeCategoryId}`, name_en: `Category ${activeCategoryId}` };
+            const categoryName = (currentLang === 'en') ? catInfo.name_en : catInfo.name_id;
 
-            // Buat struktur payload sesuai spesifikasi PRD & Prompt
             const elSaran = document.getElementById('saran-umum');
             const refNo = `SRV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(1000 + Math.random() * 9000))}`;
             let personnelName = 'Ir. Dwi Suryanto, S.T.';
+
             try {
                 const sess = JSON.parse(localStorage.getItem('lrs_active_session') || '{}');
                 if (sess.accompanying_personnel) personnelName = sess.accompanying_personnel;
@@ -382,7 +1002,8 @@
                 respondent_id: respondentId,
                 project_name: projectName,
                 category_id: activeCategoryId,
-                category_name: catInfo.name,
+                category_name: categoryName,
+                language: currentLang,
                 accompanying_personnel: personnelName,
                 personnel_wa_status: 'Terkirim',
                 attachment_name: currentAttachmentName || null,
@@ -392,13 +1013,13 @@
                 answers: answers
             };
 
-            // Simpan ke localStorage pada key 'lrs_survey_data' (append)
+            // Simpan ke localStorage pada key 'lrs_survey_data'
             try {
                 const existing = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
                 existing.push(surveyPayload);
                 localStorage.setItem('lrs_survey_data', JSON.stringify(existing));
 
-                // Simulasi pencatatan log notifikasi ke 3 pihak jika diaktifkan
+                // Simulasi notifikasi
                 try {
                     const settings = JSON.parse(localStorage.getItem('lrs_admin_settings') || '{}');
                     if (settings.enable_wa_simulation !== false) {
@@ -441,13 +1062,38 @@
 
                 updateHeaderCounters();
 
-                // Tampilkan Tampilan Sukses ("Terima Kasih")
+                // Hitung skor rata-rata kepuasan dari jawaban survei (skala 1-5)
+                let totalScore = 0;
+                let countScore = 0;
+                if (Array.isArray(answers) && answers.length > 0) {
+                    answers.forEach(a => {
+                        if (typeof a.kepuasan === 'number' && !isNaN(a.kepuasan)) {
+                            totalScore += a.kepuasan;
+                            countScore++;
+                        }
+                    });
+                }
+                const averageScore = countScore > 0 ? Math.round((totalScore / countScore) * 10) / 10 : 5;
+
+                // Event-Driven: Kirim CustomEvent 'lrs:survey-submitted'
+                window.dispatchEvent(new CustomEvent('lrs:survey-submitted', {
+                    detail: {
+                        referenceNumber: refNo,
+                        respondentName: respondentId,
+                        organization: projectName,
+                        serviceCategory: `${activeCategoryId}. ${categoryName}`,
+                        score: averageScore,
+                        submittedAt: surveyPayload.submitted_at,
+                        attachmentName: surveyPayload.attachment_name
+                    }
+                }));
+
                 showSurveySuccessView(surveyPayload);
 
-                window.showToast('🎉', 'Survei Berhasil!', 'Data survei telah tersimpan di browser storage.', '#059669');
+                window.showToast('🎉', (currentLang === 'en' ? 'Survey Submitted!' : 'Survei Berhasil!'), (currentLang === 'en' ? 'Survey data successfully saved to local storage.' : 'Data survei telah tersimpan di browser storage.'), '#059669');
             } catch (err) {
                 console.error('Gagal menyimpan ke localStorage:', err);
-                window.showToast('❌', 'Terjadi Kesalahan', 'Gagal menyimpan data ke browser storage.', '#DC2626');
+                window.showToast('❌', 'Error', 'Gagal menyimpan data ke browser storage.', '#DC2626');
             }
         });
     }
@@ -456,40 +1102,127 @@
      * Tampilkan Layar Sukses Pengisian Survei
      */
     function showSurveySuccessView(payload) {
+        if (!payload) return;
+
+        // Pastikan CustomEvent 'lrs:survey-submitted' terkirim jika dipanggil langsung
+        let totalScore = 0;
+        let countScore = 0;
+        if (Array.isArray(payload.answers) && payload.answers.length > 0) {
+            payload.answers.forEach(a => {
+                if (typeof a.kepuasan === 'number' && !isNaN(a.kepuasan)) {
+                    totalScore += a.kepuasan;
+                    countScore++;
+                }
+            });
+        }
+        const avgScore = countScore > 0 ? Math.round((totalScore / countScore) * 10) / 10 : (payload.score || 5);
+
+        window.dispatchEvent(new CustomEvent('lrs:survey-submitted', {
+            detail: {
+                referenceNumber: payload.reference_no,
+                respondentName: payload.respondent_id,
+                organization: payload.project_name,
+                serviceCategory: `${payload.category_id ? payload.category_id + '. ' : ''}${payload.category_name}`,
+                score: avgScore,
+                submittedAt: payload.submitted_at,
+                attachmentName: payload.attachment_name
+            }
+        }));
+        const step1 = document.getElementById('survey-step-1-category');
         const step2 = document.getElementById('survey-step-2-form');
         const successContainer = document.getElementById('survey-success-container');
 
+        if (step1) step1.classList.add('hidden');
         if (step2) step2.classList.add('hidden');
         if (successContainer) successContainer.classList.remove('hidden');
 
-        // Isi Data Ringkasan
         const elCatName = document.getElementById('success-category-name');
         const elCatSummary = document.getElementById('success-category-summary');
         const elRespId = document.getElementById('success-respondent-id');
         const elProjName = document.getElementById('success-project-name');
         const elAttach = document.getElementById('success-attachment-name');
         const elTime = document.getElementById('success-submitted-time');
+        const elRefNo = document.getElementById('success-reference-no');
+        const txtCopy = document.getElementById('txt-copy-ref');
 
         if (elCatName) elCatName.textContent = payload.category_name;
         if (elCatSummary) elCatSummary.textContent = `${payload.category_id}. ${payload.category_name} (${payload.answers.length} Indikator)`;
         if (elRespId) elRespId.textContent = payload.respondent_id;
         if (elProjName) elProjName.textContent = payload.project_name;
-        if (elAttach) elAttach.textContent = payload.attachment_name || 'Tidak ada lampiran';
-        if (elTime) {
-            elTime.textContent = new Date(payload.submitted_at).toLocaleTimeString('id-ID', {
-                hour: '2-digit', minute: '2-digit'
-            }) + ' WIB';
+        if (elAttach) elAttach.textContent = payload.attachment_name || I18N[currentLang].noAttachment;
+        if (elRefNo) elRefNo.textContent = payload.reference_no;
+
+        if (txtCopy) {
+            txtCopy.textContent = (currentLang === 'en') ? I18N.en.copyRef : I18N.id.copyRef;
+            txtCopy.classList.remove('text-emerald-600');
         }
 
-        // Scroll halus ke tampilan sukses
-        if (successContainer) {
-            successContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (elTime) {
+            elTime.textContent = new Date(payload.submitted_at).toLocaleTimeString((currentLang === 'en' ? 'en-US' : 'id-ID'), {
+                hour: '2-digit', minute: '2-digit'
+            }) + (currentLang === 'en' ? ' (Local)' : ' WIB');
         }
+
+        // Gulir halus ke posisi paling atas agar layar Terima Kasih tampak utuh dan tidak terpotong navbar
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * Salin Nomor Referensi ke Clipboard dengan Umpan Balik Teks
+     */
+    window.copyReferenceNo = function () {
+        const elRefNo = document.getElementById('success-reference-no');
+        const refText = elRefNo ? elRefNo.textContent.trim() : '';
+        if (!refText || refText === '-') return;
+
+        const txtCopy = document.getElementById('txt-copy-ref');
+        const defaultText = (currentLang === 'en') ? I18N.en.copyRef : I18N.id.copyRef;
+        const feedbackText = (currentLang === 'en') ? I18N.en.copiedRef : I18N.id.copiedRef;
+
+        const doFeedback = () => {
+            if (txtCopy) {
+                txtCopy.textContent = feedbackText;
+                txtCopy.classList.add('text-emerald-600');
+            }
+            setTimeout(() => {
+                if (txtCopy) {
+                    txtCopy.textContent = (currentLang === 'en') ? I18N.en.copyRef : I18N.id.copyRef;
+                    txtCopy.classList.remove('text-emerald-600');
+                }
+            }, 2000);
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(refText).then(doFeedback).catch(() => {
+                fallbackCopy(refText, doFeedback);
+            });
+        } else {
+            fallbackCopy(refText, doFeedback);
+        }
+    };
+
+    /**
+     * Fallback penyalinan teks clipboard untuk browser versi lama
+     */
+    function fallbackCopy(text, cb) {
+        const el = document.createElement('textarea');
+        el.value = text;
+        el.setAttribute('readonly', '');
+        el.style.position = 'absolute';
+        el.style.left = '-9999px';
+        document.body.appendChild(el);
+        el.select();
+        try {
+            document.execCommand('copy');
+            if (cb) cb();
+        } catch (e) {
+            console.warn('Fallback copy failed', e);
+        }
+        document.body.removeChild(el);
     }
 
     /**
      * Aksi Tombol Sukses: "Isi Kategori Lain"
-     * Mengembalikan pengguna ke Langkah 1 dengan kategori yang baru saja diisi ditandai sudah selesai.
      */
     window.actionFillOtherCategory = function () {
         const step1 = document.getElementById('survey-step-1-category');
@@ -500,14 +1233,11 @@
         if (step2) step2.classList.add('hidden');
         if (step1) step1.classList.remove('hidden');
 
-        // Reset file attachment untuk kategori berikutnya
         window.removeSurveyFile();
 
-        // Reset textarea saran umum jika ada
         const elSaran = document.getElementById('saran-umum');
         if (elSaran) elSaran.value = '';
 
-        // Update status badge kategori yang sudah terisi
         updateCategoryStatusBadges();
 
         if (step1) {
@@ -516,10 +1246,19 @@
     };
 
     /**
+     * Aksi Tombol Sukses: "Sampaikan Keluhan" (Pintasan Langsung ke Panel Keluhan)
+     */
+    window.actionGotoComplaint = function () {
+        window.actionFillOtherCategory();
+        window.switchTab('keluhan');
+    };
+
+    /**
      * Aksi Tombol Sukses: "Kembali ke Beranda"
      */
     window.actionBackToHome = function () {
         window.actionFillOtherCategory();
+        window.switchTab('survei');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -572,7 +1311,7 @@
             const isi = document.getElementById('f-isi')?.value.trim() || '';
 
             if (rating === 0 || !kategori || !subjek || !isi) {
-                window.showToast('⚠️', 'Data Belum Lengkap', 'Mohon lengkapi seluruh kolom formulir masukan.', '#DC2626');
+                window.showToast('⚠️', (currentLang === 'en' ? 'Incomplete Data' : 'Data Belum Lengkap'), (currentLang === 'en' ? 'Please complete all fields before submitting feedback.' : 'Mohon lengkapi seluruh kolom formulir masukan.'), '#DC2626');
                 return;
             }
 
@@ -582,6 +1321,7 @@
                 category: kategori,
                 subject: subjek,
                 content: isi,
+                language: currentLang,
                 submitted_at: new Date().toISOString()
             };
 
@@ -592,7 +1332,7 @@
 
                 form.reset();
                 window.setFeedbackStar(0);
-                window.showToast('💬', 'Masukan Terkirim!', 'Terima kasih atas apresiasi dan masukan berharga Anda.', '#059669');
+                window.showToast('💬', (currentLang === 'en' ? 'Feedback Submitted!' : 'Masukan Terkirim!'), (currentLang === 'en' ? 'Thank you for your valuable appreciation and feedback.' : 'Terima kasih atas apresiasi dan masukan berharga Anda.'), '#059669');
             } catch (err) {
                 console.error(err);
             }
@@ -600,7 +1340,47 @@
     }
 
     /**
-     * Submit Form Buat Keluhan
+     * File Attachment untuk Form Keluhan (Dummy)
+     */
+    window.handleComplaintFileChange = function (event) {
+        const input = event.target;
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            currentComplaintAttachmentName = file.name;
+
+            const nameEl = document.getElementById('complaint-attached-filename');
+            const dropzone = document.getElementById('complaint-upload-dropzone');
+            const preview = document.getElementById('complaint-file-preview');
+
+            if (nameEl) nameEl.textContent = file.name;
+            if (dropzone) dropzone.classList.add('hidden');
+            if (preview) {
+                preview.classList.remove('hidden');
+                preview.classList.add('flex');
+            }
+        }
+    };
+
+    window.removeComplaintFile = function (event) {
+        if (event) event.stopPropagation();
+
+        const input = document.getElementById('complaint-attachment-input');
+        if (input) input.value = '';
+
+        currentComplaintAttachmentName = null;
+
+        const dropzone = document.getElementById('complaint-upload-dropzone');
+        const preview = document.getElementById('complaint-file-preview');
+
+        if (preview) {
+            preview.classList.add('hidden');
+            preview.classList.remove('flex');
+        }
+        if (dropzone) dropzone.classList.remove('hidden');
+    };
+
+    /**
+     * Submit Form Buat Keluhan (Format Otomatis #TKT-XXXX)
      */
     function setupComplaintForm() {
         const form = document.getElementById('form-keluhan');
@@ -615,11 +1395,12 @@
             const deskripsi = document.getElementById('k-deskripsi')?.value.trim() || '';
 
             if (!kategori || !subjek || !urgencyEl || !deskripsi) {
-                window.showToast('⚠️', 'Data Belum Lengkap', 'Mohon lengkapi semua kolom keluhan sebelum mengirim.', '#DC2626');
+                window.showToast('⚠️', (currentLang === 'en' ? 'Incomplete Data' : 'Data Belum Lengkap'), (currentLang === 'en' ? 'Please complete all fields before submitting complaint.' : 'Mohon lengkapi semua kolom keluhan sebelum mengirim.'), '#DC2626');
                 return;
             }
 
-            const ticketId = 'TKT-' + String(Math.floor(1000 + Math.random() * 9000));
+            // Terbitkan Nomor Tiket Otomatis format #TKT-XXXX
+            const ticketId = '#TKT-' + String(Math.floor(1000 + Math.random() * 9000));
 
             const complaintPayload = {
                 ticket_id: ticketId,
@@ -627,7 +1408,9 @@
                 subject: subjek,
                 urgency: urgencyEl.value,
                 description: deskripsi,
+                attachment_name: currentComplaintAttachmentName || null,
                 status: 'Open',
+                language: currentLang,
                 created_at: new Date().toISOString()
             };
 
@@ -645,19 +1428,21 @@
                         <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
                             <span style="font-size:28px;">🎫</span>
                             <div>
-                                <div style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.5px;">ID Tiket Anda</div>
-                                <div style="font-size:22px;font-weight:800;color:#003B73;letter-spacing:1px;">${ticketId}</div>
+                                <div style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.5px;">${currentLang === 'en' ? 'Your Ticket ID' : 'ID Tiket Anda'}</div>
+                                <div style="font-size:22px;font-weight:800;color:#003B73;letter-spacing:1px;">${escapeHtml(ticketId)}</div>
                             </div>
                         </div>
                         <p style="font-size:12.5px;color:#475569;line-height:1.6;">
-                            Keluhan Anda berhasil dicatat dengan status <span class="status-badge badge-open">🔴 Open</span>.
-                            Simpan nomor tiket ini untuk melacak tindak lanjut penyelesaian.
+                            ${currentLang === 'en'
+                                ? `Your complaint has been successfully registered with status <span class="status-badge badge-open">🔴 Open</span>. Please save this ticket number to track resolution progress.`
+                                : `Keluhan Anda berhasil dicatat dengan status <span class="status-badge badge-open">🔴 Open</span>. Simpan nomor tiket ini untuk melacak tindak lanjut penyelesaian.`}
                         </p>
                     `;
                 }
 
                 form.reset();
-                window.showToast('🎫', 'Keluhan Terkirim!', `ID Tiket Anda: ${ticketId}`, '#059669');
+                window.removeComplaintFile();
+                window.showToast('🎫', (currentLang === 'en' ? 'Complaint Registered!' : 'Keluhan Terkirim!'), `${currentLang === 'en' ? 'Ticket ID:' : 'ID Tiket Anda:'} ${ticketId}`, '#059669');
             } catch (err) {
                 console.error(err);
             }
@@ -665,28 +1450,32 @@
     }
 
     /**
-     * Pelacakan Tiket Keluhan
+     * Pelacakan Tiket Keluhan dengan Sanitasi XSS & Normalisasi Kode
      */
     window.trackTicket = function () {
         const inputEl = document.getElementById('track-input');
         const resultEl = document.getElementById('track-result');
         if (!inputEl || !resultEl) return;
 
-        const ticketCode = inputEl.value.trim().toUpperCase();
+        let rawInput = inputEl.value.trim().toUpperCase();
 
-        if (!ticketCode) {
-            window.showToast('⚠️', 'ID Tiket Kosong', 'Ketikkan ID tiket Anda terlebih dahulu (contoh: TKT-1234).', '#D97706');
+        if (!rawInput) {
+            window.showToast('⚠️', (currentLang === 'en' ? 'Empty Ticket ID' : 'ID Tiket Kosong'), (currentLang === 'en' ? 'Please enter your ticket ID (e.g. #TKT-1234).' : 'Ketikkan ID tiket Anda terlebih dahulu (contoh: #TKT-1234).'), '#D97706');
             return;
         }
 
+        // Normalisasi: jika user memasukkan "TKT-1234", cari juga "#TKT-1234"
         const data = JSON.parse(localStorage.getItem('lrs_complaint_data') || '[]');
-        const tiket = data.find(t => t.ticket_id === ticketCode);
+        const tiket = data.find(t => {
+            const tId = String(t.ticket_id || '').toUpperCase();
+            return tId === rawInput || tId === '#' + rawInput || ('#' + tId) === rawInput;
+        });
 
         if (!tiket) {
             resultEl.className = 'ticket-result status-open visible';
             resultEl.innerHTML = `
                 <p style="font-size:13px;color:#991B1B;font-weight:600;">
-                    ❌ ID Tiket <strong>${ticketCode}</strong> tidak ditemukan dalam catatan sistem.
+                    ❌ ${currentLang === 'en' ? 'Ticket ID' : 'ID Tiket'} <strong>${escapeHtml(rawInput)}</strong> ${currentLang === 'en' ? 'not found in system records.' : 'tidak ditemukan dalam catatan sistem.'}
                 </p>
             `;
             return;
@@ -698,19 +1487,19 @@
             'Resolved':    { cls: 'status-resolved', badge: 'badge-resolved', icon: '🟢', label: 'Resolved' }
         };
         const st = statusMap[tiket.status] || statusMap['Open'];
-        const tgl = new Date(tiket.created_at).toLocaleString('id-ID', {
+        const tgl = new Date(tiket.created_at).toLocaleString((currentLang === 'en' ? 'en-US' : 'id-ID'), {
             dateStyle: 'long', timeStyle: 'short'
         });
 
         resultEl.className = `ticket-result ${st.cls} visible`;
         resultEl.innerHTML = `
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-                <div style="font-size:16px;font-weight:800;color:#003B73;">${tiket.ticket_id}</div>
+                <div style="font-size:16px;font-weight:800;color:#003B73;">${escapeHtml(tiket.ticket_id)}</div>
                 <span class="status-badge ${st.badge}">${st.icon} ${st.label}</span>
             </div>
-            <div style="font-size:13.5px;font-weight:700;color:#0F172A;margin-bottom:4px;">${tiket.subject || '-'}</div>
-            <div style="font-size:12.5px;color:#475569;margin-bottom:8px;line-height:1.5;">${tiket.description}</div>
-            <div style="font-size:11px;color:#94A3B8;">📅 Dibuat: ${tgl} · 🏷️ ${tiket.category} · ⚡ ${tiket.urgency}</div>
+            <div style="font-size:13.5px;font-weight:700;color:#0F172A;margin-bottom:4px;">${escapeHtml(tiket.subject || '-')}</div>
+            <div style="font-size:12.5px;color:#475569;margin-bottom:8px;line-height:1.5;">${escapeHtml(tiket.description)}</div>
+            <div style="font-size:11px;color:#94A3B8;">📅 ${currentLang === 'en' ? 'Created:' : 'Dibuat:'} ${escapeHtml(tgl)} · 🏷️ ${escapeHtml(tiket.category)} · ⚡ ${escapeHtml(tiket.urgency)}</div>
         `;
     };
 
@@ -730,7 +1519,8 @@
             targetPanel.classList.add('active');
         }
 
-        document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(b => {
+        const activeBtns = document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`);
+        activeBtns.forEach(b => {
             b.classList.add('active');
             b.setAttribute('aria-selected', 'true');
         });
@@ -763,7 +1553,7 @@
     };
 
     /**
-     * Periksa Parameter URL Query (?proyek=...&personel=...&kategori=...)
+     * Periksa Parameter URL Query (?proyek=...&personel=...&kategori=...&lang=...)
      */
     function checkUrlQueryParams() {
         try {
@@ -771,6 +1561,11 @@
             const proyek = params.get('proyek');
             const personel = params.get('personel');
             const kategori = params.get('kategori');
+            const lang = params.get('lang');
+
+            if (lang && (lang === 'en' || lang === 'id')) {
+                window.setLanguage(lang);
+            }
 
             if (proyek || personel) {
                 let session = {};
@@ -806,6 +1601,14 @@
         setupSurveyForm();
         setupFeedbackForm();
         setupComplaintForm();
+
+        // Inisialisasi bahasa dari localStorage jika ada
+        let savedLang = 'id';
+        try {
+            savedLang = localStorage.getItem('lrs_client_lang') || 'id';
+        } catch (e) {}
+        window.setLanguage(savedLang);
+
         checkUrlQueryParams();
     });
 

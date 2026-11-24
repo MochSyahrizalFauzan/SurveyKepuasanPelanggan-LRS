@@ -43,9 +43,9 @@ class ProgressiveSurveyTest extends TestCase
         // Kategori A: 5 Indikator (A1 - A5)
         $response->assertSee('id="category-group-A"', false);
         $response->assertSee('id="card-A1"', false);
-        $response->assertSee('Keramahan personal PT LRS');
+        $response->assertSee('Keramahan personal PT Len Railway Systems');
         $response->assertSee('id="card-A2"', false);
-        $response->assertSee('Kemampuan komunikasi personal PT LRS');
+        $response->assertSee('Kemampuan komunikasi personal PT Len Railway Systems');
         $response->assertSee('id="card-A3"', false);
         $response->assertSee('Pemahaman kebutuhan pelanggan');
         $response->assertSee('id="card-A4"', false);
@@ -70,13 +70,13 @@ class ProgressiveSurveyTest extends TestCase
         $response->assertSee('id="card-B7"', false);
         $response->assertSee('Komunikasi dan pelaporan progres');
         $response->assertSee('id="card-B8"', false);
-        $response->assertSee('Budaya K3L PT. LRS');
+        $response->assertSee('Budaya K3L PT Len Railway Systems');
         $response->assertSee('id="card-B9"', false);
         $response->assertSee('Kelengkapan dan kepatuhan penggunaan APD');
         $response->assertSee('id="card-B10"', false);
         $response->assertSee('Sosialisasi aturan K3L di lokasi kerja');
         $response->assertSee('id="card-B11"', false);
-        $response->assertSee('Kompetensi K3L personil PT. LRS');
+        $response->assertSee('Kompetensi K3L personil PT Len Railway Systems');
 
         // Kategori C: 5 Indikator (C1 - C5)
         $response->assertSee('id="category-group-C"', false);
@@ -105,26 +105,33 @@ class ProgressiveSurveyTest extends TestCase
         $response->assertSee('Tingkat Kepentingan');
         $response->assertSee('Tingkat Kepuasan');
 
-        // Visualisasi Skala di Tengah (Kurang - Netral - Sangat)
-        $response->assertSee('1: Kurang');
-        $response->assertSee('3: Netral');
-        $response->assertSee('5: Sangat');
+        // Visualisasi Skala di Tengah (Kurang Puas / Tidak Penting - Netral - Sangat Puas / Sangat Penting)
+        $response->assertSee('Kurang Puas / Tidak Penting');
+        $response->assertSee('Netral');
+        $response->assertSee('Sangat Puas / Sangat Penting');
     }
 
     /**
-     * ATURAN KETAT: Test bahwa TIDAK ADA textarea catatan/komentar di dalam kartu indikator.
+     * Test blok keterangan kondisional (*Keterangan Wajib Diisi) muncul pada indikator.
      */
-    public function test_indicators_do_not_contain_comment_textarea(): void
+    public function test_indicators_have_conditional_explanation_block_and_no_legacy_textarea(): void
     {
         $response = $this->get(route('form'));
 
         $response->assertStatus(200);
 
-        // Pastikan tidak ada class keterangan-textarea di dalam indikator
+        // Pastikan tidak ada class keterangan-textarea lama di dalam indikator
         $response->assertDontSee('keterangan-textarea');
         $response->assertDontSee('ket-wrap-A1');
         $response->assertDontSee('ket-wrap-B1');
         $response->assertDontSee('ket-wrap-C1');
+
+        // Pastikan blok keterangan wajib kondisional ada di setiap indikator
+        $response->assertSee('*Keterangan Wajib Diisi');
+        $response->assertSee('id="reason-block-A1"', false);
+        $response->assertSee('id="reason-A1"', false);
+        $response->assertSee('id="reason-block-B1"', false);
+        $response->assertSee('id="reason-block-C1"', false);
     }
 
     /**
@@ -175,9 +182,9 @@ class ProgressiveSurveyTest extends TestCase
     }
 
     /**
-     * Test ketersediaan tampilan sukses beserta 2 tombol aksi ("Isi Kategori Lain" dan "Kembali ke Beranda").
+     * Test ketersediaan tampilan sukses Langkah 3 beserta 3 tombol aksi dan kartu SMAP ISO 37001.
      */
-    public function test_success_view_has_required_action_buttons(): void
+    public function test_success_view_has_required_action_buttons_and_smap_card(): void
     {
         $response = $this->get(route('form'));
 
@@ -187,7 +194,89 @@ class ProgressiveSurveyTest extends TestCase
         $response->assertSee('Terima Kasih!');
         $response->assertSee('id="btn-fill-other-category"', false);
         $response->assertSee('Isi Kategori Lain');
+        $response->assertSee('id="btn-goto-complaint"', false);
+        $response->assertSee('Sampaikan Keluhan');
         $response->assertSee('id="btn-back-to-home"', false);
         $response->assertSee('Kembali ke Beranda');
+
+        // Komitmen SMAP ISO 37001
+        $response->assertSee('Sistem Manajemen Anti Penyuapan (SMAP) ISO 37001');
+        $response->assertSee('https://lrs.co.id/about-us/smap');
+        $response->assertSee('target="_blank"', false);
+        $response->assertSee('rel="noopener noreferrer"', false);
+
+        // Desain Responsif & Fitur Baru Layanan Terima Kasih V4.0
+        $response->assertSee('min-h-[calc(100dvh-5.5rem)]', false);
+        $response->assertSee('max-w-4xl', false);
+        $response->assertSee('from-[#1a336e] via-[#2563eb] to-[#dc2626]', false);
+        $response->assertSee('id="btn-copy-ref"', false);
+        $response->assertSee('id="txt-copy-ref"', false);
+        $response->assertSee('Salin');
+        $response->assertSee('<dl', false);
+        $response->assertSee('<dt', false);
+        $response->assertSee('<dd', false);
+    }
+
+    /**
+     * Test ketersediaan tombol bilingual switcher dan data teks bilingual.
+     */
+    public function test_client_portal_has_bilingual_switcher_and_attributes(): void
+    {
+        $response = $this->get(route('form'));
+
+        $response->assertStatus(200);
+
+        // Switcher ID | EN
+        $response->assertSee('id="btn-lang-id"', false);
+        $response->assertSee('id="btn-lang-en"', false);
+
+        // Bilingual Data Attributes
+        $response->assertSee('data-category-en="Services &amp; Support"', false);
+        $response->assertSee('data-category-en="Project Execution"', false);
+        $response->assertSee('data-category-en="Maintenance Period"', false);
+        $response->assertSee('data-text-en="Friendliness of PT Len Railway Systems personnel"', false);
+    }
+
+    /**
+     * Test standardisasi nama PT Len Railway Systems dan ketiadaan varian non-standar.
+     */
+    public function test_client_portal_has_standardized_company_name(): void
+    {
+        $response = $this->get(route('form'));
+
+        $response->assertStatus(200);
+
+        $response->assertSee('PT Len Railway Systems');
+        $response->assertDontSee('PT. Len Railways Systems');
+        $response->assertDontSee('PT LRS');
+        $response->assertDontSee('PT. LRS');
+
+        // Cek juga pada halaman verify
+        $verifyResponse = $this->get(route('verify'));
+        $verifyResponse->assertStatus(200);
+        $verifyResponse->assertSee('PT Len Railway Systems');
+        $verifyResponse->assertDontSee('PT. Len Railways Systems');
+    }
+
+    /**
+     * Test bahwa config survey memiliki konfigurasi bilingual lengkap.
+     */
+    public function test_survey_config_has_complete_bilingual_structure(): void
+    {
+        $categories = config('survey.categories');
+
+        $this->assertIsArray($categories);
+        $this->assertCount(3, $categories);
+
+        foreach ($categories as $cat) {
+            $this->assertArrayHasKey('name_en', $cat);
+            $this->assertArrayHasKey('description_en', $cat);
+            $this->assertArrayHasKey('indicators', $cat);
+
+            foreach ($cat['indicators'] as $ind) {
+                $this->assertArrayHasKey('text_en', $ind);
+                $this->assertNotEmpty($ind['text_en']);
+            }
+        }
     }
 }

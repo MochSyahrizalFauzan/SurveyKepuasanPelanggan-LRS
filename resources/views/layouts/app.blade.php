@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="@yield('meta_description', 'Portal Mutu & Survei Kepuasan Klien — PT. Len Railways Systems')">
-    <title>@yield('title', 'PT. Len Railways Systems')</title>
+    <meta name="description" content="@yield('meta_description', 'Portal Mutu & Survei Kepuasan Klien — PT Len Railway Systems')">
+    <title>@yield('title', 'PT Len Railway Systems')</title>
 
     {{-- Asset Bundler: Vite jika manifest tersedia, Fallback ke Asset Statis & CDN untuk Prototipe --}}
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -39,7 +39,7 @@
         {{-- Grid Titik Halus (Engineering Dot Matrix Texture) --}}
         <div class="absolute inset-0 opacity-[0.035]" style="background-image: radial-gradient(#003B73 1.2px, transparent 1.2px); background-size: 28px 28px;"></div>
 
-        {{-- Siluet Gambar Pusat Kendali Operasi Rel (OCC) PT LRS di Sudut Kanan Bawah --}}
+        {{-- Siluet Gambar Pusat Kendali Operasi Rel (OCC) PT Len Railway Systems di Sudut Kanan Bawah --}}
         <div class="absolute -right-16 -bottom-10 w-full max-w-2xl h-[420px] opacity-[0.06] bg-no-repeat bg-right-bottom bg-contain"
              style="background-image: url('{{ asset('images/bg-railway-control.jpg') }}'); filter: grayscale(25%); mask-image: linear-gradient(to top left, rgba(0,0,0,1) 20%, transparent 80%); -webkit-mask-image: linear-gradient(to top left, rgba(0,0,0,1) 20%, transparent 80%);">
         </div>
