@@ -1325,7 +1325,7 @@
             actionItems.push({
                 type: 'Keluhan Baru',
                 badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
-                title: c.subject || c.description,
+                title: c.title || c.subject || c.description,
                 subtitle: `${c.project_name || 'Proyek LRS'} • ${c.ticket_id}`,
                 actionText: 'Tindak Lanjut',
                 actionTicketId: c.ticket_id
@@ -1336,7 +1336,7 @@
             actionItems.push({
                 type: 'Dalam Pengerjaan',
                 badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
-                title: c.subject || c.description,
+                title: c.title || c.subject || c.description,
                 subtitle: `${c.project_name || 'Proyek LRS'} • PIC: ${c.pic || 'Tim Terkait'}`,
                 actionText: 'Lihat Progress',
                 actionTicketId: c.ticket_id
@@ -1759,7 +1759,7 @@
         const filtered = complaints.filter(c => {
             const matchStatus = currentComplaintFilterStatus === 'all' || (c.status || '').toLowerCase() === currentComplaintFilterStatus.toLowerCase();
             const matchCat = categoryFilter === 'all' || (c.category || '').toLowerCase().includes(categoryFilter.toLowerCase());
-            const textTarget = `${c.ticket_id || ''} ${c.client_name || ''} ${c.project_name || ''} ${c.subject || ''} ${c.description || ''}`.toLowerCase();
+            const textTarget = `${c.ticket_id || ''} ${c.reporter_name || c.client_name || ''} ${c.project_name || ''} ${c.title || c.subject || ''} ${c.description || ''}`.toLowerCase();
             const matchSearch = !searchInput || textTarget.includes(searchInput);
             return matchStatus && matchCat && matchSearch;
         });
@@ -1777,6 +1777,8 @@
             const dateStr = c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
             const slaText = getSlaBadgeHtml(c);
             const safeId = escapeHtml(c.ticket_id);
+            const reporterLabel = c.reporter_name || c.client_name || 'Klien';
+            const titleLabel = c.title || c.subject || c.description;
 
             html += `
                 <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
@@ -1789,13 +1791,13 @@
                     </td>
                     <td class="px-4 py-3.5">
                         <div class="font-bold text-slate-800">${escapeHtml(c.project_name || '-')}</div>
-                        <div class="text-[11px] text-slate-500">${escapeHtml(c.client_name || 'Klien')}</div>
+                        <div class="text-[11px] text-slate-500">${escapeHtml(reporterLabel)}</div>
                     </td>
                     <td class="px-4 py-3.5 max-w-xs">
                         <span class="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 mb-1">
                             ${escapeHtml(c.category || 'Teknis')}
                         </span>
-                        <div class="font-bold text-slate-800 truncate">${escapeHtml(c.subject || c.description)}</div>
+                        <div class="font-bold text-slate-800 truncate">${escapeHtml(titleLabel)}</div>
                     </td>
                     <td class="px-4 py-3.5">
                         <select data-ticket-id="${safeId}"
@@ -1961,7 +1963,7 @@
                         ${escapeHtml(c.category || 'Teknis')}
                     </span>
                 </div>
-                <h4 class="text-xs font-bold text-slate-800 line-clamp-2 mb-1">${escapeHtml(c.subject || c.description)}</h4>
+                <h4 class="text-xs font-bold text-slate-800 line-clamp-2 mb-1">${escapeHtml(c.title || c.subject || c.description)}</h4>
                 <div class="text-[10px] text-slate-500 font-medium truncate mb-2">${escapeHtml(c.project_name || '-')}</div>
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
                     <span class="font-semibold text-slate-600 truncate">PIC: ${escapeHtml(c.pic || 'Belum Ditugaskan')}</span>
@@ -2031,17 +2033,17 @@
         if (elId) elId.textContent = complaint.ticket_id;
         if (elStatusBadge) elStatusBadge.textContent = complaint.status || 'Open';
         if (elPriorityBadge) elPriorityBadge.textContent = complaint.urgency || 'Sedang';
-        if (elTitle) elTitle.textContent = complaint.subject || complaint.description;
-        if (elProject) elProject.textContent = `${complaint.project_name || '-'} · ${complaint.client_name || 'Klien'}`;
-        if (elClient) elClient.textContent = complaint.client_name || 'Klien';
+        if (elTitle) elTitle.textContent = complaint.title || complaint.subject || complaint.description;
+        if (elProject) elProject.textContent = `${complaint.project_name || '-'} · ${complaint.reporter_name || complaint.client_name || 'Klien'}`;
+        if (elClient) elClient.textContent = complaint.reporter_name || complaint.client_name || 'Klien';
         if (elDesc) elDesc.textContent = complaint.description || '-';
         if (elCreatedAt) elCreatedAt.textContent = complaint.created_at ? new Date(complaint.created_at).toLocaleString('id-ID') : '-';
         if (elCategory) elCategory.textContent = complaint.category || 'Teknis';
         if (elSlaText) elSlaText.textContent = `${complaint.sla_hours || 24} Jam`;
 
         if (elPic) elPic.value = complaint.pic || '';
-        if (elRca) elRca.value = complaint.rca || '';
-        if (elCapa) elCapa.value = complaint.capa || '';
+        if (elRca) elRca.value = complaint.root_cause || complaint.rca || '';
+        if (elCapa) elCapa.value = complaint.action_taken || complaint.capa || '';
         if (elStatus) elStatus.value = complaint.status || 'Open';
 
         if (elTimeline) {
@@ -2087,7 +2089,9 @@
 
             complaint.pic = pic;
             complaint.rca = rca;
+            complaint.root_cause = rca || null;
             complaint.capa = capa;
+            complaint.action_taken = capa || null;
             complaint.status = status;
 
             if (status === 'Resolved' && !complaint.resolved_at) {

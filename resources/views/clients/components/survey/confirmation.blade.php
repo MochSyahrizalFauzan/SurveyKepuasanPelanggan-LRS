@@ -57,6 +57,16 @@
             <div>
                 <x-survey.confirmation-receipt />
             </div>
+
+            {{-- Pintasan ke Pusat Keluhan Klien (/keluhan) --}}
+            <div class="pt-1 flex justify-center">
+                <a href="{{ route('client.complaint') }}"
+                   id="btn-goto-complaint"
+                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-200 font-extrabold text-xs sm:text-sm shadow-2xs transition-all active:scale-95 focus:outline-none">
+                    <span>🎫</span>
+                    <span id="txt-btn-goto-complaint">Sampaikan Keluhan</span>
+                </a>
+            </div>
         </div>
         
         {{-- Modern CSS Marquee Ticker (Pure CSS) --}}

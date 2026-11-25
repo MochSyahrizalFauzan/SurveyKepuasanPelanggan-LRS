@@ -14,6 +14,9 @@
 (function () {
     'use strict';
 
+    // Jalankan logika Portal Survei hanya pada halaman yang memiliki #panel-survei
+    if (!document.getElementById('panel-survei')) return;
+
     // Cegah inisialisasi ganda jika aset dimuat via Vite dan static script tag
     if (window.__lrs_portal_initialized) return;
     window.__lrs_portal_initialized = true;
@@ -389,8 +392,10 @@
         document.title = t.portalTitle;
         const elPortalBadge = document.getElementById('txt-portal-badge');
         const elPortalSubtitle = document.getElementById('txt-portal-subtitle');
+        const elHeaderComplaint = document.getElementById('txt-btn-header-complaint');
         if (elPortalBadge) elPortalBadge.textContent = t.portalBadge;
         if (elPortalSubtitle) elPortalSubtitle.textContent = t.portalSubtitle;
+        if (elHeaderComplaint) elHeaderComplaint.textContent = t.btnGotoComplaint;
 
         // 3. Update Nav Tab Labels
         const tabSurvei = document.getElementById('tab-btn-survei');
@@ -1331,11 +1336,10 @@
     };
 
     /**
-     * Aksi Tombol Sukses: "Sampaikan Keluhan" (Pintasan Langsung ke Panel Keluhan)
+     * Aksi Tombol Sukses: "Sampaikan Keluhan" (Pintasan Langsung ke Halaman /keluhan)
      */
     window.actionGotoComplaint = function () {
-        window.actionFillOtherCategory();
-        window.switchTab('keluhan');
+        window.location.href = '/keluhan';
     };
 
     /**

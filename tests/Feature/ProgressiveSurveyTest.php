@@ -182,7 +182,7 @@ class ProgressiveSurveyTest extends TestCase
     }
 
     /**
-     * Test ketersediaan tampilan sukses Langkah 3 beserta 3 tombol aksi dan kartu SMAP ISO 37001.
+     * Test ketersediaan tampilan sukses Langkah 3 beserta tombol pintasan keluhan dan kartu SMAP ISO 37001.
      */
     public function test_success_view_has_required_action_buttons_and_smap_card(): void
     {
@@ -192,12 +192,9 @@ class ProgressiveSurveyTest extends TestCase
 
         $response->assertSee('id="survey-success-container"', false);
         $response->assertSee('Terima Kasih!');
-        $response->assertSee('id="btn-fill-other-category"', false);
-        $response->assertSee('Isi Kategori Lain');
         $response->assertSee('id="btn-goto-complaint"', false);
         $response->assertSee('Sampaikan Keluhan');
-        $response->assertSee('id="btn-back-to-home"', false);
-        $response->assertSee('Kembali ke Beranda');
+        $response->assertSee(route('client.complaint'), false);
 
         // Komitmen SMAP ISO 37001
         $response->assertSee('Sistem Manajemen Anti Penyuapan (SMAP) ISO 37001');

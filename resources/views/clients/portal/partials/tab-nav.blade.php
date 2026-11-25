@@ -28,14 +28,11 @@
             </div>
         </button>
 
-        {{-- Tab 2: Sampaikan Keluhan --}}
-        <button type="button"
-                id="tab-btn-keluhan"
-                class="tab-btn w-full px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all text-left font-bold border border-transparent"
-                role="tab"
-                aria-selected="false"
-                data-tab="keluhan"
-                onclick="switchTab('keluhan', this)">
+        {{-- Tab 2: Sampaikan Keluhan (Arahkan ke Halaman Mandiri /keluhan) --}}
+        <a href="{{ route('client.complaint') }}"
+           id="tab-btn-keluhan"
+           class="tab-btn w-full px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all text-left font-bold border border-transparent"
+           data-tab="keluhan">
             <div class="flex-1 min-w-0">
                 <span class="tab-label-title block text-xs sm:text-sm font-black text-slate-800 leading-tight truncate">
                     Sampaikan Keluhan
@@ -44,7 +41,7 @@
                     Pelaporan & Lacak Tiket
                 </span>
             </div>
-        </button>
+        </a>
 
         {{-- Tab 3: Masukan & Saran Umum --}}
         <button type="button"

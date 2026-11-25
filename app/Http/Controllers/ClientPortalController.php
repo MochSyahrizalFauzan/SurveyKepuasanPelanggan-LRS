@@ -41,4 +41,12 @@ class ClientPortalController extends Controller
     {
         return view('clients.verify');
     }
+
+    /**
+     * Tampilkan halaman mandiri Pusat Keluhan Klien (Zero-Login).
+     */
+    public function complaint(): View
+    {
+        return view('clients.complaint');
+    }
 }

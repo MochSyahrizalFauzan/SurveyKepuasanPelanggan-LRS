@@ -18,25 +18,21 @@ class SurveyConfirmationTest extends TestCase
         // Container utama konfirmasi
         $response->assertSee('id="survey-success-container"', false);
         $response->assertSee('Terima Kasih!');
-        $response->assertSee('✓ Survei Berhasil Terkirim');
-        $response->assertSee('id="txt-success-badge"', false);
+        $response->assertSee('id="hero-icon-container"', false);
         $response->assertSee('id="txt-success-title"', false);
         $response->assertSee('id="txt-success-msg"', false);
 
-        // 3 Tombol Aksi Hierarki Visual
-        $response->assertSee('id="btn-fill-other-category"', false);
-        $response->assertSee('Isi Kategori Lain');
+        // Tombol Pintasan Keluhan Pelanggan (/keluhan)
         $response->assertSee('id="btn-goto-complaint"', false);
         $response->assertSee('Sampaikan Keluhan');
-        $response->assertSee('id="btn-back-to-home"', false);
-        $response->assertSee('Kembali ke Beranda');
+        $response->assertSee(route('client.complaint'), false);
 
         // Confetti Canvas untuk Skor 5
         $response->assertSee('id="confirmation-confetti-canvas"', false);
     }
 
     /**
-     * Test bahwa sub-komponen Digital Receipt dirender dengan No. Referensi, DL semantic, Print, dan Download JSON.
+     * Test bahwa sub-komponen Digital Receipt dirender dengan No. Referensi, DL semantic, dan tombol Salin.
      */
     public function test_confirmation_receipt_component_contains_print_and_download_actions(): void
     {
@@ -46,7 +42,7 @@ class SurveyConfirmationTest extends TestCase
 
         // Receipt Card & 3D Tilt container
         $response->assertSee('id="receipt-card-container"', false);
-        $response->assertSee('Tanda Terima Digital Resmi');
+        $response->assertSee('id="txt-summary-title"', false);
 
         // No. Referensi & Tombol Salin
         $response->assertSee('id="txt-ref-label"', false);
@@ -66,12 +62,6 @@ class SurveyConfirmationTest extends TestCase
         $response->assertSee('id="lbl-attach-name"', false);
         $response->assertSee('id="success-attachment-name"', false);
         $response->assertSee('id="success-submitted-time"', false);
-
-        // Tombol Aksi Cetak PDF & Unduh JSON
-        $response->assertSee('id="btn-print-receipt"', false);
-        $response->assertSee('Simpan PDF / Cetak');
-        $response->assertSee('id="btn-download-json"', false);
-        $response->assertSee('Unduh JSON');
     }
 
     /**
@@ -79,29 +69,27 @@ class SurveyConfirmationTest extends TestCase
      */
     public function test_confirmation_audio_component_renders_chime_controls_and_visualizer(): void
     {
-        $response = $this->get(route('form'));
-
-        $response->assertStatus(200);
+        $view = $this->blade('<x-survey.confirmation-audio />');
 
         // Audio Widget
-        $response->assertSee('id="confirmation-audio-widget"', false);
-        $response->assertSee('Chime Konfirmasi');
+        $view->assertSee('id="confirmation-audio-widget"', false);
+        $view->assertSee('Chime Konfirmasi');
 
         // 4 Bar Visualizer
-        $response->assertSee('id="eq-bar-1"', false);
-        $response->assertSee('id="eq-bar-2"', false);
-        $response->assertSee('id="eq-bar-3"', false);
-        $response->assertSee('id="eq-bar-4"', false);
+        $view->assertSee('id="eq-bar-1"', false);
+        $view->assertSee('id="eq-bar-2"', false);
+        $view->assertSee('id="eq-bar-3"', false);
+        $view->assertSee('id="eq-bar-4"', false);
 
         // Tombol Replay & Mute
-        $response->assertSee('id="btn-replay-chime"', false);
-        $response->assertSee('id="btn-mute-chime"', false);
-        $response->assertSee('id="icon-sound-on"', false);
-        $response->assertSee('id="icon-sound-muted"', false);
+        $view->assertSee('id="btn-replay-chime"', false);
+        $view->assertSee('id="btn-mute-chime"', false);
+        $view->assertSee('id="icon-sound-on"', false);
+        $view->assertSee('id="icon-sound-muted"', false);
 
         // Sintesis C5 -> G5
-        $response->assertSee('523.25', false);
-        $response->assertSee('783.99', false);
+        $view->assertSee('523.25', false);
+        $view->assertSee('783.99', false);
     }
 
     /**

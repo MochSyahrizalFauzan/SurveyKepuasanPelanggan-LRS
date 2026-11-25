@@ -51,11 +51,18 @@
                     </button>
                 </div>
 
-                <div class="flex items-center p-1 rounded-2xl bg-slate-200/70 border border-slate-200">
-                    <a href="{{ route('admin.dashboard') }}#overview"
-                       class="text-xs px-3 py-1.5 justify-center rounded-xl font-bold transition-all bg-[#003B73] text-white shadow-sm flex items-center gap-1.5">
-                        <span class="truncate">Admin Page</span>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('client.complaint') }}"
+                       id="btn-header-complaint"
+                       class="text-xs px-3 py-1.5 justify-center rounded-xl font-bold transition-all bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-2xs flex items-center gap-1.5">
+                        <span id="txt-btn-header-complaint" class="truncate">Sampaikan Keluhan</span>
                     </a>
+                    <!-- <div class="flex items-center p-1 rounded-2xl bg-slate-200/70 border border-slate-200">
+                        <a href="{{ route('admin.dashboard') }}#overview"
+                           class="text-xs px-3 py-1.5 justify-center rounded-xl font-bold transition-all bg-[#003B73] text-white shadow-sm flex items-center gap-1.5">
+                            <span class="truncate">Admin Page</span>
+                        </a>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -76,12 +83,6 @@
             <div class="panels-container">
                 {{-- Panel 1: Formulir Survei FRM-QOP-06-02 (2-Step Progressive Disclosure) --}}
                 @include('clients.portal.panels.survey')
-
-                {{-- Panel 2: Formulir Beri Masukan & Apresiasi --}}
-                @include('clients.portal.panels.feedback')
-
-                {{-- Panel 3: Formulir Buat Keluhan Kendala & Pelacakan Tiket --}}
-                @include('clients.portal.panels.complaint')
             </div>
 
         </div>
