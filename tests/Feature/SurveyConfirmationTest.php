@@ -22,10 +22,9 @@ class SurveyConfirmationTest extends TestCase
         $response->assertSee('id="txt-success-title"', false);
         $response->assertSee('id="txt-success-msg"', false);
 
-        // Tombol Pintasan Keluhan Pelanggan (/keluhan)
-        $response->assertSee('id="btn-goto-complaint"', false);
-        $response->assertSee('Sampaikan Keluhan');
-        $response->assertSee(route('client.complaint'), false);
+        // Tanda Terima Digital ter-render
+        $response->assertSee('id="receipt-card-container"', false);
+        $response->assertSee('id="btn-copy-ref"', false);
 
         // Confetti Canvas untuk Skor 5
         $response->assertSee('id="confirmation-confetti-canvas"', false);

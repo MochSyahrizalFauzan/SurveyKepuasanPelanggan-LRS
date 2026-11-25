@@ -81,7 +81,7 @@
 
                 <div class="relative z-10 space-y-2 max-w-2xl">
                     <h1 id="txt-hero-title" class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                        Pusat Keluhan &amp; Pelacakan Tiket
+                        Pusat Keluhan &amp; Pelacakan Keluhan
                     </h1>
                     <p id="txt-hero-subtitle" class="text-xs sm:text-sm text-blue-100/90 leading-relaxed">
                         Laporkan kendala teknis, pelaksanaan proyek, atau layanan pemeliharaan kapan saja. Setiap laporan diterbitkan nomor tiket resmi untuk dipantau progres penyelesaiannya oleh PT Len Railway Systems.
@@ -429,7 +429,7 @@
                 <div class="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 md:p-8 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.06)] space-y-5">
                     <div class="space-y-1">
                         <h2 id="txt-track-title" class="text-base sm:text-lg font-extrabold text-slate-800">
-                            Lacak Progres Penanganan Tiket
+                            Lacak Progres Penanganan Keluhan
                         </h2>
                         <p id="txt-track-subtitle" class="text-xs sm:text-sm text-slate-500">
                             Masukkan nomor tiket keluhan Anda (contoh: #TKT-1234 atau TKT-1234) untuk melihat status terbaru.

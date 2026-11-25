@@ -348,6 +348,8 @@
     {{-- QRCode.js CDN untuk Pembuatan QR Code Tautan Survei --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
  
-    {{-- Script Interaktivitas Admin & LocalStorage --}}
+    {{-- Script Modular Perhitungan CSI, Editor Metadata Responden & Interaktivitas Admin --}}
+    <script src="{{ asset('js/admin/csi-engine.js') }}"></script>
+    <script src="{{ asset('js/admin/survey-metadata-modal.js') }}"></script>
     <script src="{{ asset('js/admin-portal.js') }}"></script>
 @endpush

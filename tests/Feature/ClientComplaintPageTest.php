@@ -90,7 +90,6 @@ class ClientComplaintPageTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('id="btn-header-complaint"', false);
-        $response->assertSee('id="btn-goto-complaint"', false);
         $response->assertSee(route('client.complaint'), false);
     }
 }

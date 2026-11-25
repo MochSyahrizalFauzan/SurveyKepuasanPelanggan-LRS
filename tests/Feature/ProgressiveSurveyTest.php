@@ -192,7 +192,7 @@ class ProgressiveSurveyTest extends TestCase
 
         $response->assertSee('id="survey-success-container"', false);
         $response->assertSee('Terima Kasih!');
-        $response->assertSee('id="btn-goto-complaint"', false);
+        $response->assertSee('id="btn-header-complaint"', false);
         $response->assertSee('Sampaikan Keluhan');
         $response->assertSee(route('client.complaint'), false);
 

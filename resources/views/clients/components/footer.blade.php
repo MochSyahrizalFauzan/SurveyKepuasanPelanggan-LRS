@@ -171,26 +171,17 @@
                         <img src="{{ asset('images/certifications/smk3.png') }}"
                              alt="Sertifikasi SMK3"
                              loading="lazy"
-                             class="h-8 sm:h-10 w-auto object-contain filter brightness-100 hover:brightness-110 transition-all duration-300"
+                             class="h-20 sm:h-20 w-auto object-contain filter brightness-100 hover:brightness-110 transition-all duration-300"
                              onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
                     @endif
-                    <div class="{{ $smk3Exists ? 'hidden' : 'inline-flex' }} items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-xs font-semibold text-slate-200">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                        <span>Sertifikasi SMK3</span>
-                    </div>
-
                     {{-- Logo Sertifikasi BSI --}}
                     @if ($bsiExists)
                         <img src="{{ asset('images/certifications/bsi-certifications.png') }}"
                              alt="Sertifikasi BSI"
                              loading="lazy"
-                             class="h-8 sm:h-10 w-auto object-contain filter brightness-100 hover:brightness-110 transition-all duration-300"
+                             class="h-20 sm:h-20 w-auto object-contain filter brightness-100 hover:brightness-110 transition-all duration-300"
                              onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
                     @endif
-                    <div class="{{ $bsiExists ? 'hidden' : 'inline-flex' }} items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-xs font-semibold text-slate-200">
-                        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                        <span>Sertifikasi BSI (Quality, Safety & Environment)</span>
-                    </div>
                 </div>
             </div>
         </div>

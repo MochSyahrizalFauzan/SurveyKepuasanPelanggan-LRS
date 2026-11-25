@@ -249,4 +249,75 @@ class AdminDashboardTest extends TestCase
         $response->assertSee('id="general-client-institution"', false);
         $response->assertSee('id="general-respondent-name"', false);
     }
+
+    /**
+     * Test Tab Navigasi "Perhitungan CSI" modular, 4 KPI card, matriks 2 baris header, dan pagination di #section-surveys.
+     */
+    public function test_admin_surveys_section_has_csi_tab_matrix_and_pagination(): void
+    {
+        $response = $this->get(route('admin.dashboard'));
+
+        $response->assertStatus(200);
+
+        // Segmented Tab Switcher pada Data Survei
+        $response->assertSee('id="tab-btn-surveys-recap"', false);
+        $response->assertSee('Rekap Responden');
+        $response->assertSee('id="tab-btn-surveys-csi"', false);
+        $response->assertSee('Perhitungan CSI');
+        $response->assertSee('id="panel-surveys-recap"', false);
+        $response->assertSee('id="panel-surveys-csi"', false);
+
+        // Pagination Tab 1 Rekap Responden (10 / 25 / 50)
+        $response->assertSee('id="surveys-recap-pagination-bar"', false);
+        $response->assertSee('id="surveys-recap-per-page"', false);
+        $response->assertSee('value="25"', false);
+        $response->assertSee('value="50"', false);
+
+        // 4 Kartu Ringkasan KPI CSI
+        $response->assertSee('id="csi-kpi-total-val"', false);
+        $response->assertSee('id="csi-kpi-quality-badge"', false);
+        $response->assertSee('id="csi-kpi-avg-s"', false);
+        $response->assertSee('id="csi-kpi-avg-i"', false);
+        $response->assertSee('id="csi-kpi-worst-gap-val"', false);
+        $response->assertSee('id="csi-kpi-respondents-count"', false);
+
+        // Toolbar Kontrol & Filter Dinamis CSI
+        $response->assertSee('id="csi-filter-project"', false);
+        $response->assertSee('id="csi-filter-category"', false);
+        $response->assertSee('id="csi-filter-search"', false);
+        $response->assertSee('id="btn-export-csi-csv"', false);
+        $response->assertSee('Ekspor Matriks CSI (CSV)');
+
+        // Struktur Tabel Matriks CSI 2 Baris Header & Kolom Sticky
+        $response->assertSee('id="csi-matrix-table"', false);
+        $response->assertSee('sticky left-0', false);
+        $response->assertSee('sticky left-12', false);
+        $response->assertSee('Atribut / Indikator');
+        $response->assertSee('Kepentingan (1–5)');
+        $response->assertSee('Indeks (I)');
+        $response->assertSee('Kepuasan (1–5)');
+        $response->assertSee('Indeks (S)');
+        $response->assertSee('CSI Per Fasa');
+        $response->assertSee('CSI Total');
+
+        // Pagination & Empty State Matriks CSI serta Script Engine Modular
+        $response->assertSee('id="csi-pagination-bar"', false);
+        $response->assertSee('id="csi-per-page"', false);
+        $response->assertSee('id="csi-empty-state"', false);
+        $response->assertSee('js/admin/csi-engine.js', false);
+        $response->assertSee('Budaya K3L PT Len Railway Systems', false);
+
+        // Modal Edit Metadata Responden Modular
+        $response->assertSee('id="editSurveyMetadataModal"', false);
+        $response->assertSee('Edit Metadata Responden');
+        $response->assertSee('id="edit-meta-ref-badge"', false);
+        $response->assertSee('id="edit-meta-project"', false);
+        $response->assertSee('id="edit-meta-client"', false);
+        $response->assertSee('id="edit-meta-category"', false);
+        $response->assertSee('id="edit-meta-category-warning"', false);
+        $response->assertSee('Mengubah kategori akan memengaruhi pengelompokan data pada counter dan perhitungan CSI.');
+        $response->assertSee('id="edit-meta-personnel"', false);
+        $response->assertSee('id="btn-save-edit-metadata"', false);
+        $response->assertSee('js/admin/survey-metadata-modal.js', false);
+    }
 }

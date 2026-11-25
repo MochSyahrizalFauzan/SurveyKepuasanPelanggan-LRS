@@ -20,6 +20,8 @@
     let activeTicketId = null;
     let activeQrInstance = null;
     let generalQrInstance = null;
+    let surveysRecapPage = 1;
+    let surveysRecapPerPage = 10;
 
     const DEFAULT_TARGET_SCORE = 80.0;
     const TARGET_TOTAL_PIC = 12;
@@ -655,6 +657,9 @@
         } else if (targetSectionId === 'section-surveys') {
             populateSurveysProjectFilter();
             renderSurveysTable();
+            if (window.LrsCsiEngine && typeof window.LrsCsiEngine.refresh === 'function') {
+                window.LrsCsiEngine.refresh();
+            }
         } else if (targetSectionId === 'section-complaints') {
             renderComplaintsView();
             updateComplaintTabBadge();
@@ -1424,12 +1429,37 @@
      * =========================================================================
      */
     window.onSurveyFilterChange = function () {
+        surveysRecapPage = 1;
+        renderSurveysTable();
+    };
+
+    window.refreshAdminSurveyViews = function () {
+        populateSurveysProjectFilter();
+        renderSurveysTable();
+        renderOverviewData();
+        if (window.LrsCsiEngine && typeof window.LrsCsiEngine.refresh === 'function') {
+            window.LrsCsiEngine.refresh();
+        }
+    };
+
+    window.onSurveyRecapPerPageChange = function () {
+        const el = document.getElementById('surveys-recap-per-page');
+        surveysRecapPerPage = Math.max(1, parseInt(el?.value || '10', 10) || 10);
+        surveysRecapPage = 1;
+        renderSurveysTable();
+    };
+
+    window.goToSurveyRecapPage = function (targetPage) {
+        surveysRecapPage = Math.max(1, parseInt(targetPage, 10) || 1);
         renderSurveysTable();
     };
 
     function renderSurveysTable() {
         const tableBody = document.getElementById('table-surveys-body') || document.getElementById('surveys-table-body');
         const emptyState = document.getElementById('table-surveys-empty') || document.getElementById('surveys-empty-state');
+        const pagBar = document.getElementById('surveys-recap-pagination-bar');
+        const pagInfo = document.getElementById('surveys-recap-pagination-info');
+        const pagControls = document.getElementById('surveys-recap-pagination-controls');
         if (!tableBody) return;
 
         const surveys = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
@@ -1437,18 +1467,25 @@
         const categoryFilter = (document.getElementById('filter-surveys-category') || document.getElementById('filter-survey-category'))?.value || 'all';
         const projectFilter = document.getElementById('filter-surveys-project')?.value || 'all';
 
-        const filtered = surveys.filter(s => {
-            const matchCat = categoryFilter === 'all' || s.category_id === categoryFilter;
-            let matchProj = true;
-            if (projectFilter === 'GENERAL') {
-                matchProj = isGeneralSurveyItem(s);
-            } else if (projectFilter !== 'all') {
-                matchProj = (s.project_name || '').toLowerCase() === projectFilter.toLowerCase();
-            }
-            const searchTarget = `${s.reference_no || ''} ${s.client_name || ''} ${s.respondent_id || ''} ${s.project_name || ''} ${s.accompanying_personnel || ''} ${isGeneralSurveyItem(s) ? 'survei umum general non-kontrak' : ''}`.toLowerCase();
-            const matchSearch = !searchInput || searchTarget.includes(searchInput);
-            return matchCat && matchProj && matchSearch;
-        });
+        const filtered = surveys
+            .filter(s => {
+                const matchCat = categoryFilter === 'all' || s.category_id === categoryFilter;
+                let matchProj = true;
+                if (projectFilter === 'GENERAL') {
+                    matchProj = isGeneralSurveyItem(s);
+                } else if (projectFilter !== 'all') {
+                    matchProj = (s.project_name || '').toLowerCase() === projectFilter.toLowerCase();
+                }
+                const searchTarget = `${s.reference_no || ''} ${s.client_name || ''} ${s.respondent_id || ''} ${s.project_name || ''} ${s.accompanying_personnel || ''} ${isGeneralSurveyItem(s) ? 'survei umum general non-kontrak' : ''}`.toLowerCase();
+                const matchSearch = !searchInput || searchTarget.includes(searchInput);
+                return matchCat && matchProj && matchSearch;
+            })
+            .sort((a, b) => {
+                const timeA = a.submitted_at ? new Date(a.submitted_at).getTime() : 0;
+                const timeB = b.submitted_at ? new Date(b.submitted_at).getTime() : 0;
+                if (timeB !== timeA) return timeB - timeA;
+                return surveys.indexOf(b) - surveys.indexOf(a);
+            });
 
         // Update Counter Cards
         let totalSurveys = surveys.length;
@@ -1475,15 +1512,26 @@
         if (filtered.length === 0) {
             tableBody.innerHTML = '';
             if (emptyState) emptyState.classList.remove('hidden');
+            if (pagBar) pagBar.classList.add('hidden');
             return;
         }
 
         if (emptyState) emptyState.classList.add('hidden');
+        if (pagBar) pagBar.classList.remove('hidden');
+
+        const totalFiltered = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(totalFiltered / surveysRecapPerPage));
+        if (surveysRecapPage > totalPages) surveysRecapPage = totalPages;
+        if (surveysRecapPage < 1) surveysRecapPage = 1;
+
+        const startIdx = (surveysRecapPage - 1) * surveysRecapPerPage;
+        const endIdx = Math.min(totalFiltered, startIdx + surveysRecapPerPage);
+        const pageItems = filtered.slice(startIdx, endIdx);
 
         let html = '';
-        filtered.forEach((s, idx) => {
+        pageItems.forEach((s, idx) => {
             const origIdx = surveys.indexOf(s);
-            const refNo = s.reference_no || `SRV-${String(idx + 1).padStart(4, '0')}`;
+            const refNo = s.reference_no || `SRV-${String(startIdx + idx + 1).padStart(4, '0')}`;
             const dateStr = s.submitted_at
                 ? new Date(s.submitted_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                 : '-';
@@ -1541,17 +1589,63 @@
                         </div>
                     </td>
                     <td class="px-4 py-3.5 text-center whitespace-nowrap">
-                        <button type="button"
-                                onclick="openSurveyDetailModal(${origIdx})"
-                                class="px-3 py-1.5 rounded-xl text-xs font-bold text-[#003B73] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 shadow-2xs transition-colors cursor-pointer">
-                            Rincian
-                        </button>
+                        <div class="inline-flex items-center justify-center gap-1.5">
+                            <button type="button"
+                                    onclick="openEditSurveyMetadataModal(${origIdx})"
+                                    title="Edit Metadata Responden"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:text-white bg-slate-100 hover:bg-[#003B73] border border-slate-200 hover:border-[#003B73] shadow-2xs transition-colors cursor-pointer">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                <span>Edit</span>
+                            </button>
+                            <button type="button"
+                                    onclick="openSurveyDetailModal(${origIdx})"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-bold text-[#003B73] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 shadow-2xs transition-colors cursor-pointer">
+                                Rincian
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
         });
 
         tableBody.innerHTML = html;
+
+        if (pagInfo) {
+            pagInfo.textContent = `Menampilkan ${startIdx + 1}–${endIdx} dari ${totalFiltered} responden`;
+        }
+        if (pagControls) {
+            const btnBase = 'px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer';
+            const btnDisabled = 'opacity-40 cursor-not-allowed pointer-events-none';
+            let pHtml = `
+                <button type="button"
+                        onclick="goToSurveyRecapPage(${surveysRecapPage - 1})"
+                        ${surveysRecapPage <= 1 ? 'disabled' : ''}
+                        class="${btnBase} bg-white border-slate-200 text-slate-600 hover:bg-slate-100 ${surveysRecapPage <= 1 ? btnDisabled : ''}">
+                    Prev
+                </button>
+            `;
+            for (let p = 1; p <= totalPages; p++) {
+                const isActive = p === surveysRecapPage;
+                pHtml += `
+                    <button type="button"
+                            onclick="goToSurveyRecapPage(${p})"
+                            class="${btnBase} ${isActive ? 'bg-[#003B73] text-white border-[#003B73] shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}">
+                        ${p}
+                    </button>
+                `;
+            }
+            pHtml += `
+                <button type="button"
+                        onclick="goToSurveyRecapPage(${surveysRecapPage + 1})"
+                        ${surveysRecapPage >= totalPages ? 'disabled' : ''}
+                        class="${btnBase} bg-white border-slate-200 text-slate-600 hover:bg-slate-100 ${surveysRecapPage >= totalPages ? btnDisabled : ''}">
+                    Next
+                </button>
+            `;
+            pagControls.innerHTML = pHtml;
+        }
     }
 
     window.openSurveyDetailModal = function (origIdx) {
@@ -3269,6 +3363,9 @@
                     updateNotificationBell();
                     renderOverviewData();
                     renderSurveysTable();
+                    if (window.LrsCsiEngine && typeof window.LrsCsiEngine.refresh === 'function') {
+                        window.LrsCsiEngine.refresh();
+                    }
                 } catch (err) {
                     console.error('Error saat menangani event storage survei:', err);
                 }
@@ -3329,6 +3426,9 @@
         updateNotificationBell();
         updateComplaintTabBadge();
         initStorageEventListener();
+        if (window.LrsCsiEngine && typeof window.LrsCsiEngine.refresh === 'function') {
+            window.LrsCsiEngine.refresh();
+        }
 
         // Tangani navigasi awal via hash
         window.addEventListener('hashchange', handleHashChange);

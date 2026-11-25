@@ -23,10 +23,10 @@
             headerSubtitle: 'Pelaporan Kendala Layanan, Proyek & Pelacakan Status Tiket',
             backToSurvey: 'Survei Kepuasan',
             heroPill: 'Layanan Tanggap Keluhan · Zero-Login',
-            heroTitle: 'Pusat Keluhan & Pelacakan Tiket',
+            heroTitle: 'Pusat Keluhan & Pelacakan Status Keluhan',
             heroSubtitle: 'Laporkan kendala teknis, pelaksanaan proyek, atau layanan pemeliharaan kapan saja. Setiap laporan diterbitkan nomor tiket resmi untuk dipantau progres penyelesaiannya oleh PT Len Railway Systems.',
             tabSubmit: 'Buat Laporan Keluhan',
-            tabTrack: 'Lacak Status Tiket',
+            tabTrack: 'Lacak Status Keluhan',
 
             // Form Tab 1
             sessionPrefill: 'Identitas proyek & pelapor diisi otomatis dari sesi aktif Anda (tetap dapat diubah).',
@@ -83,7 +83,7 @@
             btnCreateAnother: 'Buat Laporan Lain',
 
             // Track Tab 2
-            trackTitle: 'Lacak Progres Penanganan Tiket',
+            trackTitle: 'Lacak Progres Penanganan Keluhan',
             trackSubtitle: 'Masukkan nomor tiket keluhan Anda (contoh: #TKT-1234 atau TKT-1234) untuk melihat status terbaru.',
             phTrackInput: 'Contoh: #TKT-1234',
             btnTrackSearch: 'Lacak',
