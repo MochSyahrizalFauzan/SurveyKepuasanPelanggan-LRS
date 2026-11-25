@@ -365,9 +365,9 @@
                                         <dt id="lbl-sum-category" class="text-[10px] font-bold uppercase text-slate-400">Kategori</dt>
                                         <dd id="sum-category" class="font-bold text-slate-800 mt-0.5 truncate">-</dd>
                                     </div>
-                                    <div class="bg-white p-3 rounded-xl border border-slate-200/70">
+                                    <div class="bg-white p-3 rounded-xl border border-slate-200/70 min-w-0">
                                         <dt id="lbl-sum-urgency" class="text-[10px] font-bold uppercase text-slate-400">Urgensi &amp; Waktu Lapor</dt>
-                                        <dd id="sum-urgency-time" class="font-bold text-slate-800 mt-0.5 truncate">-</dd>
+                                        <dd id="sum-urgency-time" class="font-bold text-slate-800 mt-0.5 break-words leading-snug">-</dd>
                                     </div>
                                 </dl>
                             </div>
@@ -461,7 +461,91 @@
 
                 {{-- Kartu Hasil Pelacakan --}}
                 <div id="track-result-container" class="hidden bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 md:p-8 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.06)] space-y-6" aria-live="polite">
-                    {{-- Diisi aman (escaped) oleh JS --}}
+                    {{-- Header Nomor Tiket & Lencana Urgensi --}}
+                    <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                        <div class="min-w-0">
+                            <span id="track-detail-ticket-lbl" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Nomor Tiket</span>
+                            <span id="track-detail-ticket-id" class="text-xl font-black text-[#003B73]">#TKT-0000</span>
+                        </div>
+                        <span id="track-detail-urgency-badge" class="px-3 py-1 rounded-full text-xs font-extrabold border bg-slate-100 text-slate-700 border-slate-200">
+                            Urgensi: -
+                        </span>
+                    </div>
+
+                    {{-- Timeline Responsif & Dinamis (Vertical Mobile <-> Horizontal Desktop) --}}
+                    <div class="p-4 sm:p-6 rounded-2xl bg-slate-50/90 border border-slate-200/80">
+                        <ol id="ticket-timeline-list" class="relative flex flex-col md:flex-row md:items-start gap-0" aria-label="Linimasa Status Tiket">
+                            <li class="relative flex flex-row md:flex-col md:flex-1 gap-3.5 md:gap-3">
+                                <div class="flex flex-col items-center md:flex-row md:w-full shrink-0">
+                                    <div class="w-8 h-8 rounded-full bg-[#1a336e] text-white ring-4 ring-blue-100 flex items-center justify-center text-xs font-black shrink-0">1</div>
+                                    <div class="w-0.5 flex-1 min-h-6 my-1 md:w-auto md:h-0.5 md:flex-1 md:my-0 md:mx-2 bg-slate-200 rounded-full"></div>
+                                </div>
+                                <div class="flex-1 min-w-0 pb-6 md:pb-0 md:pr-5">
+                                    <span class="text-xs sm:text-sm font-extrabold text-slate-900">Baru Masuk</span>
+                                    <time class="block text-[11px] font-semibold text-slate-500 mt-0.5">-</time>
+                                    <p class="text-xs text-slate-600 mt-1 leading-relaxed">Laporan diterima sistem dan menunggu peninjauan tim PT Len Railway Systems.</p>
+                                </div>
+                            </li>
+                            <li class="relative flex flex-row md:flex-col md:flex-1 gap-3.5 md:gap-3">
+                                <div class="flex flex-col items-center md:flex-row md:w-full shrink-0">
+                                    <div class="w-8 h-8 rounded-full bg-white border-2 border-slate-200 text-slate-400 flex items-center justify-center text-xs font-black shrink-0">2</div>
+                                    <div class="w-0.5 flex-1 min-h-6 my-1 md:w-auto md:h-0.5 md:flex-1 md:my-0 md:mx-2 bg-slate-200 rounded-full"></div>
+                                </div>
+                                <div class="flex-1 min-w-0 pb-6 md:pb-0 md:pr-5">
+                                    <span class="text-xs sm:text-sm font-bold text-slate-400">Sedang Diproses</span>
+                                    <time class="block text-[11px] font-medium text-slate-400 mt-0.5">Menunggu</time>
+                                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Tim teknis sedang menindaklanjuti kendala di lapangan.</p>
+                                </div>
+                            </li>
+                            <li class="relative flex flex-row md:flex-col md:flex-1 gap-3.5 md:gap-3">
+                                <div class="flex flex-col items-center md:flex-row md:w-full shrink-0">
+                                    <div class="w-8 h-8 rounded-full bg-white border-2 border-slate-200 text-slate-400 flex items-center justify-center text-xs font-black shrink-0">3</div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <span class="text-xs sm:text-sm font-bold text-slate-400">Selesai</span>
+                                    <time class="block text-[11px] font-medium text-slate-400 mt-0.5">Menunggu</time>
+                                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Kendala telah selesai ditangani dan tiket ditutup.</p>
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+
+                    {{-- Judul & Uraian Kendala --}}
+                    <div class="space-y-2">
+                        <h3 id="track-detail-title" class="text-base sm:text-lg font-extrabold text-slate-900 break-words">-</h3>
+                        <p id="track-detail-description" class="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50/70 p-4 rounded-xl border border-slate-200/70 break-words">-</p>
+                    </div>
+
+                    {{-- Detail Metadata --}}
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70 min-w-0">
+                            <dt id="track-meta-lbl-reporter" class="text-[10px] font-bold uppercase text-slate-400">Pelapor</dt>
+                            <dd id="track-meta-val-reporter" class="font-bold text-slate-800 mt-0.5 break-words leading-snug">-</dd>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70 min-w-0">
+                            <dt id="track-meta-lbl-project" class="text-[10px] font-bold uppercase text-slate-400">Proyek / Instansi</dt>
+                            <dd id="track-meta-val-project" class="font-bold text-slate-800 mt-0.5 break-words leading-snug">-</dd>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70 min-w-0">
+                            <dt id="track-meta-lbl-category" class="text-[10px] font-bold uppercase text-slate-400">Kategori</dt>
+                            <dd id="track-meta-val-category" class="font-bold text-slate-800 mt-0.5 break-words leading-snug">-</dd>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70 min-w-0">
+                            <dt id="track-meta-lbl-date" class="text-[10px] font-bold uppercase text-slate-400">Tanggal Lapor</dt>
+                            <dd class="font-bold text-slate-800 mt-0.5 break-words leading-snug">
+                                <time id="track-meta-val-date">-</time>
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <div class="text-xs text-slate-500 flex flex-wrap items-center gap-2">
+                        <span aria-hidden="true">📎</span>
+                        <span id="track-meta-lbl-attachment" class="font-semibold">Lampiran:</span>
+                        <span id="track-meta-val-attachment" class="text-slate-700 font-bold break-all">-</span>
+                    </div>
+
+                    {{-- Blok Tindak Lanjut Tim PT Len Railway Systems --}}
+                    <div id="track-followup-container"></div>
                 </div>
 
                 {{-- State Tidak Ditemukan --}}

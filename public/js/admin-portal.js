@@ -356,8 +356,10 @@
                     urgency: 'Sedang',
                     status: 'In Progress',
                     created_at: new Date(now.getTime() - 14 * 3600 * 1000).toISOString(),
+                    in_progress_at: new Date(now.getTime() - 6 * 3600 * 1000).toISOString(),
                     sla_hours: 24,
                     pic: 'Sekretariat Proyek LRS',
+                    pic_name: 'Sekretariat Proyek LRS',
                     rca: 'Pemberkasan tanda tangan pihak ketiga tertunda karena dinas luar kota.',
                     capa: 'Menggunakan tanda tangan digital tersertifikasi untuk mempercepat validasi.',
                     audit_trail: [
@@ -375,9 +377,11 @@
                     urgency: 'Tinggi',
                     status: 'Resolved',
                     created_at: new Date(now.getTime() - 20 * 3600 * 1000).toISOString(),
+                    in_progress_at: new Date(now.getTime() - 12 * 3600 * 1000).toISOString(),
                     resolved_at: new Date(now.getTime() - 4 * 3600 * 1000).toISOString(),
                     sla_hours: 24,
                     pic: 'Koordinator K3L Lapangan',
+                    pic_name: 'Koordinator K3L Lapangan',
                     rca: 'Kabel dipasang saat pengujian cepat malam hari dan belum dirapikan oleh teknisi.',
                     capa: 'Pemasangan pelindung karet lantai dan penataan ulang jalur kabel permanen.',
                     audit_trail: [
@@ -1857,16 +1861,28 @@
             const complaint = complaints.find(c => c.ticket_id === ticketId);
             if (!complaint) return;
 
+            const nowIso = new Date().toISOString();
             complaint.status = newStatus;
-            if (newStatus === 'Resolved') {
-                complaint.resolved_at = new Date().toISOString();
+            if (newStatus === 'In Progress' && !complaint.in_progress_at) {
+                complaint.in_progress_at = nowIso;
+            }
+            if (newStatus === 'Resolved' && !complaint.resolved_at) {
+                complaint.resolved_at = nowIso;
             }
             if (!complaint.audit_trail) complaint.audit_trail = [];
             complaint.audit_trail.push({
-                timestamp: new Date().toISOString(),
+                timestamp: nowIso,
                 status: newStatus,
                 note: `Status tiket diubah menjadi "${newStatus}" melalui dashboard admin.`
             });
+            if (Array.isArray(complaint.timeline_notes)) {
+                complaint.timeline_notes.push({
+                    timestamp: nowIso,
+                    status: newStatus,
+                    pic_name: complaint.pic_name || complaint.pic || null,
+                    note: `Status tiket diubah menjadi "${newStatus}" melalui dashboard admin.`
+                });
+            }
 
             localStorage.setItem('lrs_complaint_data', JSON.stringify(complaints));
             updateComplaintTabBadge();
@@ -2041,7 +2057,7 @@
         if (elCategory) elCategory.textContent = complaint.category || 'Teknis';
         if (elSlaText) elSlaText.textContent = `${complaint.sla_hours || 24} Jam`;
 
-        if (elPic) elPic.value = complaint.pic || '';
+        if (elPic) elPic.value = complaint.pic_name || complaint.pic || '';
         if (elRca) elRca.value = complaint.root_cause || complaint.rca || '';
         if (elCapa) elCapa.value = complaint.action_taken || complaint.capa || '';
         if (elStatus) elStatus.value = complaint.status || 'Open';
@@ -2087,22 +2103,37 @@
             const capa = (document.getElementById('modal-capa-input') || document.getElementById('ticket-form-capa'))?.value.trim() || '';
             const status = (document.getElementById('modal-status-select') || document.getElementById('ticket-form-status'))?.value || 'Open';
 
+            const nowIso = new Date().toISOString();
             complaint.pic = pic;
+            complaint.pic_name = pic || null;
             complaint.rca = rca;
             complaint.root_cause = rca || null;
             complaint.capa = capa;
             complaint.action_taken = capa || null;
             complaint.status = status;
 
+            if (status === 'In Progress' && !complaint.in_progress_at) {
+                complaint.in_progress_at = nowIso;
+            }
             if (status === 'Resolved' && !complaint.resolved_at) {
-                complaint.resolved_at = new Date().toISOString();
+                complaint.resolved_at = nowIso;
             }
 
+            const noteText = `Catatan tindak lanjut diperbarui: PIC ${pic || '-'}, status ${status}.`;
             if (!complaint.audit_trail) complaint.audit_trail = [];
             complaint.audit_trail.push({
-                timestamp: new Date().toISOString(),
+                timestamp: nowIso,
                 status: status,
-                note: `Catatan tindak lanjut diperbarui: PIC ${pic || '-'}, status ${status}.`
+                note: noteText
+            });
+            if (!Array.isArray(complaint.timeline_notes)) {
+                complaint.timeline_notes = [];
+            }
+            complaint.timeline_notes.push({
+                timestamp: nowIso,
+                status: status,
+                pic_name: pic || null,
+                note: capa || rca || noteText
             });
 
             localStorage.setItem('lrs_complaint_data', JSON.stringify(complaints));

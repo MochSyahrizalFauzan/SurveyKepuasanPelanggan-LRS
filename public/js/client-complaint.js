@@ -92,10 +92,23 @@
             notFoundTitle: 'Nomor Tiket Tidak Ditemukan',
             notFoundDesc: 'Pastikan penulisan nomor tiket sudah benar (contoh: #TKT-1234) atau periksa kembali daftar tiket terbaru Anda di atas.',
 
-            // Stepper & Tracking Detail
+            // Stepper, Timeline & Tracking Detail
+            timelineHeading: 'Linimasa Penanganan Tiket',
+            liveSyncBadge: 'Sinkron Real-Time',
             stepOpen: 'Baru Masuk (Open)',
             stepProgress: 'Sedang Diproses (In Progress)',
             stepResolved: 'Selesai (Resolved)',
+            stepOpenTitle: 'Baru Masuk',
+            stepProgressTitle: 'Sedang Diproses',
+            stepResolvedTitle: 'Selesai',
+            badgeCurrent: 'Saat Ini',
+            badgeDone: 'Selesai',
+            recordedInSystem: 'Tercatat di sistem',
+            stagePendingTime: 'Menunggu',
+            stepOpenDesc: 'Laporan diterima sistem dan menunggu peninjauan tim PT Len Railway Systems.',
+            stepProgressDescDefault: 'Tim teknis sedang menindaklanjuti kendala di lapangan.',
+            stepProgressPicPrefix: 'Ditangani oleh',
+            stepResolvedDescDefault: 'Kendala telah selesai ditangani dan tiket ditutup.',
             detailTicketLbl: 'Nomor Tiket',
             detailReporterLbl: 'Pelapor',
             detailProjectLbl: 'Proyek / Instansi',
@@ -105,6 +118,7 @@
             detailAttachmentLbl: 'Lampiran',
             noAttachment: 'Tidak ada lampiran',
             followupHeader: 'Tindak Lanjut Tim PT Len Railway Systems',
+            picLbl: 'PIC Penanganan',
             rootCauseLbl: 'Akar Masalah / Pemeriksaan',
             actionTakenLbl: 'Langkah Perbaikan yang Dilakukan',
             pendingFollowup: 'Tim teknis PT Len Railway Systems sedang meninjau laporan Anda.',
@@ -117,7 +131,9 @@
             toastCopiedTitle: 'Disalin',
             toastCopiedDesc: 'Nomor tiket berhasil disalin ke clipboard.',
             toastEmptySearchTitle: 'Nomor Tiket Kosong',
-            toastEmptySearchDesc: 'Masukkan nomor tiket yang ingin dilacak terlebih dahulu.'
+            toastEmptySearchDesc: 'Masukkan nomor tiket yang ingin dilacak terlebih dahulu.',
+            toastTicketUpdatedTitle: 'Pembaruan Tiket',
+            toastTicketUpdatedDesc: 'Status tiket baru saja diperbarui'
         },
         en: {
             pageTitle: 'Client Complaint Center · PT Len Railway Systems',
@@ -194,10 +210,23 @@
             notFoundTitle: 'Ticket Number Not Found',
             notFoundDesc: 'Please ensure the ticket number is entered correctly (e.g. #TKT-1234) or select from your recent tickets above.',
 
-            // Stepper & Tracking Detail
+            // Stepper, Timeline & Tracking Detail
+            timelineHeading: 'Ticket Resolution Timeline',
+            liveSyncBadge: 'Real-Time Sync',
             stepOpen: 'Received (Open)',
             stepProgress: 'In Progress',
             stepResolved: 'Resolved',
+            stepOpenTitle: 'Received',
+            stepProgressTitle: 'In Progress',
+            stepResolvedTitle: 'Resolved',
+            badgeCurrent: 'Current',
+            badgeDone: 'Completed',
+            recordedInSystem: 'Recorded',
+            stagePendingTime: 'Pending',
+            stepOpenDesc: 'Report received by the system and awaiting review by PT Len Railway Systems team.',
+            stepProgressDescDefault: 'Technical team is following up on the issue in the field.',
+            stepProgressPicPrefix: 'Handled by',
+            stepResolvedDescDefault: 'Issue has been resolved and the ticket is closed.',
             detailTicketLbl: 'Ticket Number',
             detailReporterLbl: 'Reporter',
             detailProjectLbl: 'Project / Institution',
@@ -207,6 +236,7 @@
             detailAttachmentLbl: 'Attachment',
             noAttachment: 'No attachment',
             followupHeader: 'PT Len Railway Systems Team Follow-Up',
+            picLbl: 'Assigned PIC',
             rootCauseLbl: 'Root Cause / Investigation',
             actionTakenLbl: 'Corrective Action Taken',
             pendingFollowup: 'PT Len Railway Systems technical team is reviewing your report.',
@@ -219,7 +249,9 @@
             toastCopiedTitle: 'Copied',
             toastCopiedDesc: 'Ticket number copied to clipboard.',
             toastEmptySearchTitle: 'Empty Ticket Number',
-            toastEmptySearchDesc: 'Please enter the ticket number to track.'
+            toastEmptySearchDesc: 'Please enter the ticket number to track.',
+            toastTicketUpdatedTitle: 'Ticket Updated',
+            toastTicketUpdatedDesc: 'Ticket status has just been updated'
         }
     };
 
@@ -243,6 +275,49 @@
     function formatDisplayTicket(ticketId) {
         const clean = normalizeTicketKey(ticketId);
         return clean ? '#' + clean : '-';
+    }
+
+    /**
+     * Format Tanggal Ringkas Tanpa Potongan Teks
+     * ID: "25 Nov 2026, 10:15 WIB" | EN: "25 Nov 2026, 10:15 AM"
+     */
+    function formatCompactDateTime(dateInput, lang) {
+        if (!dateInput) return '';
+        const d = new Date(dateInput);
+        if (isNaN(d.getTime())) return '';
+
+        const monthsId = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const day = String(d.getDate()).padStart(2, '0');
+        const monthName = (lang === 'en' ? monthsEn : monthsId)[d.getMonth()];
+        const year = d.getFullYear();
+        const mins = String(d.getMinutes()).padStart(2, '0');
+
+        if (lang === 'en') {
+            let hours = d.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${day} ${monthName} ${year}, ${String(hours).padStart(2, '0')}:${mins} ${ampm}`;
+        }
+
+        const hrs = String(d.getHours()).padStart(2, '0');
+        return `${day} ${monthName} ${year}, ${hrs}:${mins} WIB`;
+    }
+
+    /**
+     * Ambil Timestamp Tahap Timeline (Kompatibel Data Lama & Baru)
+     */
+    function resolveStageTimestamp(ticket, targetStatus) {
+        const key = String(targetStatus || '').toLowerCase();
+        if (key === 'open' && ticket.created_at) return ticket.created_at;
+        if (key === 'in progress' && ticket.in_progress_at) return ticket.in_progress_at;
+        if (key === 'resolved' && ticket.resolved_at) return ticket.resolved_at;
+
+        const sources = []
+            .concat(Array.isArray(ticket.timeline_notes) ? ticket.timeline_notes : [])
+            .concat(Array.isArray(ticket.audit_trail) ? ticket.audit_trail : []);
+        const match = sources.find(entry => entry && String(entry.status || '').toLowerCase() === key && entry.timestamp);
+        return match ? match.timestamp : null;
     }
 
     function getCategoryLabel(catVal) {
@@ -605,6 +680,8 @@
                 description: descVal,
                 attachment_name: currentAttachmentName || null,
                 status: 'Open',
+                pic: '',
+                pic_name: null,
                 root_cause: null,
                 action_taken: null,
                 rca: '',
@@ -613,6 +690,16 @@
                 language: currentLang,
                 sla_hours: urgencyVal === 'Kritis' ? 12 : (urgencyVal === 'Tinggi' ? 24 : 48),
                 created_at: createdIso,
+                in_progress_at: null,
+                resolved_at: null,
+                timeline_notes: [
+                    {
+                        timestamp: createdIso,
+                        status: 'Open',
+                        pic_name: null,
+                        note: 'Laporan keluhan diterima melalui Pusat Keluhan Klien (/keluhan).'
+                    }
+                ],
                 audit_trail: [
                     {
                         timestamp: createdIso,
@@ -664,11 +751,7 @@
         const elUrgTime = document.getElementById('sum-urgency-time');
 
         const urgMeta = getUrgencyMeta(payload.urgency);
-        const timeStr = payload.created_at
-            ? new Date(payload.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'id-ID', {
-                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-            })
-            : '-';
+        const timeStr = formatCompactDateTime(payload.created_at, currentLang) || I18N[currentLang].recordedInSystem;
 
         if (elTicketId) elTicketId.textContent = formatDisplayTicket(payload.ticket_id);
         if (elReporter) elReporter.textContent = payload.reporter_name || payload.client_name || '-';
@@ -792,12 +875,12 @@
     };
 
     /**
-     * Render Kartu Hasil Pelacakan dengan Stepper 3 Tahap & Tindak Lanjut Tim LRS
+     * Render Kartu Hasil Pelacakan dengan Timeline Responsif (Vertical Mobile <-> Horizontal Desktop) & Tindak Lanjut Tim LRS
      */
     function renderTrackTicketResult(rawQuery) {
         const resultContainer = document.getElementById('track-result-container');
         const notFoundBox = document.getElementById('track-not-found');
-        if (!resultContainer || !notFoundBox) return;
+        if (!resultContainer || !notFoundBox) return false;
 
         const targetKey = normalizeTicketKey(rawQuery);
         let list = [];
@@ -810,7 +893,7 @@
             activeTrackedTicketId = null;
             resultContainer.classList.add('hidden');
             notFoundBox.classList.remove('hidden');
-            return;
+            return false;
         }
 
         activeTrackedTicketId = ticket.ticket_id;
@@ -821,128 +904,222 @@
         const statusNorm = String(ticket.status || 'Open').toLowerCase();
         const stepIdx = statusNorm === 'resolved' ? 3 : (statusNorm === 'in progress' ? 2 : 1);
 
+        const picName = String(ticket.pic_name || ticket.pic || '').trim();
+        const rootCause = String(ticket.root_cause || ticket.rca || '').trim();
+        const actionTaken = String(ticket.action_taken || ticket.capa || '').trim();
+        const hasFollowup = Boolean(picName || rootCause || actionTaken);
+
+        const openIso = resolveStageTimestamp(ticket, 'Open');
+        const progressIso = resolveStageTimestamp(ticket, 'In Progress');
+        const resolvedIso = resolveStageTimestamp(ticket, 'Resolved');
+
         const stepItems = [
-            { num: 1, label: t.stepOpen, active: stepIdx >= 1 },
-            { num: 2, label: t.stepProgress, active: stepIdx >= 2 },
-            { num: 3, label: t.stepResolved, active: stepIdx >= 3 }
+            {
+                num: 1,
+                title: t.stepOpenTitle,
+                iso: openIso,
+                desc: t.stepOpenDesc,
+                state: stepIdx > 1 ? 'completed' : 'current'
+            },
+            {
+                num: 2,
+                title: t.stepProgressTitle,
+                iso: progressIso,
+                desc: picName ? `${t.stepProgressPicPrefix} ${picName}. ${t.stepProgressDescDefault}` : t.stepProgressDescDefault,
+                state: stepIdx > 2 ? 'completed' : (stepIdx === 2 ? 'current' : 'pending')
+            },
+            {
+                num: 3,
+                title: t.stepResolvedTitle,
+                iso: resolvedIso,
+                desc: actionTaken || t.stepResolvedDescDefault,
+                state: stepIdx === 3 ? 'completed' : 'pending'
+            }
         ];
 
         const urgMeta = getUrgencyMeta(ticket.urgency);
-        const createdStr = ticket.created_at
-            ? new Date(ticket.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : 'id-ID', {
-                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-            })
-            : '-';
+        const createdFormatted = formatCompactDateTime(ticket.created_at, currentLang) || t.recordedInSystem;
 
-        const rootCause = ticket.root_cause || ticket.rca || '';
-        const actionTaken = ticket.action_taken || ticket.capa || '';
-        const hasFollowup = Boolean(String(rootCause).trim() || String(actionTaken).trim());
+        const setElText = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
 
-        const stepperHtml = stepItems.map((st, idx) => {
-            const circleCls = st.active
-                ? (stepIdx === 3 && st.num === 3 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-[#003B73] text-white border-[#003B73]')
-                : 'bg-white text-slate-400 border-slate-300';
-            const textCls = st.active ? 'text-slate-900 font-extrabold' : 'text-slate-400 font-semibold';
-            const connector = idx < stepItems.length - 1
-                ? `<div class="hidden sm:block flex-1 h-1 mx-2 rounded-full ${stepIdx > st.num ? 'bg-[#003B73]' : 'bg-slate-200'}"></div>`
-                : '';
+        setElText('track-detail-ticket-lbl', t.detailTicketLbl);
+        setElText('track-detail-ticket-id', formatDisplayTicket(ticket.ticket_id));
 
-            return `
-                <div class="flex items-center ${idx < stepItems.length - 1 ? 'sm:flex-1' : ''}">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black shrink-0 ${circleCls}">
-                            ${st.active && stepIdx > st.num ? '✓' : st.num}
-                        </span>
-                        <span class="text-xs leading-tight ${textCls}">${escapeHtml(st.label)}</span>
-                    </div>
-                    ${connector}
-                </div>
-            `;
-        }).join('');
+        const elUrgBadge = document.getElementById('track-detail-urgency-badge');
+        if (elUrgBadge) {
+            elUrgBadge.className = `px-3 py-1 rounded-full text-xs font-extrabold border ${urgMeta.cls}`;
+            elUrgBadge.textContent = `${t.detailUrgencyLbl}: ${urgMeta.label}`;
+        }
 
-        const followupBlockHtml = hasFollowup
-            ? `
-                <div class="p-4 sm:p-5 rounded-2xl bg-blue-50/70 border border-blue-200/90 space-y-3">
-                    <div class="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[#003B73]">
-                        <span>🛠️</span>
-                        <span>${escapeHtml(t.followupHeader)}</span>
-                    </div>
-                    ${rootCause ? `
-                        <div>
-                            <span class="block text-[11px] font-bold text-slate-500 uppercase">${escapeHtml(t.rootCauseLbl)}</span>
-                            <p class="text-xs sm:text-sm text-slate-800 mt-0.5 leading-relaxed">${escapeHtml(rootCause)}</p>
+        setElText('track-timeline-heading', t.timelineHeading);
+        setElText('txt-track-live-sync', t.liveSyncBadge);
+
+        const timelineListEl = document.getElementById('ticket-timeline-list');
+        if (timelineListEl) {
+            timelineListEl.innerHTML = stepItems.map((st, idx) => {
+                const isLast = idx === stepItems.length - 1;
+                const isDone = st.state === 'completed';
+                const isCurrent = st.state === 'current';
+
+                let circleClass = 'bg-white border-2 border-slate-200 text-slate-400';
+                let pingHtml = '';
+                let iconHtml = `<span>${st.num}</span>`;
+                let titleClass = 'text-slate-400 font-bold';
+                let timeClass = 'text-slate-400 font-medium';
+                let descClass = 'text-slate-400';
+                let badgeHtml = '';
+
+                if (isDone) {
+                    circleClass = (stepIdx === 3 && st.num === 3)
+                        ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
+                        : 'bg-emerald-600 text-white';
+                    iconHtml = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg>';
+                    titleClass = 'text-slate-900 font-extrabold';
+                    timeClass = 'text-emerald-700 font-semibold';
+                    descClass = 'text-slate-600';
+                    badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">${escapeHtml(t.badgeDone)}</span>`;
+                } else if (isCurrent) {
+                    const isProgressStep = st.num === 2;
+                    circleClass = isProgressStep
+                        ? 'bg-amber-500 text-white ring-4 ring-amber-100'
+                        : 'bg-[#1a336e] text-white ring-4 ring-blue-100';
+                    const pingColor = isProgressStep ? 'bg-amber-400/40' : 'bg-[#1a336e]/35';
+                    const badgeCls = isProgressStep
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : 'bg-blue-50 text-[#1a336e] border-blue-200';
+                    pingHtml = `<span class="absolute inset-0 rounded-full ${pingColor} animate-ping pointer-events-none" style="animation-duration: 2.2s;" aria-hidden="true"></span>`;
+                    titleClass = 'text-slate-900 font-extrabold';
+                    timeClass = isProgressStep ? 'text-amber-700 font-semibold' : 'text-[#1a336e] font-semibold';
+                    descClass = 'text-slate-700';
+                    badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${badgeCls}">${escapeHtml(t.badgeCurrent)}</span>`;
+                }
+
+                // Garis penghubung antar tahap
+                const lineDone = stepIdx > st.num;
+                const lineColor = lineDone ? 'bg-emerald-500' : 'bg-slate-200';
+                const connectorHtml = !isLast
+                    ? `<div class="w-0.5 flex-1 min-h-6 my-1 md:w-auto md:h-0.5 md:flex-1 md:my-0 md:mx-2 rounded-full ${lineColor}" aria-hidden="true"></div>`
+                    : '';
+
+                // Format <time>
+                const formattedIso = st.iso ? formatCompactDateTime(st.iso, currentLang) : '';
+                let timeHtml = '';
+                if (formattedIso) {
+                    timeHtml = `<time datetime="${escapeHtml(st.iso)}" class="block text-[11px] ${timeClass} mt-0.5 break-words">${escapeHtml(formattedIso)}</time>`;
+                } else if (isDone || isCurrent) {
+                    timeHtml = `<time class="block text-[11px] ${timeClass} mt-0.5">${escapeHtml(t.recordedInSystem)}</time>`;
+                } else {
+                    timeHtml = `<time class="block text-[11px] ${timeClass} mt-0.5">${escapeHtml(t.stagePendingTime)}</time>`;
+                }
+
+                const contentPad = !isLast ? 'pb-6 md:pb-0 md:pr-5' : '';
+
+                return `
+                    <li class="relative flex flex-row md:flex-col md:flex-1 gap-3.5 md:gap-3 min-w-0">
+                        <div class="flex flex-col items-center md:flex-row md:w-full shrink-0">
+                            <div class="relative w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 z-10 ${circleClass}">
+                                ${pingHtml}
+                                <span class="relative z-10 flex items-center justify-center">${iconHtml}</span>
+                            </div>
+                            ${connectorHtml}
                         </div>
-                    ` : ''}
-                    ${actionTaken ? `
-                        <div>
-                            <span class="block text-[11px] font-bold text-slate-500 uppercase">${escapeHtml(t.actionTakenLbl)}</span>
-                            <p class="text-xs sm:text-sm text-slate-800 mt-0.5 leading-relaxed">${escapeHtml(actionTaken)}</p>
+                        <div class="flex-1 min-w-0 ${contentPad}">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-xs sm:text-sm leading-tight ${titleClass}">${escapeHtml(st.title)}</span>
+                                ${badgeHtml}
+                            </div>
+                            ${timeHtml}
+                            <p class="text-xs leading-relaxed mt-1 break-words ${descClass}">${escapeHtml(st.desc)}</p>
                         </div>
-                    ` : ''}
-                </div>
-            `
-            : `
-                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-500 flex items-center gap-2.5">
-                    <span>⏳</span>
-                    <span>${escapeHtml(t.pendingFollowup)}</span>
-                </div>
-            `;
+                    </li>
+                `;
+            }).join('');
+        }
 
-        resultContainer.innerHTML = `
-            <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
-                <div>
-                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">${escapeHtml(t.detailTicketLbl)}</span>
-                    <span class="text-xl font-black text-[#003B73]">${escapeHtml(formatDisplayTicket(ticket.ticket_id))}</span>
-                </div>
-                <span class="px-3 py-1 rounded-full text-xs font-extrabold border ${urgMeta.cls}">
-                    ${escapeHtml(t.detailUrgencyLbl)}: ${escapeHtml(urgMeta.label)}
-                </span>
-            </div>
+        setElText('track-detail-title', ticket.title || ticket.subject || '-');
+        setElText('track-detail-description', ticket.description || '-');
 
-            <!-- Stepper 3 Tahap Visual -->
-            <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                ${stepperHtml}
-            </div>
+        setElText('track-meta-lbl-reporter', t.detailReporterLbl);
+        setElText('track-meta-val-reporter', ticket.reporter_name || ticket.client_name || '-');
+        setElText('track-meta-lbl-project', t.detailProjectLbl);
+        setElText('track-meta-val-project', ticket.project_name || '-');
+        setElText('track-meta-lbl-category', t.detailCategoryLbl);
+        setElText('track-meta-val-category', getCategoryLabel(ticket.category));
+        setElText('track-meta-lbl-date', t.detailDateLbl);
 
-            <!-- Judul & Uraian -->
-            <div class="space-y-2">
-                <h3 class="text-base sm:text-lg font-extrabold text-slate-900">
-                    ${escapeHtml(ticket.title || ticket.subject || '-')}
-                </h3>
-                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50/70 p-4 rounded-xl border border-slate-200/70">
-                    ${escapeHtml(ticket.description || '-')}
-                </p>
-            </div>
+        const elDateVal = document.getElementById('track-meta-val-date');
+        if (elDateVal) {
+            elDateVal.textContent = createdFormatted;
+            if (ticket.created_at) {
+                elDateVal.setAttribute('datetime', ticket.created_at);
+            } else {
+                elDateVal.removeAttribute('datetime');
+            }
+        }
 
-            <!-- Detail Metadata -->
-            <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
-                    <dt class="text-[10px] font-bold uppercase text-slate-400">${escapeHtml(t.detailReporterLbl)}</dt>
-                    <dd class="font-bold text-slate-800 mt-0.5 truncate">${escapeHtml(ticket.reporter_name || ticket.client_name || '-')}</dd>
-                </div>
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
-                    <dt class="text-[10px] font-bold uppercase text-slate-400">${escapeHtml(t.detailProjectLbl)}</dt>
-                    <dd class="font-bold text-slate-800 mt-0.5 truncate">${escapeHtml(ticket.project_name || '-')}</dd>
-                </div>
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
-                    <dt class="text-[10px] font-bold uppercase text-slate-400">${escapeHtml(t.detailCategoryLbl)}</dt>
-                    <dd class="font-bold text-slate-800 mt-0.5 truncate">${escapeHtml(getCategoryLabel(ticket.category))}</dd>
-                </div>
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
-                    <dt class="text-[10px] font-bold uppercase text-slate-400">${escapeHtml(t.detailDateLbl)}</dt>
-                    <dd class="font-bold text-slate-800 mt-0.5 truncate">${escapeHtml(createdStr)}</dd>
-                </div>
-            </dl>
+        setElText('track-meta-lbl-attachment', `${t.detailAttachmentLbl}:`);
+        setElText('track-meta-val-attachment', ticket.attachment_name || t.noAttachment);
 
-            <div class="text-xs text-slate-500 flex items-center gap-2">
-                <span>📎</span>
-                <span class="font-semibold">${escapeHtml(t.detailAttachmentLbl)}:</span>
-                <span class="text-slate-700 font-bold">${escapeHtml(ticket.attachment_name || t.noAttachment)}</span>
-            </div>
+        const followupEl = document.getElementById('track-followup-container');
+        if (followupEl) {
+            followupEl.innerHTML = hasFollowup
+                ? `
+                    <div class="p-4 sm:p-5 rounded-2xl bg-blue-50/70 border border-blue-200/90 space-y-3">
+                        <div class="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[#003B73]">
+                            <span aria-hidden="true">🛠️</span>
+                            <span>${escapeHtml(t.followupHeader)}</span>
+                        </div>
+                        ${picName ? `
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-500 uppercase">${escapeHtml(t.picLbl)}</span>
+                                <p class="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5 break-words">${escapeHtml(picName)}</p>
+                            </div>
+                        ` : ''}
+                        ${rootCause ? `
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-500 uppercase">${escapeHtml(t.rootCauseLbl)}</span>
+                                <p class="text-xs sm:text-sm text-slate-800 mt-0.5 leading-relaxed break-words">${escapeHtml(rootCause)}</p>
+                            </div>
+                        ` : ''}
+                        ${actionTaken ? `
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-500 uppercase">${escapeHtml(t.actionTakenLbl)}</span>
+                                <p class="text-xs sm:text-sm text-slate-800 mt-0.5 leading-relaxed break-words">${escapeHtml(actionTaken)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `
+                : `
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-500 flex items-center gap-2.5">
+                        <span aria-hidden="true">⏳</span>
+                        <span>${escapeHtml(t.pendingFollowup)}</span>
+                    </div>
+                `;
+        }
 
-            ${followupBlockHtml}
-        `;
+        return true;
     }
+
+    /**
+     * Sinkronisasi Real-Time Antar-Tab (Admin <-> Klien) via storage Event
+     */
+    window.addEventListener('storage', function (e) {
+        if (e.key === 'lrs_complaint_data') {
+            renderRecentTickets();
+            if (activeTrackedTicketId) {
+                const updated = renderTrackTicketResult(activeTrackedTicketId);
+                if (updated) {
+                    const t = I18N[currentLang];
+                    showToast('🔄', t.toastTicketUpdatedTitle, t.toastTicketUpdatedDesc);
+                }
+            }
+        } else if (e.key === 'lrs_client_lang' && e.newValue) {
+            window.setLanguage(e.newValue);
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
         let savedLang = 'id';

@@ -61,12 +61,19 @@ class ClientComplaintPageTest extends TestCase
         $response->assertSee('id="btn-track-created-ticket"', false);
         $response->assertSee('id="btn-create-another-complaint"', false);
 
-        // Panel Lacak Status Tiket (Tab 2)
+        // Panel Lacak Status Tiket (Tab 2) & Struktur Adaptive Timeline
         $response->assertSee('id="track-ticket-input"', false);
         $response->assertSee('id="btn-track-ticket"', false);
         $response->assertSee('Tiket Terbaru Anda');
         $response->assertSee('id="recent-tickets-container"', false);
         $response->assertSee('id="track-result-container"', false);
+        $response->assertSee('id="ticket-timeline-list"', false);
+        $response->assertSee('flex flex-col md:flex-row md:items-start gap-0', false);
+        $response->assertSee('<ol', false);
+        $response->assertSee('<li', false);
+        $response->assertSee('<time', false);
+        $response->assertSee('id="track-meta-val-date"', false);
+        $response->assertSee('id="track-followup-container"', false);
 
         // Footer & Script aktif
         $response->assertSee('js/client-complaint.js', false);
