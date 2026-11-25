@@ -14,17 +14,30 @@ class AdminDashboardTest extends TestCase
         $response = $this->get(route('admin.dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('PT. Len Railways Systems');
+        $response->assertSee('PT Len Railway Systems');
+        $response->assertDontSee('PT. Len Railways Systems');
+        $response->assertDontSee('PT Len Railways Systems');
+        $response->assertDontSee('PT. Len Railway Systems');
+
         $response->assertSee('Ringkasan Kepuasan & Layanan', false);
         $response->assertSee('Indeks Kepuasan Pelanggan');
         $response->assertSee('Unduh Laporan');
-        $response->assertSee('Harapan vs. Kenyataan');
+        $response->assertSee('w-full sm:w-auto', false);
+        $response->assertSee('Kepentingan dan Kepuasan');
+        $response->assertSee('Tingkat Kepuasan');
+        $response->assertSee('Tingkat Kepentingan');
+        $response->assertSee('Selisih Kepentingan & Kepuasan');
         $response->assertSee('Pemantauan & Tindak Lanjut', false);
         $response->assertSee('Daftar & Progres Keluhan', false);
         $response->assertSee('Penyebab Masalah');
         $response->assertSee('Langkah Perbaikan yang Dilakukan');
 
-        // Pastikan istilah teknis / jargon audit lama sudah dibersihkan
+        // Pastikan istilah lama dan skala bintang/5.0 sudah dibersihkan
+        $response->assertDontSee('Harapan vs');
+        $response->assertDontSee('Tingkat Harapan');
+        $response->assertDontSee('Kesesuaian Harapan');
+        $response->assertDontSee('dari skala 5.0');
+        $response->assertDontSee('★');
         $response->assertDontSee('GRC');
         $response->assertDontSee('ISO 9001');
         $response->assertDontSee('ISO 10002');
@@ -41,8 +54,9 @@ class AdminDashboardTest extends TestCase
         $response = $this->get('/admin/dashboard');
 
         $response->assertStatus(200);
+        $response->assertSee('PT Len Railway Systems');
         $response->assertSee('Indeks Kepuasan Pelanggan');
-        $response->assertSee('Harapan vs. Kenyataan');
+        $response->assertSee('Kepentingan dan Kepuasan');
     }
 
     /**
@@ -88,9 +102,17 @@ class AdminDashboardTest extends TestCase
         $response->assertSee('id="dim-score-C"', false);
         $response->assertDontSee('id="dim-score-D"');
 
-        // Konsistensi Pembulatan Skor Kepuasan (1 angka di belakang koma)
-        $response->assertSee('85.7%');
-        $response->assertSee('Target Perusahaan: ≥ 80.0%');
+        // Konsistensi Pembulatan Skor Kepuasan & Kepentingan dalam Persentase (%)
+        $response->assertSee('81.2%');
+        $response->assertSee('82.4%');
+        $response->assertSee('78.0%');
+        $response->assertSee('+4.4%');
+        $response->assertSee('Target Perusahaan:');
+        $response->assertSee('(≥ 80.0%)');
+        $response->assertSee('whitespace-nowrap', false);
+        $response->assertSee('id="dim-imp-A"', false);
+        $response->assertSee('id="dim-imp-B"', false);
+        $response->assertSee('id="dim-imp-C"', false);
 
         // Kartu Partisipasi Responden dengan Hierarki Seragam
         $response->assertSee('id="card-partisipasi-responden"', false);
@@ -185,5 +207,46 @@ class AdminDashboardTest extends TestCase
         $response->assertSee('Uji Suara');
         $response->assertSee('id="setting-toggle-whatsapp"', false);
         $response->assertSee('id="table-notif-logs-body"', false);
+    }
+
+    /**
+     * Test fitur Tautan Survei Umum (Proyek Belum Berkontrak) & filter Non-Kontrak di Dashboard Admin.
+     */
+    public function test_admin_dashboard_has_general_survey_link_and_filters(): void
+    {
+        $response = $this->get(route('admin.dashboard'));
+
+        $response->assertStatus(200);
+
+        // Kartu Tautan Survei Umum di Modul 4
+        $response->assertSee('Tautan Survei Umum (Proyek Belum Berkontrak)');
+        $response->assertSee('id="general-survey-link-card"', false);
+        $response->assertSee('id="general-survey-url"', false);
+        $response->assertSee('mode=general', false);
+        $response->assertSee('Salin Tautan Umum');
+        $response->assertSee('Buka Tautan');
+        $response->assertSee('Tampilkan QR Umum');
+        $response->assertSee('id="general-qr-panel"', false);
+
+        // Opsi Filter Survei Umum (Non-Kontrak) di Modul 1 & Modul 2
+        $response->assertSee('id="filter-overview-project"', false);
+        $response->assertSee('id="filter-surveys-project"', false);
+        $response->assertSee('Survei Umum (Non-Kontrak)');
+    }
+
+    /**
+     * Test akses langsung route /form?mode=general tanpa redirect ke /verify.
+     */
+    public function test_client_portal_general_mode_loads_directly_with_optional_identity_fields(): void
+    {
+        $response = $this->get('/form?mode=general');
+
+        $response->assertStatus(200);
+        $response->assertSee('PT Len Railway Systems');
+        $response->assertSee('Survei Umum (Non-Kontrak)');
+        $response->assertSee('id="general-mode-identity-card"', false);
+        $response->assertSee('id="general-project-name"', false);
+        $response->assertSee('id="general-client-institution"', false);
+        $response->assertSee('id="general-respondent-name"', false);
     }
 }

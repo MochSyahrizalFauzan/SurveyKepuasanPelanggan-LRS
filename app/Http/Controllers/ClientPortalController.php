@@ -30,6 +30,7 @@ class ClientPortalController extends Controller
             'clientName' => $clientName,
             'totalQuestions' => $totalQuestions,
             'totalInputs' => $totalInputs,
+            'isGeneralMode' => request()->query('mode') === 'general',
         ]);
     }
 

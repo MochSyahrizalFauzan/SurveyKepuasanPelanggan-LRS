@@ -73,17 +73,17 @@
             {{-- Tabel Rincian Jawaban Indikator --}}
             <div>
                 <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
-                    Rincian Penilaian Ganda (Harapan vs. Kepuasan)
+                    Rincian Penilaian Ganda (Kepentingan dan Kepuasan)
                 </h4>
-                <div class="border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
+                <div class="border border-slate-200/80 rounded-xl overflow-x-auto shadow-2xs">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-100/80 text-[10px] font-extrabold text-slate-600 uppercase tracking-wider border-b border-slate-200/80">
                                 <th class="py-2.5 px-3">Kode</th>
                                 <th class="py-2.5 px-3">Indikator Penilaian</th>
-                                <th class="py-2.5 px-3 text-center">Harapan (1-5)</th>
-                                <th class="py-2.5 px-3 text-center">Kepuasan (1-5)</th>
-                                <th class="py-2.5 px-3 text-center">Kesesuaian</th>
+                                <th class="py-2.5 px-3 text-center text-[#003B73]">Kepuasan (%)</th>
+                                <th class="py-2.5 px-3 text-center">Kepentingan (%)</th>
+                                <th class="py-2.5 px-3 text-center">Selisih</th>
                             </tr>
                         </thead>
                         <tbody id="modal-survey-answers-body" class="divide-y divide-slate-100 text-slate-700">

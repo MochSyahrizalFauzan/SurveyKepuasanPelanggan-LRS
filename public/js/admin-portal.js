@@ -1,12 +1,12 @@
 /**
- * PT. Len Railways Systems — Admin Portal & Pemantauan Kepuasan Layanan
+ * PT Len Railway Systems — Admin Portal & Pemantauan Kepuasan Layanan
  * Logika Interaktif Vanilla JS + Chart.js + QRCode.js + LocalStorage
  *
  * 6 Section Utama (SPA Hash Navigation):
- * 1. #ringkasan       : Overview CSI, Gauge Chart, IPA Chart, 3 Kartu Kategori, 4 Metrik, Area Prioritas Perbaikan
- * 2. #data-survei     : Rekapitulasi Data Survei Klien, Filter Pencarian & Kategori, Rincian Modal, Ekspor CSV
+ * 1. #ringkasan       : Overview CSI, Gauge Chart, Grafik Kepentingan dan Kepuasan, 3 Kartu Kategori, 4 Metrik, Area Prioritas Perbaikan
+ * 2. #data-survei     : Rekapitulasi Data Survei Klien, Filter Proyek/Kategori/Pencarian, Rincian Modal, Ekspor CSV
  * 3. #keluhan         : Daftar Keluhan Klien, Switcher Tabel & Kanban, Inline Status Change, Tindak Lanjut Modal
- * 4. #qr-tautan       : Generator QR Code Dinamis & Tautan Survei dengan Parameter URL, Kartu Cetak PNG, Riwayat QR
+ * 4. #qr-tautan       : Tautan Survei Umum (Non-Kontrak), Generator QR Code Dinamis & Tautan Survei, Kartu Cetak PNG, Riwayat QR
  * 5. #proyek-personel : Kelola Master Data Proyek & Personel Pendamping LRS (CRUD Lengkap)
  * 6. #pengaturan      : Target Mutu Kepuasan, Toggle Audio Chime & Simulasi WhatsApp, Log Notifikasi, Reset Demo
  */
@@ -19,10 +19,77 @@
     let ipaChartInstance = null;
     let activeTicketId = null;
     let activeQrInstance = null;
+    let generalQrInstance = null;
 
     const DEFAULT_TARGET_SCORE = 80.0;
     const TARGET_TOTAL_PIC = 12;
     const TARGET_TOTAL_PROYEK = 5;
+
+    /**
+     * Helper Escape HTML untuk Mencegah Serangan XSS pada data localStorage
+     */
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /**
+     * Helper Sanitasi URL (Hanya izinkan http:, https:, atau relative path)
+     */
+    function sanitizeUrl(url) {
+        if (!url) return '#';
+        const trimmed = String(url).trim();
+        if (/^(https?:\/\/|\/)/i.test(trimmed)) {
+            return trimmed;
+        }
+        return '#';
+    }
+
+    /**
+     * Konversi Skor Skala 1-5 ke Angka Persentase (0-100)
+     */
+    function toPercentNum(scoreOutOf5) {
+        return (parseFloat(scoreOutOf5) / 5) * 100;
+    }
+
+    /**
+     * Konversi Skor Skala 1-5 ke Format Persentase 1 Desimal (contoh: "82.4%")
+     */
+    function toPercentStr(scoreOutOf5) {
+        return toPercentNum(scoreOutOf5).toFixed(1) + '%';
+    }
+
+    /**
+     * Cek apakah item survei/keluhan termasuk Survei Umum (Non-Kontrak)
+     */
+    function isGeneralSurveyItem(item) {
+        if (!item) return false;
+        return item.survey_source === 'general' || item.project_code === 'GENERAL';
+    }
+
+    /**
+     * Cek kesesuaian periode tanggal ISO terhadap filter periode
+     */
+    function matchesPeriodFilter(isoDate, periodFilter) {
+        if (!periodFilter || periodFilter === 'all') return true;
+        if (!isoDate) return periodFilter === '2026-YTD';
+        const d = new Date(isoDate);
+        if (Number.isNaN(d.getTime())) return true;
+
+        const year = d.getUTCFullYear();
+        const month = d.getUTCMonth() + 1;
+
+        if (periodFilter === '2025') return year === 2025;
+        if (periodFilter === '2026-YTD') return year === 2026;
+        if (periodFilter === '2026-Q1') return year === 2026 && month >= 1 && month <= 3;
+        if (periodFilter === '2026-Q2') return year === 2026 && month >= 4 && month <= 6;
+        return true;
+    }
 
     // Mapping Kategori Sesuai PRD.md
     const CATEGORY_NAMES = {
@@ -582,11 +649,13 @@
             populateOverviewProjectFilter();
             renderOverviewData();
         } else if (targetSectionId === 'section-surveys') {
+            populateSurveysProjectFilter();
             renderSurveysTable();
         } else if (targetSectionId === 'section-complaints') {
             renderComplaintsView();
             updateComplaintTabBadge();
         } else if (targetSectionId === 'section-qr') {
+            initGeneralSurveyLinkCard();
             populateQrDropdowns();
             onQrParameterChange();
             renderQrHistoryTable();
@@ -725,12 +794,33 @@
         const currentVal = select.value || 'all';
         const projects = JSON.parse(localStorage.getItem('lrs_projects_data') || '[]');
 
-        let html = '<option value="all">Semua Proyek Aktif</option>';
+        let html = '<option value="all">Semua Proyek</option>';
+        html += '<option value="GENERAL">Survei Umum (Non-Kontrak)</option>';
         projects.forEach(p => {
-            html += `<option value="${p.name}">${p.name}</option>`;
+            html += `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`;
         });
         select.innerHTML = html;
-        select.value = currentVal;
+        if (Array.from(select.options).some(opt => opt.value === currentVal)) {
+            select.value = currentVal;
+        }
+    }
+
+    function populateSurveysProjectFilter() {
+        const select = document.getElementById('filter-surveys-project');
+        if (!select) return;
+
+        const currentVal = select.value || 'all';
+        const projects = JSON.parse(localStorage.getItem('lrs_projects_data') || '[]');
+
+        let html = '<option value="all">Semua Proyek</option>';
+        html += '<option value="GENERAL">Survei Umum (Non-Kontrak)</option>';
+        projects.forEach(p => {
+            html += `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`;
+        });
+        select.innerHTML = html;
+        if (Array.from(select.options).some(opt => opt.value === currentVal)) {
+            select.value = currentVal;
+        }
     }
 
     window.onFilterChange = function () {
@@ -744,11 +834,16 @@
         const targetMutuPercent = parseFloat(settings.target_score) || DEFAULT_TARGET_SCORE;
 
         const selectedProject = document.getElementById('filter-overview-project')?.value || 'all';
+        const selectedPeriod = document.getElementById('filter-overview-period')?.value || 'all';
 
-        // Filter Survei berdasarkan Proyek jika dipilih
-        const filteredSurveys = selectedProject === 'all'
-            ? surveys
-            : surveys.filter(s => (s.project_name || '').toLowerCase() === selectedProject.toLowerCase());
+        // Filter Survei berdasarkan Proyek dan Periode
+        const filteredSurveys = surveys.filter(s => {
+            const matchPeriod = matchesPeriodFilter(s.submitted_at, selectedPeriod);
+            if (!matchPeriod) return false;
+            if (selectedProject === 'all') return true;
+            if (selectedProject === 'GENERAL') return isGeneralSurveyItem(s);
+            return (s.project_name || '').toLowerCase() === selectedProject.toLowerCase();
+        });
 
         let totalScorePossible = 0;
         let totalScoreActual = 0;
@@ -818,17 +913,20 @@
             });
         });
 
-        // Hitung Indeks Kepuasan Persentase
+        // Hitung Indeks Kepuasan & Kepentingan dalam Persentase (%) dengan 1 desimal
         let csiPercentage = totalScorePossible > 0
             ? (totalScoreActual / totalScorePossible) * 100
-            : 85.70;
+            : 81.20;
 
-        csiPercentage = Math.round(csiPercentage * 100) / 100;
+        csiPercentage = Math.round(csiPercentage * 10) / 10;
 
-        const avgKepentingan = countAnswers > 0 ? (sumKepentingan / countAnswers).toFixed(2) : '4.62';
-        const avgKepuasan = countAnswers > 0 ? (sumKepuasan / countAnswers).toFixed(2) : '4.28';
-        const kesesuaianNumber = parseFloat(avgKepuasan) - parseFloat(avgKepentingan);
-        const kesesuaianStr = (kesesuaianNumber >= 0 ? `+` : ``) + kesesuaianNumber.toFixed(2);
+        const avgKepuasanPctNum = countAnswers > 0 ? ((sumKepuasan / (countAnswers * 5)) * 100) : 82.4;
+        const avgKepentinganPctNum = countAnswers > 0 ? ((sumKepentingan / (countAnswers * 5)) * 100) : 78.0;
+        const avgKepuasanPctStr = avgKepuasanPctNum.toFixed(1) + '%';
+        const avgKepentinganPctStr = avgKepentinganPctNum.toFixed(1) + '%';
+
+        const selisihPctNum = parseFloat(avgKepuasanPctNum.toFixed(1)) - parseFloat(avgKepentinganPctNum.toFixed(1));
+        const selisihPctStr = (selisihPctNum >= 0 ? '+' : '') + selisihPctNum.toFixed(1) + '%';
 
         // Update Skor & Gauge (Konsisten 1 Desimal toFixed(1))
         const csiNumberEl = document.getElementById('csi-score-number');
@@ -840,7 +938,9 @@
         const csiFormatted = csiPercentage.toFixed(1);
         if (csiNumberEl) csiNumberEl.textContent = `${csiFormatted}%`;
         if (gaugeCenterEl) gaugeCenterEl.textContent = `${csiFormatted}%`;
-        if (targetTextEl) targetTextEl.textContent = `/ Target Perusahaan: ≥ ${targetMutuPercent.toFixed(1)}%`;
+        if (targetTextEl) {
+            targetTextEl.innerHTML = `/ Target Perusahaan: <span class="whitespace-nowrap">(≥ ${targetMutuPercent.toFixed(1)}%)</span>`;
+        }
         const topbarTargetEl = document.getElementById('topbar-target-score');
         if (topbarTargetEl) topbarTargetEl.textContent = targetMutuPercent.toFixed(1);
 
@@ -849,18 +949,18 @@
                 badgeEl.className = 'px-3 py-1 rounded-full text-xs font-extrabold border bg-emerald-50 text-emerald-700 border-emerald-200 shadow-2xs';
                 badgeEl.textContent = 'Memenuhi Target';
                 if (interpEl) {
-                    interpEl.textContent = `Kinerja layanan sudah mencapai target perusahaan (≥ ${targetMutuPercent.toFixed(1)}%).`;
+                    interpEl.innerHTML = `Kinerja layanan sudah mencapai target perusahaan <span class="whitespace-nowrap">(≥ ${targetMutuPercent.toFixed(1)}%)</span>.`;
                 }
             } else {
                 badgeEl.className = 'px-3 py-1 rounded-full text-xs font-extrabold border bg-amber-50 text-amber-700 border-amber-200 shadow-2xs';
                 badgeEl.textContent = 'Di Bawah Target';
                 if (interpEl) {
-                    interpEl.textContent = `Skor saat ini (${csiFormatted}%) masih di bawah target (≥ ${targetMutuPercent.toFixed(1)}%). Fokus perbaikan pada area yang nilainya rendah.`;
+                    interpEl.innerHTML = `Skor saat ini (${csiFormatted}%) masih di bawah target <span class="whitespace-nowrap">(≥ ${targetMutuPercent.toFixed(1)}%)</span>. Fokus perbaikan pada area yang nilainya rendah.`;
                 }
             }
         }
 
-        // Update 4 Kotak Ringkasan Sejajar
+        // Update 4 Kotak Ringkasan Sejajar (Kepuasan sebagai metrik utama dalam %)
         const elAvgImp = document.getElementById('avg-kepentingan-val');
         const elAvgSat = document.getElementById('avg-kepuasan-val');
         const elGapVal = document.getElementById('gap-index-val');
@@ -868,58 +968,69 @@
         const elRatioVal = document.getElementById('participation-ratio-val');
         const elRatioSub = document.getElementById('participation-subtext');
 
-        if (elAvgImp) elAvgImp.textContent = avgKepentingan;
-        if (elAvgSat) elAvgSat.textContent = avgKepuasan;
+        if (elAvgSat) elAvgSat.textContent = avgKepuasanPctStr;
+        if (elAvgImp) elAvgImp.textContent = avgKepentinganPctStr;
 
         if (elGapVal) {
-            elGapVal.textContent = kesesuaianStr;
-            if (kesesuaianNumber >= 0) {
+            elGapVal.textContent = selisihPctStr;
+            if (selisihPctNum >= 0) {
                 elGapVal.className = 'text-base md:text-lg font-black text-emerald-600';
                 if (elGapLabel) {
                     elGapLabel.className = 'block text-[10px] text-emerald-600 font-bold';
-                    elGapLabel.textContent = '(Melampaui Harapan)';
+                    elGapLabel.textContent = 'Melampaui Kepentingan';
                 }
             } else {
                 elGapVal.className = 'text-base md:text-lg font-black text-rose-600';
                 if (elGapLabel) {
                     elGapLabel.className = 'block text-[10px] text-rose-600 font-bold';
-                    elGapLabel.textContent = '(Di Bawah Harapan)';
+                    elGapLabel.textContent = 'Di Bawah Kepentingan';
                 }
             }
         }
 
         // Partisipasi Responden
-        const picCount = respondentsSet.size || (filteredSurveys.length > 0 ? filteredSurveys.length : 6);
-        const activeProjectsCount = activeProjectsSet.size || (selectedProject !== 'all' ? 1 : 3);
-        const targetPics = selectedProject === 'all' ? TARGET_TOTAL_PIC : 3;
+        const picCount = respondentsSet.size || (filteredSurveys.length > 0 ? filteredSurveys.length : 0);
+        const activeProjectsCount = activeProjectsSet.size || (selectedProject !== 'all' ? (filteredSurveys.length > 0 ? 1 : 0) : 0);
+        const targetPics = selectedProject === 'all' ? TARGET_TOTAL_PIC : Math.max(picCount, 3);
         const targetProjects = TARGET_TOTAL_PROYEK;
-        const partPct = Math.round((picCount / targetPics) * 100);
+        const partPct = targetPics > 0 ? Math.round((picCount / targetPics) * 100) : 0;
 
         if (elRatioVal) elRatioVal.textContent = `${partPct}%`;
         if (elRatioSub) {
-            elRatioSub.textContent = selectedProject === 'all'
-                ? `${picCount} dari ${targetPics} PIC • ${activeProjectsCount}/${targetProjects} Proyek Aktif`
-                : `${picCount} PIC • Proyek: ${selectedProject}`;
+            if (selectedProject === 'all') {
+                elRatioSub.textContent = `${picCount} dari ${targetPics} PIC • ${activeProjectsCount}/${targetProjects} Proyek Aktif`;
+            } else if (selectedProject === 'GENERAL') {
+                elRatioSub.textContent = `${picCount} PIC • Survei Umum (Non-Kontrak)`;
+            } else {
+                elRatioSub.textContent = `${picCount} PIC • Proyek: ${selectedProject}`;
+            }
         }
 
-        // Update 3 Kartu Kategori
+        // Update 3 Kartu Kategori (Kepuasan utama % & Kepentingan pendamping %)
+        const fallbackImpPct = { A: 93.0, B: 92.0, C: 89.0 };
         ['A', 'B', 'C'].forEach(dim => {
             const st = dimStats[dim];
             const pct = st.possible > 0
                 ? (st.actual / st.possible) * 100
                 : (dim === 'A' ? 88.2 : dim === 'B' ? 84.6 : 83.5);
+            const impPct = st.count > 0
+                ? ((st.imp / (st.count * 5)) * 100)
+                : fallbackImpPct[dim];
             const fixedPct = pct.toFixed(1);
+            const fixedImpPct = impPct.toFixed(1);
 
             const scoreEl = document.getElementById(`dim-score-${dim}`);
+            const impEl = document.getElementById(`dim-imp-${dim}`);
             const barEl = document.getElementById(`dim-bar-${dim}`);
             const ratioEl = document.getElementById(`dim-ratio-${dim}`);
             const badgeDimEl = document.getElementById(`dim-badge-${dim}`);
 
             if (scoreEl) scoreEl.textContent = `${fixedPct}%`;
+            if (impEl) impEl.textContent = `Kepentingan: ${fixedImpPct}%`;
             if (barEl) barEl.style.width = `${fixedPct}%`;
 
-            const catProjectsCount = st.projectsSet.size || activeProjectsCount;
-            const catPicCount = st.picSet.size || picCount;
+            const catProjectsCount = st.projectsSet.size;
+            const catPicCount = st.picSet.size;
             if (ratioEl) ratioEl.textContent = `${catProjectsCount}/${targetProjects} Proyek • ${catPicCount}/${targetPics} PIC`;
 
             if (badgeDimEl) {
@@ -988,8 +1099,7 @@
         const top3 = list.slice(0, 3);
 
         container.innerHTML = top3.map((item, idx) => {
-            const avgStr = item.avg.toFixed(1);
-            const pct = Math.round((item.avg / 5.0) * 100);
+            const pctStr = toPercentStr(item.avg);
             return `
                 <div class="p-4 rounded-xl border border-amber-200/80 bg-amber-50/40 hover:bg-amber-50/70 transition-all flex flex-col justify-between">
                     <div>
@@ -997,21 +1107,21 @@
                             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
                                 <span>#${idx + 1} Prioritas</span>
                                 <span>•</span>
-                                <span>${item.code}</span>
+                                <span>${escapeHtml(item.code)}</span>
                             </span>
                             <span class="text-xs font-black text-amber-700 bg-white px-2 py-0.5 rounded-md border border-amber-200 shadow-2xs">
-                                ${avgStr} / 5.0 (${pct}%)
+                                ${pctStr}
                             </span>
                         </div>
                         <h4 class="text-xs font-bold text-slate-800 leading-snug mb-1">
-                            ${item.title}
+                            ${escapeHtml(item.title)}
                         </h4>
                         <p class="text-[11px] text-slate-500 font-medium">
-                            Kategori: <span class="font-semibold text-slate-700">${item.cat}</span>
+                            Kategori: <span class="font-semibold text-slate-700">${escapeHtml(item.cat)}</span>
                         </p>
                     </div>
                     <div class="mt-3 pt-2.5 border-t border-amber-200/60 flex items-center justify-between text-[10px] font-semibold text-amber-800">
-                        <span>Rekomendasi: Tinjau & Evaluasi PIC Lapangan</span>
+                        <span>Rekomendasi: Tinjau &amp; Evaluasi PIC Lapangan</span>
                         <span>⚠️</span>
                     </div>
                 </div>
@@ -1071,14 +1181,14 @@
 
         const labels = ['A. Layanan & Dukungan', 'B. Pelaksanaan Proyek', 'C. Masa Pemeliharaan'];
         const impData = [
-            dimStats.A.count > 0 ? (dimStats.A.imp / dimStats.A.count).toFixed(2) : '4.65',
-            dimStats.B.count > 0 ? (dimStats.B.imp / dimStats.B.count).toFixed(2) : '4.60',
-            dimStats.C.count > 0 ? (dimStats.C.imp / dimStats.C.count).toFixed(2) : '4.45'
+            dimStats.A.count > 0 ? parseFloat(((dimStats.A.imp / (dimStats.A.count * 5)) * 100).toFixed(1)) : 93.0,
+            dimStats.B.count > 0 ? parseFloat(((dimStats.B.imp / (dimStats.B.count * 5)) * 100).toFixed(1)) : 92.0,
+            dimStats.C.count > 0 ? parseFloat(((dimStats.C.imp / (dimStats.C.count * 5)) * 100).toFixed(1)) : 89.0
         ];
         const satData = [
-            dimStats.A.count > 0 ? (dimStats.A.sat / dimStats.A.count).toFixed(2) : '4.41',
-            dimStats.B.count > 0 ? (dimStats.B.sat / dimStats.B.count).toFixed(2) : '4.25',
-            dimStats.C.count > 0 ? (dimStats.C.sat / dimStats.C.count).toFixed(2) : '4.18'
+            dimStats.A.count > 0 ? parseFloat(((dimStats.A.sat / (dimStats.A.count * 5)) * 100).toFixed(1)) : 88.2,
+            dimStats.B.count > 0 ? parseFloat(((dimStats.B.sat / (dimStats.B.count * 5)) * 100).toFixed(1)) : 84.6,
+            dimStats.C.count > 0 ? parseFloat(((dimStats.C.sat / (dimStats.C.count * 5)) * 100).toFixed(1)) : 83.5
         ];
 
         const ctx = canvas.getContext('2d');
@@ -1088,8 +1198,20 @@
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Kepuasan (Kenyataan)',
+                        label: 'Kepuasan',
                         data: satData,
+                        type: 'bar',
+                        backgroundColor: '#003B73',
+                        hoverBackgroundColor: '#002B54',
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        barThickness: 36,
+                        order: 2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Kepentingan',
+                        data: impData,
                         type: 'line',
                         borderColor: '#F59E0B',
                         backgroundColor: '#F59E0B',
@@ -1100,17 +1222,7 @@
                         pointRadius: 6,
                         pointHoverRadius: 8,
                         tension: 0.2,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Harapan (Tingkat Kepentingan)',
-                        data: impData,
-                        type: 'bar',
-                        backgroundColor: '#003B73',
-                        hoverBackgroundColor: '#002B54',
-                        borderRadius: 8,
-                        borderSkipped: false,
-                        barThickness: 32,
+                        order: 1,
                         yAxisID: 'y'
                     }
                 ]
@@ -1128,16 +1240,23 @@
                         bodyFont: { size: 11 },
                         callbacks: {
                             label: function (ctx) {
-                                return ` ${ctx.dataset.label}: ${ctx.raw} / 5.0`;
+                                return ` ${ctx.dataset.label}: ${parseFloat(ctx.raw).toFixed(1)}%`;
                             }
                         }
                     }
                 },
                 scales: {
                     y: {
-                        min: 3.0,
-                        max: 5.0,
-                        ticks: { stepSize: 0.5, font: { size: 10, weight: 'bold' }, color: '#64748B' },
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20,
+                            font: { size: 10, weight: 'bold' },
+                            color: '#64748B',
+                            callback: function (value) {
+                                return value + '%';
+                            }
+                        },
                         grid: { color: '#F1F5F9' }
                     },
                     x: {
@@ -1148,44 +1267,66 @@
             }
         });
 
-        // Kesimpulan otomatis
-        const summaryTextEl = document.getElementById('ipa-summary-text');
+        // Kesimpulan otomatis (Kepentingan dan Kepuasan dalam %)
+        const summaryTextEl = document.getElementById('chart-main-conclusion') || document.getElementById('ipa-summary-text');
         if (summaryTextEl) {
             const lowestSat = Math.min(...satData.map(Number));
             const lowestIdx = satData.findIndex(v => Number(v) === lowestSat);
-            const lowestCat = labels[lowestIdx] || 'Pelaksanaan Proyek';
-            summaryTextEl.textContent = `Prioritas perbaikan utama berada pada "${lowestCat}" dengan selisih kepuasan terendah.`;
+            const lowestCat = labels[lowestIdx] || 'B. Pelaksanaan Proyek';
+            const lowestImp = impData[lowestIdx] || 0;
+            const gapVal = (lowestSat - lowestImp).toFixed(1);
+            const gapText = parseFloat(gapVal) >= 0 ? `+${gapVal}%` : `${gapVal}%`;
+            summaryTextEl.textContent = `Fokus utama pada "${lowestCat}" dengan kepuasan ${lowestSat.toFixed(1)}% dibanding kepentingan ${lowestImp.toFixed(1)}% (selisih ${gapText}).`;
         }
     }
 
     function renderPemantauanDanTindakLanjut(complaints, lowIndicators, selectedProject) {
-        const filteredComplaints = selectedProject === 'all'
-            ? complaints
-            : complaints.filter(c => (c.project_name || '').toLowerCase() === selectedProject.toLowerCase());
+        const filteredComplaints = complaints.filter(c => {
+            if (selectedProject === 'all') return true;
+            if (selectedProject === 'GENERAL') return isGeneralSurveyItem(c);
+            return (c.project_name || '').toLowerCase() === selectedProject.toLowerCase();
+        });
+
+        const totalComplaints = filteredComplaints.length;
+        const resolvedComplaints = filteredComplaints.filter(c => (c.status || '').toLowerCase() === 'resolved');
+        const onTimeResolved = resolvedComplaints.filter(c => {
+            if (!c.created_at || !c.resolved_at) return true;
+            const hours = (new Date(c.resolved_at) - new Date(c.created_at)) / (1000 * 3600);
+            return hours <= (c.sla_hours || 24);
+        });
+
+        const slaPct = totalComplaints > 0 ? Math.round((onTimeResolved.length / totalComplaints) * 100) : 100;
+        const elSlaPct = document.getElementById('sla-adherence-pct');
+        const elSlaBar = document.getElementById('sla-adherence-bar');
+        const elSlaDetail = document.getElementById('sla-detail-text');
+        const elStatusBadge = document.getElementById('status-layanan-badge');
+
+        if (elSlaPct) elSlaPct.textContent = `${slaPct}% Tepat Waktu`;
+        if (elSlaBar) elSlaBar.style.width = `${slaPct}%`;
+        if (elSlaDetail) elSlaDetail.textContent = `${onTimeResolved.length} dari ${totalComplaints} keluhan selesai sesuai target`;
+        if (elStatusBadge) {
+            if (slaPct >= 80) {
+                elStatusBadge.className = 'font-bold text-emerald-600';
+                elStatusBadge.textContent = '● Status Layanan: Baik';
+            } else if (slaPct >= 50) {
+                elStatusBadge.className = 'font-bold text-amber-600';
+                elStatusBadge.textContent = '● Status Layanan: Perlu Perhatian';
+            } else {
+                elStatusBadge.className = 'font-bold text-rose-600';
+                elStatusBadge.textContent = '● Status Layanan: Kritis';
+            }
+        }
 
         const openComplaints = filteredComplaints.filter(c => (c.status || '').toLowerCase() === 'open');
         const inProgressComplaints = filteredComplaints.filter(c => (c.status || '').toLowerCase() === 'in progress');
-        const resolvedComplaints = filteredComplaints.filter(c => (c.status || '').toLowerCase() === 'resolved');
-
-        const badgeOverdue = document.getElementById('badge-count-overdue');
-        const badgeWarning = document.getElementById('badge-count-warning');
-        const badgeOntrack = document.getElementById('badge-count-ontrack');
-
-        if (badgeOverdue) badgeOverdue.textContent = openComplaints.length;
-        if (badgeWarning) badgeWarning.textContent = inProgressComplaints.length;
-        if (badgeOntrack) badgeOntrack.textContent = resolvedComplaints.length;
-
-        const container = document.getElementById('prioritas-tindak-lanjut-list');
-        if (!container) return;
 
         const actionItems = [];
         openComplaints.forEach(c => {
             actionItems.push({
-                type: 'Keluhan Kritis',
+                type: 'Keluhan Baru',
                 badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
                 title: c.subject || c.description,
-                subtitle: `${c.project_name} • Tiket #${c.ticket_id}`,
-                pic: c.pic || 'Koordinator Lapangan',
+                subtitle: `${c.project_name || 'Proyek LRS'} • ${c.ticket_id}`,
                 actionText: 'Tindak Lanjut',
                 actionTicketId: c.ticket_id
             });
@@ -1196,12 +1337,17 @@
                 type: 'Dalam Pengerjaan',
                 badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
                 title: c.subject || c.description,
-                subtitle: `${c.project_name} • PIC: ${c.pic || 'Tim Terkait'}`,
-                pic: c.pic || 'Tim Operasional',
+                subtitle: `${c.project_name || 'Proyek LRS'} • PIC: ${c.pic || 'Tim Terkait'}`,
                 actionText: 'Lihat Progress',
                 actionTicketId: c.ticket_id
             });
         });
+
+        const elOpenCapa = document.getElementById('open-capa-count');
+        if (elOpenCapa) elOpenCapa.textContent = `${actionItems.length} Masalah`;
+
+        const container = document.getElementById('capa-alerts-container') || document.getElementById('prioritas-tindak-lanjut-list');
+        if (!container) return;
 
         if (actionItems.length === 0) {
             container.innerHTML = `
@@ -1217,16 +1363,16 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border ${item.badgeClass}">
-                            ${item.type}
+                            ${escapeHtml(item.type)}
                         </span>
-                        <span class="text-[11px] font-semibold text-slate-500 truncate">${item.subtitle}</span>
+                        <span class="text-[11px] font-semibold text-slate-500 truncate">${escapeHtml(item.subtitle)}</span>
                     </div>
-                    <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${item.title}</h4>
+                    <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${escapeHtml(item.title)}</h4>
                 </div>
                 <button type="button"
-                        onclick="openTicketModal('${item.actionTicketId}')"
+                        onclick="openTicketModal('${escapeHtml(item.actionTicketId)}')"
                         class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#003B73] bg-blue-50 hover:bg-blue-100 transition-colors shrink-0 cursor-pointer">
-                    ${item.actionText}
+                    ${escapeHtml(item.actionText)}
                 </button>
             </div>
         `).join('');
@@ -1240,17 +1386,33 @@
         }
 
         let csv = '\uFEFF';
-        csv += 'No,Nomor Referensi,Tanggal,Klien,Proyek,Kategori,Personel Pendamping,Catatan\n';
+        csv += 'PT Len Railway Systems - Laporan Kepentingan dan Kepuasan Pelanggan\n';
+        csv += 'No,Nomor Referensi,Tanggal,Klien,Proyek,Sumber Survei,Kategori,Personel Pendamping,Tingkat Kepuasan (%),Tingkat Kepentingan (%),Selisih Kepentingan & Kepuasan (%),Catatan\n';
 
         surveys.forEach((s, idx) => {
             const dateStr = s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('id-ID') : '-';
             const cleanNotes = (s.general_notes || '').replace(/"/g, '""');
-            csv += `${idx + 1},"${s.reference_no || '-'}","${dateStr}","${s.client_name || s.respondent_id || '-'}","${s.project_name || '-'}","${s.category_name || s.category_id || '-'}","${s.accompanying_personnel || '-'}","${cleanNotes}"\n`;
+            let sumImp = 0, sumSat = 0, cnt = 0;
+            (s.answers || []).forEach(a => {
+                if (a.kepentingan > 0 && a.kepuasan > 0) {
+                    sumImp += parseFloat(a.kepentingan);
+                    sumSat += parseFloat(a.kepuasan);
+                    cnt++;
+                }
+            });
+            const satPct = cnt > 0 ? ((sumSat / (cnt * 5)) * 100).toFixed(1) : '80.0';
+            const impPct = cnt > 0 ? ((sumImp / (cnt * 5)) * 100).toFixed(1) : '80.0';
+            const gapPctNum = parseFloat(satPct) - parseFloat(impPct);
+            const gapPct = (gapPctNum >= 0 ? '+' : '') + gapPctNum.toFixed(1) + '%';
+            const sourceLabel = isGeneralSurveyItem(s) ? 'Survei Umum' : 'Proyek Kontrak';
+
+            csv += `${idx + 1},"${s.reference_no || '-'}","${dateStr}","${s.client_name || s.respondent_id || '-'}","${s.project_name || '-'}","${sourceLabel}","${s.category_name || s.category_id || '-'}","${s.accompanying_personnel || '-'}","${satPct}%","${impPct}%","${gapPct}","${cleanNotes}"\n`;
         });
 
-        downloadCsvFile(csv, 'ringkasan-survei-lrs.csv');
-        showAdminToast('File CSV ringkasan berhasil diunduh.');
+        downloadCsvFile(csv, 'laporan-kepentingan-dan-kepuasan-lrs.csv');
+        showAdminToast('Laporan CSV PT Len Railway Systems berhasil diunduh.');
     };
+    window.exportIsoReport = window.exportOverviewCsv;
 
     /**
      * =========================================================================
@@ -1269,12 +1431,19 @@
         const surveys = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
         const searchInput = ((document.getElementById('filter-surveys-search') || document.getElementById('filter-survey-search'))?.value || '').toLowerCase().trim();
         const categoryFilter = (document.getElementById('filter-surveys-category') || document.getElementById('filter-survey-category'))?.value || 'all';
+        const projectFilter = document.getElementById('filter-surveys-project')?.value || 'all';
 
         const filtered = surveys.filter(s => {
             const matchCat = categoryFilter === 'all' || s.category_id === categoryFilter;
-            const searchTarget = `${s.reference_no || ''} ${s.client_name || ''} ${s.respondent_id || ''} ${s.project_name || ''} ${s.accompanying_personnel || ''}`.toLowerCase();
+            let matchProj = true;
+            if (projectFilter === 'GENERAL') {
+                matchProj = isGeneralSurveyItem(s);
+            } else if (projectFilter !== 'all') {
+                matchProj = (s.project_name || '').toLowerCase() === projectFilter.toLowerCase();
+            }
+            const searchTarget = `${s.reference_no || ''} ${s.client_name || ''} ${s.respondent_id || ''} ${s.project_name || ''} ${s.accompanying_personnel || ''} ${isGeneralSurveyItem(s) ? 'survei umum general non-kontrak' : ''}`.toLowerCase();
             const matchSearch = !searchInput || searchTarget.includes(searchInput);
-            return matchCat && matchSearch;
+            return matchCat && matchProj && matchSearch;
         });
 
         // Update Counter Cards
@@ -1315,41 +1484,57 @@
                 ? new Date(s.submitted_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                 : '-';
             const catName = s.category_name || CATEGORY_NAMES[s.category_id] || 'Pelaksanaan Proyek';
+            const isGeneral = isGeneralSurveyItem(s);
 
             let sumSat = 0;
+            let sumImp = 0;
             let countAns = 0;
             (s.answers || []).forEach(a => {
                 if (a.kepuasan > 0) {
                     sumSat += parseFloat(a.kepuasan);
+                    sumImp += parseFloat(a.kepentingan || 0);
                     countAns++;
                 }
             });
-            const scorePct = countAns > 0 ? ((sumSat / (countAns * 5)) * 100).toFixed(1) : '85.0';
+            const scorePct = countAns > 0 ? ((sumSat / (countAns * 5)) * 100).toFixed(1) : '80.0';
+            const impPct = countAns > 0 && sumImp > 0 ? ((sumImp / (countAns * 5)) * 100).toFixed(1) : '80.0';
+
+            const generalBadge = isGeneral
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-700 border border-sky-200 ml-1.5">Survei Umum</span>`
+                : '';
 
             html += `
                 <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
-                    <td class="px-4 py-3.5 font-black text-[#003B73]">
-                        ${refNo}
+                    <td class="px-4 py-3.5 font-black text-[#003B73] whitespace-nowrap">
+                        ${escapeHtml(refNo)}
                     </td>
                     <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap">
-                        ${dateStr}
+                        ${escapeHtml(dateStr)}
                     </td>
                     <td class="px-4 py-3.5">
-                        <div class="font-bold text-slate-800">${s.project_name || '-'}</div>
-                        <div class="text-[11px] text-slate-500">${s.client_name || s.respondent_id || 'PIC Responden'}</div>
+                        <div class="font-bold text-slate-800 flex flex-wrap items-center gap-1">
+                            <span>${escapeHtml(s.project_name || (isGeneral ? 'Survei Umum (Non-Kontrak)' : '-'))}</span>
+                            ${generalBadge}
+                        </div>
+                        <div class="text-[11px] text-slate-500">${escapeHtml(s.client_name || s.respondent_id || 'PIC Responden')}</div>
                     </td>
                     <td class="px-4 py-3.5">
                         <span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-[#003B73] border border-blue-100">
-                            ${catName}
+                            ${escapeHtml(catName)}
                         </span>
                     </td>
                     <td class="px-4 py-3.5 text-slate-700 font-semibold">
-                        ${s.accompanying_personnel || 'Ir. Dwi Suryanto, S.T.'}
+                        ${escapeHtml(s.accompanying_personnel || (isGeneral ? 'Layanan Umum LRS' : 'Ir. Dwi Suryanto, S.T.'))}
                     </td>
                     <td class="px-4 py-3.5">
-                        <span class="inline-flex items-center gap-1 font-black text-xs px-2.5 py-1 rounded-md ${parseFloat(scorePct) >= 80 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
-                            ${scorePct}%
-                        </span>
+                        <div class="flex flex-col items-start gap-0.5">
+                            <span class="inline-flex items-center gap-1 font-black text-xs px-2.5 py-0.5 rounded-md ${parseFloat(scorePct) >= 80 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                                Kepuasan: ${scorePct}%
+                            </span>
+                            <span class="text-[10px] text-slate-500 font-semibold pl-0.5">
+                                Kepentingan: ${impPct}%
+                            </span>
+                        </div>
                     </td>
                     <td class="px-4 py-3.5 text-center whitespace-nowrap">
                         <button type="button"
@@ -1373,6 +1558,8 @@
         const modal = document.getElementById('surveyDetailModal');
         if (!modal) return;
 
+        const isGeneral = isGeneralSurveyItem(survey);
+
         // Header & Metadata
         const elRef = document.getElementById('modal-survey-ref') || document.getElementById('detail-survey-ref');
         const elCatBadge = document.getElementById('modal-survey-category-badge');
@@ -1390,7 +1577,7 @@
         const catName = survey.category_name || CATEGORY_NAMES[survey.category_id] || 'Pelaksanaan Proyek';
 
         if (elRef) elRef.textContent = survey.reference_no || 'SRV-LRS';
-        if (elCatBadge) elCatBadge.textContent = catName;
+        if (elCatBadge) elCatBadge.textContent = isGeneral ? `${catName} · Survei Umum` : catName;
         if (elDate) {
             elDate.textContent = survey.submitted_at
                 ? new Date(survey.submitted_at).toLocaleString('id-ID')
@@ -1398,8 +1585,8 @@
         }
         if (elClientName) elClientName.textContent = survey.client_name || survey.respondent_id || 'PIC Klien';
         if (elClientRole) elClientRole.textContent = survey.client_role ? `${survey.client_role} • ${survey.project_name || ''}` : 'Responden Lapangan';
-        if (elProject) elProject.textContent = survey.project_name || '-';
-        if (elPersonnel) elPersonnel.textContent = `Personel Pendamping: ${survey.accompanying_personnel || 'Ir. Dwi Suryanto, S.T.'}`;
+        if (elProject) elProject.textContent = (survey.project_name || '-') + (isGeneral ? ' (Survei Umum)' : '');
+        if (elPersonnel) elPersonnel.textContent = `Personel Pendamping: ${survey.accompanying_personnel || (isGeneral ? 'Layanan Umum LRS' : 'Ir. Dwi Suryanto, S.T.')}`;
 
         if (elNotifStatus) {
             elNotifStatus.textContent = `Simulasi notifikasi otomatis diteruskan ke ${survey.accompanying_personnel || 'Personel Pendamping'} via WhatsApp.`;
@@ -1416,23 +1603,29 @@
             }
         }
 
-        // Tabel Indikator
+        // Tabel Indikator (Kepuasan %, Kepentingan %, dan Selisih Kepentingan & Kepuasan %)
         if (elIndTable) {
             let indHtml = '';
             (survey.answers || []).forEach(a => {
                 const meta = INDICATOR_MAP[a.question_id] || { code: a.question_id, title: `Indikator ${a.question_id}` };
                 const imp = parseFloat(a.kepentingan) || 0;
                 const sat = parseFloat(a.kepuasan) || 0;
-                const gap = (sat - imp).toFixed(1);
-                const gapColor = (sat - imp) >= 0 ? 'text-emerald-600' : 'text-rose-600';
+                const satPctNum = toPercentNum(sat);
+                const impPctNum = toPercentNum(imp);
+                const gapPctNum = satPctNum - impPctNum;
+                const gapStr = (gapPctNum >= 0 ? '+' : '') + gapPctNum.toFixed(1) + '%';
+                const gapColor = gapPctNum >= 0 ? 'text-emerald-600' : 'text-rose-600';
 
                 indHtml += `
                     <tr class="border-b border-slate-100 text-xs hover:bg-slate-50/60 transition-colors">
-                        <td class="py-2.5 px-3 font-bold text-[#003B73]">${meta.code}</td>
-                        <td class="py-2.5 px-3 text-slate-700">${meta.title}</td>
-                        <td class="py-2.5 px-3 text-center font-bold text-slate-700">${imp} / 5</td>
-                        <td class="py-2.5 px-3 text-center font-bold text-amber-600">${sat} / 5</td>
-                        <td class="py-2.5 px-3 text-center font-black ${gapColor}">${gap >= 0 ? '+' + gap : gap}</td>
+                        <td class="py-2.5 px-3 font-bold text-[#003B73]">${escapeHtml(meta.code)}</td>
+                        <td class="py-2.5 px-3 text-slate-700">
+                            <div>${escapeHtml(meta.title)}</div>
+                            ${a.reason ? `<div class="text-[11px] text-rose-600 mt-0.5 italic">Catatan: ${escapeHtml(a.reason)}</div>` : ''}
+                        </td>
+                        <td class="py-2.5 px-3 text-center font-black text-[#003B73]">${satPctNum.toFixed(1)}%</td>
+                        <td class="py-2.5 px-3 text-center font-bold text-slate-600">${impPctNum.toFixed(1)}%</td>
+                        <td class="py-2.5 px-3 text-center font-black ${gapColor}">${gapStr}</td>
                     </tr>
                 `;
             });
@@ -1459,15 +1652,30 @@
         }
 
         let csv = '\uFEFF';
-        csv += 'Nomor Referensi,Tanggal,Klien,Role,Proyek,Kategori,Personel Pendamping,Catatan,Lampiran\n';
+        csv += 'PT Len Railway Systems - Rekap Data Survei Kepentingan dan Kepuasan\n';
+        csv += 'Nomor Referensi,Tanggal,Klien,Role,Proyek,Sumber Survei,Kategori,Personel Pendamping,Tingkat Kepuasan (%),Tingkat Kepentingan (%),Selisih Kepentingan & Kepuasan (%),Catatan,Lampiran\n';
 
         surveys.forEach(s => {
             const dateStr = s.submitted_at ? new Date(s.submitted_at).toLocaleString('id-ID') : '-';
             const cleanNotes = (s.general_notes || '').replace(/"/g, '""');
-            csv += `"${s.reference_no || '-'}","${dateStr}","${s.client_name || s.respondent_id || '-'}","${s.client_role || '-'}","${s.project_name || '-'}","${s.category_name || s.category_id || '-'}","${s.accompanying_personnel || '-'}","${cleanNotes}","${s.attachment_name || '-'}"\n`;
+            let sumImp = 0, sumSat = 0, cnt = 0;
+            (s.answers || []).forEach(a => {
+                if (a.kepentingan > 0 && a.kepuasan > 0) {
+                    sumImp += parseFloat(a.kepentingan);
+                    sumSat += parseFloat(a.kepuasan);
+                    cnt++;
+                }
+            });
+            const satPct = cnt > 0 ? ((sumSat / (cnt * 5)) * 100).toFixed(1) : '80.0';
+            const impPct = cnt > 0 ? ((sumImp / (cnt * 5)) * 100).toFixed(1) : '80.0';
+            const gapNum = parseFloat(satPct) - parseFloat(impPct);
+            const gapPct = (gapNum >= 0 ? '+' : '') + gapNum.toFixed(1) + '%';
+            const sourceLabel = isGeneralSurveyItem(s) ? 'Survei Umum' : 'Proyek Kontrak';
+
+            csv += `"${s.reference_no || '-'}","${dateStr}","${s.client_name || s.respondent_id || '-'}","${s.client_role || '-'}","${s.project_name || '-'}","${sourceLabel}","${s.category_name || s.category_id || '-'}","${s.accompanying_personnel || '-'}","${satPct}%","${impPct}%","${gapPct}","${cleanNotes}","${s.attachment_name || '-'}"\n`;
         });
 
-        downloadCsvFile(csv, 'rekap-survei-pelanggan-lrs.csv');
+        downloadCsvFile(csv, 'rekap-survei-kepentingan-dan-kepuasan-lrs.csv');
         showAdminToast('Data survei berhasil diekspor ke CSV.');
     };
 
@@ -1499,12 +1707,20 @@
 
     window.filterComplaintsByStatus = function (status) {
         currentComplaintFilterStatus = status;
-        document.querySelectorAll('.btn-filter-status').forEach(btn => {
-            const btnStatus = btn.getAttribute('data-status');
-            if (btnStatus === status) {
-                btn.className = 'btn-filter-status px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-[#003B73] text-white shadow-xs cursor-pointer';
-            } else {
-                btn.className = 'btn-filter-status px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer';
+        const mapIds = {
+            'all': 'filter-status-all',
+            'Open': 'filter-status-open',
+            'In Progress': 'filter-status-progress',
+            'Resolved': 'filter-status-resolved'
+        };
+        Object.keys(mapIds).forEach(stKey => {
+            const btn = document.getElementById(mapIds[stKey]);
+            if (btn) {
+                if (stKey === status) {
+                    btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold border bg-[#003B73] text-white border-[#003B73] shadow-xs cursor-pointer transition-all';
+                } else {
+                    btn.className = 'px-3.5 py-1.5 rounded-xl text-xs font-extrabold border bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 shadow-2xs cursor-pointer transition-all';
+                }
             }
         });
         renderComplaintsView();
@@ -1513,6 +1729,7 @@
     window.onComplaintFilterChange = function () {
         renderComplaintsView();
     };
+    window.onKanbanFilterChange = window.onComplaintFilterChange;
 
     function renderComplaintsView() {
         renderComplaintsTable();
@@ -1521,12 +1738,23 @@
     }
 
     function renderComplaintsTable() {
-        const tbody = document.getElementById('complaints-table-body');
+        const tbody = document.getElementById('table-complaints-body') || document.getElementById('complaints-table-body');
+        const emptyState = document.getElementById('table-complaints-empty');
         if (!tbody) return;
 
         const complaints = JSON.parse(localStorage.getItem('lrs_complaint_data') || '[]');
-        const searchInput = (document.getElementById('filter-complaint-search')?.value || '').toLowerCase().trim();
-        const categoryFilter = document.getElementById('filter-complaint-category')?.value || 'all';
+        const searchInput = ((document.getElementById('filter-kanban-search') || document.getElementById('filter-complaint-search'))?.value || '').toLowerCase().trim();
+        const categoryFilter = (document.getElementById('filter-kanban-category') || document.getElementById('filter-complaint-category'))?.value || 'all';
+
+        // Update counter filter buttons
+        const countAllEl = document.getElementById('count-complaints-all');
+        const countOpenEl = document.getElementById('count-complaints-open');
+        const countProgressEl = document.getElementById('count-complaints-progress');
+        const countResolvedEl = document.getElementById('count-complaints-resolved');
+        if (countAllEl) countAllEl.textContent = complaints.length;
+        if (countOpenEl) countOpenEl.textContent = complaints.filter(c => (c.status || '').toLowerCase() === 'open').length;
+        if (countProgressEl) countProgressEl.textContent = complaints.filter(c => (c.status || '').toLowerCase() === 'in progress').length;
+        if (countResolvedEl) countResolvedEl.textContent = complaints.filter(c => (c.status || '').toLowerCase() === 'resolved').length;
 
         const filtered = complaints.filter(c => {
             const matchStatus = currentComplaintFilterStatus === 'all' || (c.status || '').toLowerCase() === currentComplaintFilterStatus.toLowerCase();
@@ -1537,50 +1765,54 @@
         });
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-semibold">Tidak ada data keluhan yang cocok dengan filter.</td></tr>`;
+            tbody.innerHTML = '';
+            if (emptyState) emptyState.classList.remove('hidden');
             return;
         }
+
+        if (emptyState) emptyState.classList.add('hidden');
 
         let html = '';
         filtered.forEach(c => {
             const dateStr = c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
             const slaText = getSlaBadgeHtml(c);
+            const safeId = escapeHtml(c.ticket_id);
 
             html += `
                 <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
-                    <td class="px-5 py-3.5 font-black text-[#003B73]">
-                        ${c.ticket_id}
+                    <td class="px-4 py-3.5 font-black text-[#003B73] whitespace-nowrap">
+                        ${safeId}
                     </td>
-                    <td class="px-5 py-3.5 text-slate-500 whitespace-nowrap">
-                        ${dateStr}
+                    <td class="px-4 py-3.5 whitespace-nowrap">
+                        <div class="text-slate-600 font-semibold">${escapeHtml(dateStr)}</div>
+                        <div class="mt-0.5">${slaText}</div>
                     </td>
-                    <td class="px-5 py-3.5">
-                        <div class="font-bold text-slate-800">${c.project_name || '-'}</div>
-                        <div class="text-[11px] text-slate-500">${c.client_name || 'Klien'}</div>
+                    <td class="px-4 py-3.5">
+                        <div class="font-bold text-slate-800">${escapeHtml(c.project_name || '-')}</div>
+                        <div class="text-[11px] text-slate-500">${escapeHtml(c.client_name || 'Klien')}</div>
                     </td>
-                    <td class="px-5 py-3.5">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
-                            ${c.category || 'Teknis'}
+                    <td class="px-4 py-3.5 max-w-xs">
+                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 mb-1">
+                            ${escapeHtml(c.category || 'Teknis')}
                         </span>
+                        <div class="font-bold text-slate-800 truncate">${escapeHtml(c.subject || c.description)}</div>
                     </td>
-                    <td class="px-5 py-3.5 max-w-xs">
-                        <div class="font-bold text-slate-800 truncate">${c.subject || c.description}</div>
-                        <div class="text-[11px] text-slate-500 truncate">${c.description || '-'}</div>
-                    </td>
-                    <td class="px-5 py-3.5">
-                        <select onchange="changeComplaintStatus('${c.ticket_id}', this.value)"
+                    <td class="px-4 py-3.5">
+                        <select data-ticket-id="${safeId}"
+                                onchange="changeComplaintStatus(this.dataset.ticketId, this.value)"
                                 class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold ${getStatusColorClass(c.status)} focus:outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer shadow-2xs">
                             <option value="Open" ${c.status === 'Open' ? 'selected' : ''}>Masuk (Open)</option>
                             <option value="In Progress" ${c.status === 'In Progress' ? 'selected' : ''}>Dalam Proses</option>
                             <option value="Resolved" ${c.status === 'Resolved' ? 'selected' : ''}>Selesai</option>
                         </select>
                     </td>
-                    <td class="px-5 py-3.5 whitespace-nowrap">
-                        ${slaText}
+                    <td class="px-4 py-3.5 text-slate-700 font-semibold">
+                        ${escapeHtml(c.pic || 'Belum Ditugaskan')}
                     </td>
-                    <td class="px-5 py-3.5 text-right whitespace-nowrap">
+                    <td class="px-4 py-3.5 text-center whitespace-nowrap">
                         <button type="button"
-                                onclick="openTicketModal('${c.ticket_id}')"
+                                data-ticket-id="${safeId}"
+                                onclick="openTicketModal(this.dataset.ticketId)"
                                 class="px-3 py-1.5 rounded-xl text-xs font-bold text-[#003B73] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 shadow-2xs transition-colors cursor-pointer">
                             Tindak Lanjut
                         </button>
@@ -1717,22 +1949,25 @@
     }
 
     function createKanbanCardHtml(c) {
+        const safeId = escapeHtml(c.ticket_id);
         return `
             <div class="bg-white rounded-xl p-3.5 border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-slate-300 transition-all cursor-grab"
                  draggable="true"
-                 ondragstart="handleDragStart(event, '${c.ticket_id}')">
+                 data-ticket-id="${safeId}"
+                 ondragstart="handleDragStart(event, this.dataset.ticketId)">
                 <div class="flex items-center justify-between gap-2 mb-1.5">
-                    <span class="text-[10px] font-black text-[#003B73]">${c.ticket_id}</span>
+                    <span class="text-[10px] font-black text-[#003B73]">${safeId}</span>
                     <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">
-                        ${c.category || 'Teknis'}
+                        ${escapeHtml(c.category || 'Teknis')}
                     </span>
                 </div>
-                <h4 class="text-xs font-bold text-slate-800 line-clamp-2 mb-1">${c.subject || c.description}</h4>
-                <div class="text-[10px] text-slate-500 font-medium truncate mb-2">${c.project_name || '-'}</div>
+                <h4 class="text-xs font-bold text-slate-800 line-clamp-2 mb-1">${escapeHtml(c.subject || c.description)}</h4>
+                <div class="text-[10px] text-slate-500 font-medium truncate mb-2">${escapeHtml(c.project_name || '-')}</div>
                 <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
-                    <span class="font-semibold text-slate-600 truncate">PIC: ${c.pic || 'Belum Ditugaskan'}</span>
+                    <span class="font-semibold text-slate-600 truncate">PIC: ${escapeHtml(c.pic || 'Belum Ditugaskan')}</span>
                     <button type="button"
-                            onclick="openTicketModal('${c.ticket_id}')"
+                            data-ticket-id="${safeId}"
+                            onclick="openTicketModal(this.dataset.ticketId)"
                             class="font-bold text-[#003B73] hover:underline cursor-pointer">
                         Detail →
                     </button>
@@ -1777,22 +2012,32 @@
         const modal = document.getElementById('ticketModal');
         if (!modal) return;
 
-        const elId = document.getElementById('ticket-modal-id');
-        const elTitle = document.getElementById('ticket-modal-title');
-        const elProject = document.getElementById('ticket-modal-project');
+        const elId = document.getElementById('modal-ticket-id') || document.getElementById('ticket-modal-id');
+        const elStatusBadge = document.getElementById('modal-status-badge');
+        const elPriorityBadge = document.getElementById('modal-priority-badge');
+        const elTitle = document.getElementById('modal-subject') || document.getElementById('ticket-modal-title');
+        const elProject = document.getElementById('modal-project-name') || document.getElementById('ticket-modal-project');
         const elClient = document.getElementById('ticket-modal-client');
-        const elDesc = document.getElementById('ticket-modal-desc');
-        const elPic = document.getElementById('ticket-form-pic');
-        const elRca = document.getElementById('ticket-form-rca');
-        const elCapa = document.getElementById('ticket-form-capa');
-        const elStatus = document.getElementById('ticket-form-status');
-        const elTimeline = document.getElementById('ticket-audit-timeline');
+        const elDesc = document.getElementById('modal-description') || document.getElementById('ticket-modal-desc');
+        const elCreatedAt = document.getElementById('modal-created-at');
+        const elCategory = document.getElementById('modal-category');
+        const elSlaText = document.getElementById('modal-sla-text');
+        const elPic = document.getElementById('modal-pic-input') || document.getElementById('ticket-form-pic');
+        const elRca = document.getElementById('modal-rca-input') || document.getElementById('ticket-form-rca');
+        const elCapa = document.getElementById('modal-capa-input') || document.getElementById('ticket-form-capa');
+        const elStatus = document.getElementById('modal-status-select') || document.getElementById('ticket-form-status');
+        const elTimeline = document.getElementById('modal-audit-trail') || document.getElementById('ticket-audit-timeline');
 
         if (elId) elId.textContent = complaint.ticket_id;
+        if (elStatusBadge) elStatusBadge.textContent = complaint.status || 'Open';
+        if (elPriorityBadge) elPriorityBadge.textContent = complaint.urgency || 'Sedang';
         if (elTitle) elTitle.textContent = complaint.subject || complaint.description;
-        if (elProject) elProject.textContent = complaint.project_name || '-';
+        if (elProject) elProject.textContent = `${complaint.project_name || '-'} · ${complaint.client_name || 'Klien'}`;
         if (elClient) elClient.textContent = complaint.client_name || 'Klien';
         if (elDesc) elDesc.textContent = complaint.description || '-';
+        if (elCreatedAt) elCreatedAt.textContent = complaint.created_at ? new Date(complaint.created_at).toLocaleString('id-ID') : '-';
+        if (elCategory) elCategory.textContent = complaint.category || 'Teknis';
+        if (elSlaText) elSlaText.textContent = `${complaint.sla_hours || 24} Jam`;
 
         if (elPic) elPic.value = complaint.pic || '';
         if (elRca) elRca.value = complaint.rca || '';
@@ -1805,10 +2050,10 @@
                 <div class="relative pl-6 pb-4 border-l-2 border-slate-200 last:border-transparent last:pb-0">
                     <span class="absolute -left-[5px] top-0.5 w-2 h-2 rounded-full bg-[#003B73]"></span>
                     <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold mb-0.5">
-                        <span>${new Date(a.timestamp).toLocaleString('id-ID')}</span>
-                        <span class="font-bold text-slate-700">${a.status}</span>
+                        <span>${escapeHtml(new Date(a.timestamp).toLocaleString('id-ID'))}</span>
+                        <span class="font-bold text-slate-700">${escapeHtml(a.status)}</span>
                     </div>
-                    <p class="text-[11px] text-slate-600">${a.note}</p>
+                    <p class="text-[11px] text-slate-600">${escapeHtml(a.note)}</p>
                 </div>
             `).join('') || '<p class="text-xs text-slate-400">Belum ada riwayat aktivitas.</p>';
         }
@@ -1835,10 +2080,10 @@
             const complaint = complaints.find(c => c.ticket_id === activeTicketId);
             if (!complaint) return;
 
-            const pic = document.getElementById('ticket-form-pic')?.value.trim() || '';
-            const rca = document.getElementById('ticket-form-rca')?.value.trim() || '';
-            const capa = document.getElementById('ticket-form-capa')?.value.trim() || '';
-            const status = document.getElementById('ticket-form-status')?.value || 'Open';
+            const pic = (document.getElementById('modal-pic-input') || document.getElementById('ticket-form-pic'))?.value.trim() || '';
+            const rca = (document.getElementById('modal-rca-input') || document.getElementById('ticket-form-rca'))?.value.trim() || '';
+            const capa = (document.getElementById('modal-capa-input') || document.getElementById('ticket-form-capa'))?.value.trim() || '';
+            const status = (document.getElementById('modal-status-select') || document.getElementById('ticket-form-status'))?.value || 'Open';
 
             complaint.pic = pic;
             complaint.rca = rca;
@@ -1857,21 +2102,103 @@
             });
 
             localStorage.setItem('lrs_complaint_data', JSON.stringify(complaints));
+            const savedId = activeTicketId;
             closeTicketModal();
             updateComplaintTabBadge();
             renderComplaintsView();
             renderOverviewData();
-            showAdminToast(`Tindak lanjut tiket ${activeTicketId} berhasil disimpan.`);
+            showAdminToast(`Tindak lanjut tiket ${savedId} berhasil disimpan.`);
         } catch (err) {
             console.error('Error saat menyimpan detail tiket:', err);
         }
     };
+    window.saveTicketAnalysis = window.saveTicketDetails;
 
     /**
      * =========================================================================
-     * 7. SECTION 4: GENERATOR QR CODE & TAUTAN SURVEI
+     * 7. SECTION 4: TAUTAN SURVEI UMUM & GENERATOR QR CODE
      * =========================================================================
      */
+    function getGeneralSurveyUrl() {
+        return window.location.origin + '/form?mode=general';
+    }
+
+    function initGeneralSurveyLinkCard() {
+        const url = getGeneralSurveyUrl();
+        const urlInput = document.getElementById('general-survey-url');
+        const openLink = document.getElementById('btn-open-general-url');
+        if (urlInput) urlInput.value = url;
+        if (openLink) openLink.setAttribute('href', url);
+    }
+
+    window.copyGeneralSurveyUrl = function () {
+        const url = getGeneralSurveyUrl();
+        const txtBtn = document.getElementById('txt-copy-general-url');
+        const showCopied = () => {
+            if (txtBtn) {
+                txtBtn.textContent = 'Tersalin';
+                setTimeout(() => {
+                    txtBtn.textContent = 'Salin Tautan Umum';
+                }, 2000);
+            }
+            showAdminToast('Tautan Survei Umum berhasil disalin ke clipboard!');
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(showCopied).catch(() => {
+                fallbackCopyText(url, showCopied);
+            });
+        } else {
+            fallbackCopyText(url, showCopied);
+        }
+    };
+
+    function fallbackCopyText(text, cb) {
+        const el = document.createElement('textarea');
+        el.value = text;
+        el.setAttribute('readonly', '');
+        el.style.position = 'absolute';
+        el.style.left = '-9999px';
+        document.body.appendChild(el);
+        el.select();
+        try {
+            document.execCommand('copy');
+            if (cb) cb();
+        } catch (err) {}
+        document.body.removeChild(el);
+    }
+
+    window.toggleGeneralQrPanel = function () {
+        const panel = document.getElementById('general-qr-panel');
+        const canvas = document.getElementById('general-qr-canvas');
+        const txtBtn = document.getElementById('txt-toggle-general-qr');
+        if (!panel) return;
+
+        const isHidden = panel.classList.contains('hidden');
+        if (isHidden) {
+            panel.classList.remove('hidden');
+            if (txtBtn) txtBtn.textContent = 'Sembunyikan QR Umum';
+            if (canvas) {
+                canvas.innerHTML = '';
+                if (typeof QRCode !== 'undefined') {
+                    generalQrInstance = new QRCode(canvas, {
+                        text: getGeneralSurveyUrl(),
+                        width: 150,
+                        height: 150,
+                        colorDark: '#002B54',
+                        colorLight: '#FFFFFF',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } else {
+                    canvas.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">QRCode.js belum dimuat</div>';
+                }
+            }
+        } else {
+            panel.classList.add('hidden');
+            if (txtBtn) txtBtn.textContent = 'Tampilkan QR Umum';
+        }
+    };
+
     function populateQrDropdowns() {
         const projSelect = document.getElementById('qr-input-project') || document.getElementById('qr-select-project');
         const persSelect = document.getElementById('qr-input-personnel') || document.getElementById('qr-select-personnel');
@@ -1880,7 +2207,7 @@
             const projects = JSON.parse(localStorage.getItem('lrs_projects_data') || '[]');
             let pOpts = '';
             projects.forEach(p => {
-                pOpts += `<option value="${p.code}" data-name="${p.name}">${p.code} — ${p.name}</option>`;
+                pOpts += `<option value="${escapeHtml(p.code)}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.code)} — ${escapeHtml(p.name)}</option>`;
             });
             projSelect.innerHTML = pOpts;
         }
@@ -1889,7 +2216,7 @@
             const personnel = JSON.parse(localStorage.getItem('lrs_personnel_data') || '[]');
             let persOpts = '<option value="">-- Tanpa Personel Khusus --</option>';
             personnel.forEach(pe => {
-                persOpts += `<option value="${pe.name}">${pe.name} (${pe.division})</option>`;
+                persOpts += `<option value="${escapeHtml(pe.name)}">${escapeHtml(pe.name)} (${escapeHtml(pe.division)})</option>`;
             });
             persSelect.innerHTML = persOpts;
         }
@@ -2043,7 +2370,7 @@
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 24px Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('PT. LEN RAILWAYS SYSTEMS', canvas.width / 2, 50);
+        ctx.fillText('PT Len Railway Systems', canvas.width / 2, 50);
 
         ctx.font = '14px Arial, sans-serif';
         ctx.fillText('Survei Kepuasan Pelanggan & Layanan Teknis', canvas.width / 2, 80);
@@ -2083,7 +2410,7 @@
 
             ctx.fillStyle = '#94A3B8';
             ctx.font = '11px Arial, sans-serif';
-            ctx.fillText('PT. Len Railways Systems — Divisi Jaminan Mutu & Layanan Klien', canvas.width / 2, 730);
+            ctx.fillText('PT Len Railway Systems — Divisi Jaminan Mutu & Layanan Klien', canvas.width / 2, 730);
 
             const link = document.createElement('a');
             link.download = `kartu-qr-survei-${Date.now()}.png`;
@@ -2123,37 +2450,41 @@
         let html = '';
         history.forEach(item => {
             const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '-';
+            const safeUrl = escapeHtml(sanitizeUrl(item.url));
+            const safeId = escapeHtml(item.id);
             html += `
                 <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
                     <td class="px-4 py-3 font-bold text-slate-800">
-                        <div>${item.project_name || '-'}</div>
-                        <div class="text-[10px] font-mono text-slate-400 font-normal">${item.project_code || ''}</div>
+                        <div>${escapeHtml(item.project_name || '-')}</div>
+                        <div class="text-[10px] font-mono text-slate-400 font-normal">${escapeHtml(item.project_code || '')}</div>
                     </td>
                     <td class="px-4 py-3 text-slate-700">
-                        ${item.personnel_name || '-'}
+                        ${escapeHtml(item.personnel_name || '-')}
                     </td>
                     <td class="px-4 py-3">
                         <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-[#003B73]">
-                            ${item.category_name || 'Semua'}
+                            ${escapeHtml(item.category_name || 'Semua')}
                         </span>
                     </td>
                     <td class="px-4 py-3 text-slate-400 whitespace-nowrap">
-                        ${dateStr}
+                        ${escapeHtml(dateStr)}
                     </td>
                     <td class="px-4 py-3 font-mono text-[10px] text-slate-500 max-w-[140px] truncate">
-                        ${item.url}
+                        ${escapeHtml(item.url)}
                     </td>
                     <td class="px-4 py-3 text-center whitespace-nowrap">
                         <button type="button"
-                                onclick="copySpecificUrl('${item.url}')"
+                                data-url="${safeUrl}"
+                                onclick="copySpecificUrl(this.dataset.url)"
                                 class="text-blue-700 hover:underline font-bold mr-2.5 cursor-pointer">
                             Salin
                         </button>
-                        <a href="${item.url}" target="_blank" rel="noopener" class="text-slate-600 hover:underline font-semibold mr-2.5">
+                        <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-slate-600 hover:underline font-semibold mr-2.5">
                             Buka
                         </a>
                         <button type="button"
-                                onclick="deleteQrHistory('${item.id}')"
+                                data-id="${safeId}"
+                                onclick="deleteQrHistory(this.dataset.id)"
                                 class="text-rose-600 hover:underline font-bold cursor-pointer">
                             Hapus
                         </button>
@@ -2166,9 +2497,13 @@
     }
 
     window.copySpecificUrl = function (url) {
-        navigator.clipboard.writeText(url).then(() => {
-            showAdminToast('Tautan berhasil disalin!');
-        });
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+                showAdminToast('Tautan berhasil disalin!');
+            }).catch(() => fallbackCopyText(url, () => showAdminToast('Tautan berhasil disalin!')));
+        } else {
+            fallbackCopyText(url, () => showAdminToast('Tautan berhasil disalin!'));
+        }
     };
 
     window.deleteQrHistory = function (id) {
@@ -2214,6 +2549,7 @@
         if (!tbody) return;
 
         const projects = JSON.parse(localStorage.getItem('lrs_projects_data') || '[]');
+        const surveys = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
         if (countBadge) countBadge.textContent = projects.length;
 
         if (projects.length === 0) {
@@ -2227,33 +2563,40 @@
         let html = '';
         projects.forEach(p => {
             const isAktif = p.status === 'Aktif';
+            const relatedCount = surveys.filter(s => (s.project_name || '').toLowerCase() === (p.name || '').toLowerCase() || (s.project_code || '') === p.code).length;
+            const safeProjId = escapeHtml(p.id);
             html += `
                 <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
                     <td class="px-4 py-3.5 font-black text-[#003B73] whitespace-nowrap">
-                        ${p.code}
+                        ${escapeHtml(p.code)}
                     </td>
                     <td class="px-4 py-3.5 font-bold text-slate-800">
-                        ${p.name}
+                        ${escapeHtml(p.name)}
                     </td>
                     <td class="px-4 py-3.5 text-slate-600">
-                        ${p.client}
+                        ${escapeHtml(p.client)}
                     </td>
                     <td class="px-4 py-3.5 text-center font-bold text-slate-700">
-                        ${p.target_pic || 10} PIC
+                        ${escapeHtml(p.target_pic || 10)} PIC
+                    </td>
+                    <td class="px-4 py-3.5 text-center font-bold text-[#003B73]">
+                        ${relatedCount} Survei
                     </td>
                     <td class="px-4 py-3.5 text-center">
                         <span class="px-2.5 py-1 rounded-full text-[10px] font-black ${isAktif ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}">
-                            ${p.status || 'Aktif'}
+                            ${escapeHtml(p.status || 'Aktif')}
                         </span>
                     </td>
                     <td class="px-4 py-3.5 text-center whitespace-nowrap">
                         <button type="button"
-                                onclick="openProjectModal('${p.id}')"
+                                data-id="${safeProjId}"
+                                onclick="openProjectModal(this.dataset.id)"
                                 class="text-blue-700 hover:underline font-bold mr-3 cursor-pointer">
                             Edit
                         </button>
                         <button type="button"
-                                onclick="deleteProject('${p.id}')"
+                                data-id="${safeProjId}"
+                                onclick="deleteProject(this.dataset.id)"
                                 class="text-rose-600 hover:underline font-bold cursor-pointer">
                             Hapus
                         </button>
@@ -2270,9 +2613,9 @@
         if (!modal) return;
 
         const elId = document.getElementById('project-form-id');
-        const elCode = document.getElementById('project-form-code');
+        const elCode = document.getElementById('project-form-contract') || document.getElementById('project-form-code');
         const elName = document.getElementById('project-form-name');
-        const elClient = document.getElementById('project-form-client');
+        const elClient = document.getElementById('project-form-institution') || document.getElementById('project-form-client');
         const elTarget = document.getElementById('project-form-target');
         const elStatus = document.getElementById('project-form-status');
         const elTitle = document.getElementById('modal-project-title');
@@ -2315,9 +2658,9 @@
         if (e) e.preventDefault();
         try {
             const id = document.getElementById('project-form-id')?.value;
-            const code = document.getElementById('project-form-code')?.value.trim();
+            const code = (document.getElementById('project-form-contract') || document.getElementById('project-form-code'))?.value.trim();
             const name = document.getElementById('project-form-name')?.value.trim();
-            const client = document.getElementById('project-form-client')?.value.trim();
+            const client = (document.getElementById('project-form-institution') || document.getElementById('project-form-client'))?.value.trim();
             const targetPic = parseInt(document.getElementById('project-form-target')?.value, 10) || 10;
             const status = document.getElementById('project-form-status')?.value || 'Aktif';
 
@@ -2343,6 +2686,7 @@
             closeProjectModal();
             renderProjectsTable();
             populateOverviewProjectFilter();
+            populateSurveysProjectFilter();
             populateQrDropdowns();
             showAdminToast(`Data proyek "${name}" berhasil disimpan.`);
         } catch (err) {
@@ -2357,6 +2701,7 @@
         localStorage.setItem('lrs_projects_data', JSON.stringify(updated));
         renderProjectsTable();
         populateOverviewProjectFilter();
+        populateSurveysProjectFilter();
         populateQrDropdowns();
         showAdminToast('Data proyek berhasil dihapus.');
     };
@@ -2369,6 +2714,7 @@
         if (!tbody) return;
 
         const personnel = JSON.parse(localStorage.getItem('lrs_personnel_data') || '[]');
+        const surveys = JSON.parse(localStorage.getItem('lrs_survey_data') || '[]');
         if (countBadge) countBadge.textContent = personnel.length;
 
         if (personnel.length === 0) {
@@ -2381,28 +2727,35 @@
 
         let html = '';
         personnel.forEach(pe => {
+            const relatedCount = surveys.filter(s => (s.accompanying_personnel || '').toLowerCase() === (pe.name || '').toLowerCase()).length;
+            const safePersId = escapeHtml(pe.id);
             html += `
                 <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs">
                     <td class="px-4 py-3.5 font-bold text-slate-800">
-                        ${pe.name}
+                        ${escapeHtml(pe.name)}
                     </td>
                     <td class="px-4 py-3.5 text-slate-600">
-                        ${pe.division}
+                        ${escapeHtml(pe.division)}
                     </td>
                     <td class="px-4 py-3.5 text-[#003B73] font-semibold">
-                        ${pe.whatsapp}
+                        ${escapeHtml(pe.whatsapp)}
                     </td>
                     <td class="px-4 py-3.5 text-slate-500">
-                        ${pe.email}
+                        ${escapeHtml(pe.email)}
+                    </td>
+                    <td class="px-4 py-3.5 text-center font-bold text-[#003B73]">
+                        ${relatedCount} Survei
                     </td>
                     <td class="px-4 py-3.5 text-center whitespace-nowrap">
                         <button type="button"
-                                onclick="openPersonnelModal('${pe.id}')"
+                                data-id="${safePersId}"
+                                onclick="openPersonnelModal(this.dataset.id)"
                                 class="text-blue-700 hover:underline font-bold mr-3 cursor-pointer">
                             Edit
                         </button>
                         <button type="button"
-                                onclick="deletePersonnel('${pe.id}')"
+                                data-id="${safePersId}"
+                                onclick="deletePersonnel(this.dataset.id)"
                                 class="text-rose-600 hover:underline font-bold cursor-pointer">
                             Hapus
                         </button>
@@ -2587,18 +2940,18 @@
         logs.forEach(log => {
             html += `
                 <tr class="border-b border-slate-100 text-xs hover:bg-slate-50/70 transition-colors">
-                    <td class="px-3 py-2.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">${log.timestamp}</td>
-                    <td class="px-3 py-2.5 font-semibold text-slate-800">${log.recipient}</td>
+                    <td class="px-3 py-2.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">${escapeHtml(log.timestamp)}</td>
+                    <td class="px-3 py-2.5 font-semibold text-slate-800">${escapeHtml(log.recipient)}</td>
                     <td class="px-3 py-2.5">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold ${log.channel === 'WhatsApp' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}">
-                            ${log.channel}
+                            ${escapeHtml(log.channel)}
                         </span>
                     </td>
-                    <td class="px-3 py-2.5 font-mono text-[11px] text-[#003B73] font-bold">${log.reference_no || '-'}</td>
-                    <td class="px-3 py-2.5 text-slate-600">${log.type}</td>
+                    <td class="px-3 py-2.5 font-mono text-[11px] text-[#003B73] font-bold">${escapeHtml(log.reference_no || '-')}</td>
+                    <td class="px-3 py-2.5 text-slate-600">${escapeHtml(log.type)}</td>
                     <td class="px-3 py-2.5 text-center">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            ${log.status}
+                            ${escapeHtml(log.status)}
                         </span>
                     </td>
                 </tr>
@@ -2620,6 +2973,7 @@
         renderProjectsTable();
         renderPersonnelTable();
         populateOverviewProjectFilter();
+        populateSurveysProjectFilter();
         populateQrDropdowns();
         renderQrHistoryTable();
         loadAdminSettings();
@@ -2700,11 +3054,11 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-0.5">
-                            <span class="text-xs font-bold text-slate-800 truncate">${catName}</span>
-                            <span class="text-[10px] font-semibold text-slate-400 shrink-0">${relTime}</span>
+                            <span class="text-xs font-bold text-slate-800 truncate">${escapeHtml(catName)}</span>
+                            <span class="text-[10px] font-semibold text-slate-400 shrink-0">${escapeHtml(relTime)}</span>
                         </div>
                         <p class="text-[11px] text-slate-600 truncate">
-                            <span class="font-semibold text-slate-700">${respondentLabel}</span> • <span class="text-slate-500">${projectLabel}</span>
+                            <span class="font-semibold text-slate-700">${escapeHtml(respondentLabel)}</span> • <span class="text-slate-500">${escapeHtml(projectLabel)}</span>
                         </p>
                     </div>
                 </div>
@@ -2823,7 +3177,7 @@
             </div>
             <div class="flex-1 min-w-0 pt-0.5">
                 <span class="text-xs font-black tracking-tight text-white block mb-0.5">Pemberitahuan Sistem</span>
-                <p class="text-[11px] text-slate-200 leading-snug break-words">${message}</p>
+                <p class="text-[11px] text-slate-200 leading-snug break-words">${escapeHtml(message)}</p>
             </div>
             <button type="button" class="text-slate-400 hover:text-white transition-colors p-1 -mr-1 -mt-1 cursor-pointer" onclick="this.parentElement.remove()">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2931,7 +3285,9 @@
         seedFallbackData();
         initSidebarState();
         initAutoplayAudioUnlock();
+        initGeneralSurveyLinkCard();
         populateOverviewProjectFilter();
+        populateSurveysProjectFilter();
         populateQrDropdowns();
         renderOverviewData();
         renderComplaintsView();

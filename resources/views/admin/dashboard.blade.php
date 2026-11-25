@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Ringkasan Kepuasan & Layanan · PT. Len Railways Systems')
+@section('title', 'Ringkasan Kepuasan & Layanan · PT Len Railway Systems')
 
 @push('styles')
 <style>
@@ -61,7 +61,7 @@
     <aside id="admin-sidebar"
            class="fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-slate-200/90 shadow-[4px_0_24px_-4px_rgba(15,23,42,0.06)] -translate-x-full lg:translate-x-0 w-64 lg:w-72">
 
-        {{-- Garis Aksen Tri-Warna Khas PT. Len Railways Systems --}}
+        {{-- Garis Aksen Tri-Warna Khas PT Len Railway Systems --}}
         <div class="h-1 bg-gradient-to-r from-[#003B73] via-sky-500 to-[#D32F2F] shrink-0"></div>
 
         {{-- Sidebar Header / Brand LRS --}}
@@ -69,7 +69,7 @@
             <div class="flex items-center gap-3 overflow-hidden min-w-0">
                 <div class="h-10 w-10 px-1 rounded-xl bg-white flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs">
                     <img src="{{ asset('images/logo.png') }}"
-                         alt="Logo PT. Len Railways Systems"
+                         alt="Logo PT Len Railway Systems"
                          class="h-7 w-auto object-contain">
                 </div>
                 <div class="sidebar-text-group min-w-0 transition-opacity duration-200">

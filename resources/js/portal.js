@@ -164,7 +164,19 @@
             btnSubmitFeedback: 'Kirim Masukan Anda',
 
             // Footer
-            footerWbsBtn: 'Laporkan Pelanggaran (Report)'
+            footerWbsBtn: 'Laporkan Pelanggaran (Report)',
+
+            // General Mode (?mode=general)
+            generalModePill: 'Survei Umum (Non-Kontrak)',
+            generalModeTitle: 'Identitas Proyek / Instansi (Opsional)',
+            generalModeBadge: 'Akses Terbuka Tanpa Nomor Kontrak',
+            generalModeDesc: 'Anda mengakses formulir melalui Tautan Survei Umum. Silakan isi nama proyek atau instansi Anda (opsional) agar evaluasi dapat diidentifikasi oleh tim PT Len Railway Systems.',
+            lblGeneralProject: 'Nama Proyek / Pekerjaan (Opsional)',
+            phGeneralProject: 'Contoh: Proyek Persinyalan Lintas Selatan',
+            lblGeneralInstitution: 'Nama Instansi / Perusahaan (Opsional)',
+            phGeneralInstitution: 'Contoh: PT Kereta Api Indonesia',
+            lblGeneralRespondent: 'Nama Responden / PIC (Opsional)',
+            phGeneralRespondent: 'Contoh: Budi Santoso'
         },
         en: {
             portalTitle: 'Client Satisfaction Survey Portal · PT Len Railway Systems',
@@ -282,7 +294,19 @@
             btnSubmitFeedback: 'Submit Your Feedback',
 
             // Footer
-            footerWbsBtn: 'Report a Violation (WBS)'
+            footerWbsBtn: 'Report a Violation (WBS)',
+
+            // General Mode (?mode=general)
+            generalModePill: 'General Survey (Non-Contract)',
+            generalModeTitle: 'Project / Institution Identity (Optional)',
+            generalModeBadge: 'Open Access Without Contract Number',
+            generalModeDesc: 'You are accessing the form via the General Survey Link. Please enter your project or institution name (optional) so PT Len Railway Systems can identify your evaluation.',
+            lblGeneralProject: 'Project / Work Name (Optional)',
+            phGeneralProject: 'e.g. Southern Line Signalling Project',
+            lblGeneralInstitution: 'Institution / Company Name (Optional)',
+            phGeneralInstitution: 'e.g. PT Kereta Api Indonesia',
+            lblGeneralRespondent: 'Respondent / PIC Name (Optional)',
+            phGeneralRespondent: 'e.g. Budi Santoso'
         }
     };
 
@@ -598,6 +622,29 @@
         // Footer WBS Button
         const ftrWbs = document.getElementById('footer-wbs-btn-text');
         if (ftrWbs) ftrWbs.textContent = t.footerWbsBtn;
+
+        // Mode Survei Umum (?mode=general)
+        const genPill = document.getElementById('txt-general-mode-pill');
+        const genTitle = document.getElementById('txt-general-mode-title');
+        const genBadge = document.getElementById('txt-general-mode-badge');
+        const genDesc = document.getElementById('txt-general-mode-desc');
+        const lblGenProj = document.getElementById('lbl-general-project');
+        const inpGenProj = document.getElementById('general-project-name');
+        const lblGenInst = document.getElementById('lbl-general-institution');
+        const inpGenInst = document.getElementById('general-client-institution');
+        const lblGenResp = document.getElementById('lbl-general-respondent');
+        const inpGenResp = document.getElementById('general-respondent-name');
+
+        if (genPill) genPill.textContent = t.generalModePill;
+        if (genTitle) genTitle.textContent = t.generalModeTitle;
+        if (genBadge) genBadge.textContent = t.generalModeBadge;
+        if (genDesc) genDesc.textContent = t.generalModeDesc;
+        if (lblGenProj) lblGenProj.textContent = t.lblGeneralProject;
+        if (inpGenProj) inpGenProj.placeholder = t.phGeneralProject;
+        if (lblGenInst) lblGenInst.textContent = t.lblGeneralInstitution;
+        if (inpGenInst) inpGenInst.placeholder = t.phGeneralInstitution;
+        if (lblGenResp) lblGenResp.textContent = t.lblGeneralRespondent;
+        if (inpGenResp) inpGenResp.placeholder = t.phGeneralRespondent;
     };
 
     /**
@@ -947,8 +994,14 @@
             }
 
             // Ambil sesi aktif pengguna dari localStorage (Zero-Login session)
+            const params = new URLSearchParams(window.location.search);
+            const isGeneralQuery = params.get('mode') === 'general';
             let respondentId = 'PIC-001';
             let projectName = 'Proyek Dummy';
+            let projectCode = '';
+            let surveySource = isGeneralQuery ? 'general' : 'contract';
+            let clientName = '';
+            let clientRole = '';
 
             try {
                 const rawSession = localStorage.getItem('lrs_active_session');
@@ -957,7 +1010,13 @@
                         const parsed = JSON.parse(rawSession);
                         if (typeof parsed === 'object' && parsed !== null) {
                             respondentId = parsed.respondent_id || parsed.pic_id || parsed.contract_number || parsed.token || 'PIC-001';
-                            projectName = parsed.project_name || parsed.contract_number || 'Proyek Dummy';
+                            projectName = parsed.project_name || parsed.projectName || parsed.contract_number || 'Proyek Dummy';
+                            projectCode = parsed.project_code || parsed.contract_number || '';
+                            if (parsed.survey_source === 'general' || parsed.project_code === 'GENERAL') {
+                                surveySource = 'general';
+                            }
+                            clientName = parsed.client_name || '';
+                            clientRole = parsed.client_institution || parsed.client_role || '';
                         } else if (typeof parsed === 'string') {
                             respondentId = parsed || 'PIC-001';
                             projectName = parsed || 'Proyek Dummy';
@@ -969,6 +1028,28 @@
                 }
             } catch (err) {
                 console.error('Error membaca lrs_active_session:', err);
+            }
+
+            // Override identitas mandiri jika mengakses dalam mode survei umum (?mode=general)
+            if (surveySource === 'general') {
+                projectCode = 'GENERAL';
+                const genProjVal = document.getElementById('general-project-name')?.value.trim() || '';
+                const genInstVal = document.getElementById('general-client-institution')?.value.trim() || '';
+                const genRespVal = document.getElementById('general-respondent-name')?.value.trim() || '';
+
+                if (genProjVal) {
+                    projectName = genProjVal;
+                } else if (genInstVal) {
+                    projectName = `Survei Umum - ${genInstVal}`;
+                } else {
+                    projectName = 'Survei Umum (Non-Kontrak)';
+                }
+
+                if (genRespVal) clientName = genRespVal;
+                if (genInstVal) clientRole = genInstVal;
+                if (!respondentId || respondentId === 'PIC-001') {
+                    respondentId = 'PIC-GEN-' + String(Math.floor(100 + Math.random() * 900));
+                }
             }
 
             // Kumpulkan jawaban HANYA dari kategori yang dipilih, termasuk properti 'reason'
@@ -989,7 +1070,7 @@
 
             const elSaran = document.getElementById('saran-umum');
             const refNo = `SRV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(1000 + Math.random() * 9000))}`;
-            let personnelName = 'Ir. Dwi Suryanto, S.T.';
+            let personnelName = surveySource === 'general' ? 'Layanan Umum LRS' : 'Ir. Dwi Suryanto, S.T.';
 
             try {
                 const sess = JSON.parse(localStorage.getItem('lrs_active_session') || '{}');
@@ -1000,6 +1081,10 @@
             const surveyPayload = {
                 reference_no: refNo,
                 respondent_id: respondentId,
+                client_name: clientName || respondentId,
+                client_role: clientRole || (surveySource === 'general' ? 'Responden Umum' : 'Responden Lapangan'),
+                survey_source: surveySource,
+                project_code: projectCode || (surveySource === 'general' ? 'GENERAL' : ''),
                 project_name: projectName,
                 category_id: activeCategoryId,
                 category_name: categoryName,
@@ -1401,9 +1486,23 @@
 
             // Terbitkan Nomor Tiket Otomatis format #TKT-XXXX
             const ticketId = '#TKT-' + String(Math.floor(1000 + Math.random() * 9000));
+            const params = new URLSearchParams(window.location.search);
+            let sess = {};
+            try {
+                sess = JSON.parse(localStorage.getItem('lrs_active_session') || '{}');
+            } catch (errSess) {}
+
+            const isGeneral = params.get('mode') === 'general' || sess.survey_source === 'general' || sess.project_code === 'GENERAL';
+            const genProjVal = document.getElementById('general-project-name')?.value.trim() || '';
+            const genInstVal = document.getElementById('general-client-institution')?.value.trim() || '';
+            const genRespVal = document.getElementById('general-respondent-name')?.value.trim() || '';
 
             const complaintPayload = {
                 ticket_id: ticketId,
+                client_name: genRespVal || sess.client_name || sess.respondent_id || 'Klien Portal',
+                project_name: genProjVal || sess.project_name || (genInstVal ? `Survei Umum - ${genInstVal}` : (isGeneral ? 'Survei Umum (Non-Kontrak)' : 'Proyek LRS')),
+                project_code: isGeneral ? 'GENERAL' : (sess.project_code || sess.contract_number || ''),
+                survey_source: isGeneral ? 'general' : 'contract',
                 category: kategori,
                 subject: subjek,
                 urgency: urgencyEl.value,
@@ -1553,11 +1652,40 @@
     };
 
     /**
-     * Periksa Parameter URL Query (?proyek=...&personel=...&kategori=...&lang=...)
+     * Sinkronisasi input identitas mandiri pada Mode Survei Umum (?mode=general) ke localStorage
+     */
+    window.syncGeneralModeSession = function () {
+        try {
+            const session = JSON.parse(localStorage.getItem('lrs_active_session') || '{}');
+            const projVal = document.getElementById('general-project-name')?.value.trim() || '';
+            const instVal = document.getElementById('general-client-institution')?.value.trim() || '';
+            const respVal = document.getElementById('general-respondent-name')?.value.trim() || '';
+
+            session.survey_source = 'general';
+            session.project_code = 'GENERAL';
+            session.project_name = projVal || (instVal ? `Survei Umum - ${instVal}` : 'Survei Umum (Non-Kontrak)');
+            session.client_institution = instVal;
+            session.client_name = respVal;
+            if (!session.respondent_id) {
+                session.respondent_id = 'PIC-GEN-' + String(Math.floor(100 + Math.random() * 900));
+            }
+            if (!session.verified_at) {
+                session.verified_at = new Date().toISOString();
+            }
+
+            localStorage.setItem('lrs_active_session', JSON.stringify(session));
+        } catch (e) {
+            console.error('Error sinkronisasi sesi umum:', e);
+        }
+    };
+
+    /**
+     * Periksa Parameter URL Query (?mode=general&proyek=...&personel=...&kategori=...&lang=...)
      */
     function checkUrlQueryParams() {
         try {
             const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
             const proyek = params.get('proyek');
             const personel = params.get('personel');
             const kategori = params.get('kategori');
@@ -1567,14 +1695,45 @@
                 window.setLanguage(lang);
             }
 
-            if (proyek || personel) {
+            if (mode === 'general') {
+                const generalCard = document.getElementById('general-mode-identity-card');
+                if (generalCard) generalCard.classList.remove('hidden');
+
+                let session = {};
+                try {
+                    session = JSON.parse(localStorage.getItem('lrs_active_session') || '{}');
+                } catch (e) {}
+
+                const wasGeneral = session.survey_source === 'general' || session.project_code === 'GENERAL';
+                session.survey_source = 'general';
+                session.project_code = 'GENERAL';
+                if (!session.respondent_id || !String(session.respondent_id).startsWith('PIC-GEN-')) {
+                    session.respondent_id = 'PIC-GEN-' + String(Math.floor(100 + Math.random() * 900));
+                }
+                if (!session.project_name || !wasGeneral) {
+                    session.project_name = 'Survei Umum (Non-Kontrak)';
+                }
+                session.verified_at = session.verified_at || new Date().toISOString();
+                localStorage.setItem('lrs_active_session', JSON.stringify(session));
+
+                const inpProj = document.getElementById('general-project-name');
+                const inpInst = document.getElementById('general-client-institution');
+                const inpResp = document.getElementById('general-respondent-name');
+                if (inpProj && session.project_name && session.project_name !== 'Survei Umum (Non-Kontrak)') {
+                    inpProj.value = session.project_name;
+                }
+                if (inpInst && session.client_institution) inpInst.value = session.client_institution;
+                if (inpResp && session.client_name) inpResp.value = session.client_name;
+            } else if (proyek || personel) {
                 let session = {};
                 try {
                     session = JSON.parse(localStorage.getItem('lrs_active_session') || '{}');
                 } catch (e) {}
 
                 if (proyek) {
+                    session.survey_source = 'contract';
                     session.projectName = proyek;
+                    session.project_name = proyek;
                     session.project_code = proyek;
                 }
                 if (personel) {

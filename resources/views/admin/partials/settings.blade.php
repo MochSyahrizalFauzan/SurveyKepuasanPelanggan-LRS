@@ -27,7 +27,7 @@
                     </h3>
                 </div>
                 <p class="text-xs text-slate-400 mt-0.5">
-                    Skor minimal pencapaian indeks kepuasan (CSI) PT. Len Railways Systems.
+                    Skor minimal pencapaian indeks kepuasan (CSI) PT Len Railway Systems.
                 </p>
             </div>
 
@@ -178,7 +178,7 @@
                     Utilitas Demo: Reset Data Contoh (Seed Awal)
                 </h3>
                 <p class="text-xs text-rose-700/80 mt-0.5 leading-relaxed">
-                    Gunakan tombol ini saat ingin mengembalikan data prototipe ke kondisi awal saat sesi presentasi kepada Manajemen PT LRS. Seluruh data survei, keluhan, proyek, personel, dan riwayat akan di-refresh ke konfigurasi dummy standar.
+                    Gunakan tombol ini saat ingin mengembalikan data prototipe ke kondisi awal saat sesi presentasi kepada Manajemen PT Len Railway Systems. Seluruh data survei, keluhan, proyek, personel, dan riwayat akan di-refresh ke konfigurasi dummy standar.
                 </p>
                 <div class="mt-3">
                     <button type="button"

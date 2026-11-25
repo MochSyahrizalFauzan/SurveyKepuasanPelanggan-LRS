@@ -11,8 +11,85 @@
             </h1>
         </div>
         <p class="text-xs md:text-sm text-slate-500 mt-1 max-w-3xl leading-relaxed">
-            Buat kode QR dan tautan formulir survei otomatis per proyek dan personel pendamping. Klien dapat langsung memindai QR code untuk mengisi kuesioner tanpa perlu login.
+            Bagikan Tautan Survei Umum untuk proyek non-kontrak atau buat kode QR dan tautan formulir survei khusus per proyek dan personel pendamping. Klien dapat langsung mengisi kuesioner tanpa perlu login.
         </p>
+    </div>
+
+    {{-- 1B. KARTU KHUSUS: TAUTAN SURVEI UMUM (PROYEK BELUM BERKONTRAK) --}}
+    <div id="general-survey-link-card" class="bg-gradient-to-br from-blue-50/90 via-white to-sky-50/70 rounded-2xl border-2 border-[#003B73]/25 p-5 md:p-6 shadow-[0_4px_20px_-4px_rgba(0,59,115,0.10)] space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="space-y-1.5 max-w-2xl">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#003B73] text-white shadow-2xs">
+                        Akses Cepat Non-Kontrak
+                    </span>
+                    <h2 class="text-base md:text-lg font-extrabold text-slate-800 tracking-tight">
+                        Tautan Survei Umum (Proyek Belum Berkontrak)
+                    </h2>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Tautan siap pakai untuk klien atau proyek yang belum memiliki nomor kontrak resmi — tidak perlu mengatur proyek, personel, atau QR Code terlebih dahulu.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 shrink-0 w-full lg:w-auto">
+                <button type="button"
+                        id="btn-copy-general-url"
+                        onclick="copyGeneralSurveyUrl()"
+                        class="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-[#003B73] hover:bg-[#002B54] text-white font-bold text-xs shadow-sm shadow-[#003B73]/20 hover:shadow-md transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer">
+                    <span>📋</span>
+                    <span id="txt-copy-general-url">Salin Tautan Umum</span>
+                </button>
+                <a id="btn-open-general-url"
+                   href="{{ url('/form?mode=general') }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[#003B73] font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5 active:scale-95">
+                    <span>↗</span>
+                    <span>Buka Tautan</span>
+                </a>
+                <button type="button"
+                        id="btn-toggle-general-qr"
+                        onclick="toggleGeneralQrPanel()"
+                        class="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[#003B73] font-bold text-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer">
+                    <span>📱</span>
+                    <span id="txt-toggle-general-qr">Tampilkan QR Umum</span>
+                </button>
+            </div>
+        </div>
+
+        {{-- Kotak Read-Only URL Tautan Survei Umum --}}
+        <div class="bg-white rounded-xl border border-slate-200/90 p-2.5 flex items-center gap-2 shadow-2xs">
+            <span class="px-2 py-1 rounded-lg bg-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-600 shrink-0">
+                URL Tetap
+            </span>
+            <input type="text"
+                   id="general-survey-url"
+                   readonly
+                   value="{{ url('/form?mode=general') }}"
+                   aria-label="URL Tautan Survei Umum"
+                   class="w-full min-w-0 bg-transparent text-xs font-mono font-semibold text-[#003B73] select-all cursor-text focus:outline-none">
+        </div>
+
+        {{-- Panel QR Umum Opsional (Toggleable) --}}
+        <div id="general-qr-panel" class="hidden pt-3 border-t border-blue-200/70">
+            <div class="flex flex-col sm:flex-row items-center gap-5 bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs">
+                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-inner shrink-0">
+                    <div id="general-qr-canvas" class="flex items-center justify-center"></div>
+                </div>
+                <div class="space-y-2 text-center sm:text-left min-w-0">
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-[#003B73] border border-blue-100">
+                        QR Code Survei Umum · PT Len Railway Systems
+                    </span>
+                    <h4 class="text-sm font-extrabold text-slate-800">
+                        Pindai untuk Membuka Survei Umum (Non-Kontrak)
+                    </h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Klien dapat memindai QR Code ini untuk langsung mengisi survei tanpa nomor kontrak dan menuliskan nama proyek atau instansi secara mandiri.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- 2. GRID 2 KOLOM: FORM GENERATOR (KIRI) & PRATINJAU KARTU CETAK (KANAN) --}}
@@ -136,10 +213,10 @@
                 {{-- Header Kartu --}}
                 <div class="pt-2 flex flex-col items-center">
                     <img src="{{ asset('images/logo.png') }}"
-                         alt="Logo PT. Len Railways Systems"
+                         alt="Logo PT Len Railway Systems"
                          class="h-8 w-auto object-contain mb-1.5">
                     <span class="text-xs font-black text-[#003B73] tracking-tight uppercase">
-                        PT. Len Railways Systems
+                        PT Len Railway Systems
                     </span>
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                         Survei Kepuasan Pelanggan

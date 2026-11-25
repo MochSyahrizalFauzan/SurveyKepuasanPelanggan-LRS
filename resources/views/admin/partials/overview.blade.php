@@ -15,13 +15,14 @@
         </div>
 
         {{-- Kontrol Filter & Ekspor --}}
-        <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
             {{-- Filter Proyek --}}
-            <div class="relative">
+            <div class="relative w-full sm:w-auto">
                 <select id="filter-overview-project"
                         onchange="onFilterChange()"
-                        class="appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                        class="w-full sm:w-auto appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                     <option value="all">Semua Proyek</option>
+                    <option value="GENERAL">Survei Umum (Non-Kontrak)</option>
                     <option value="LRT Jakarta Fase 1B">LRT Jakarta Fase 1B</option>
                     <option value="Kereta Cepat Jakarta-Bandung">Kereta Cepat Jakarta-Bandung (Whoosh)</option>
                     <option value="Gardu Traksi Manggarai">Gardu Traksi Manggarai</option>
@@ -32,10 +33,10 @@
             </div>
 
             {{-- Filter Periode --}}
-            <div class="relative">
+            <div class="relative w-full sm:w-auto">
                 <select id="filter-overview-period"
                         onchange="onFilterChange()"
-                        class="appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                        class="w-full sm:w-auto appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 pr-8 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                     <option value="all">Semua Periode</option>
                     <option value="2026-Q1">Kuartal 1 (Q1 2026)</option>
                     <option value="2026-Q2">Kuartal 2 (Q2 2026)</option>
@@ -48,7 +49,7 @@
             {{-- Tombol Unduh Laporan --}}
             <button type="button"
                     onclick="exportIsoReport()"
-                    class="bg-[#003B73] hover:bg-[#002B54] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm shadow-[#003B73]/20 hover:shadow-md hover:shadow-[#003B73]/30 flex items-center gap-2 active:scale-95 focus:outline-none">
+                    class="w-full sm:w-auto justify-center bg-[#003B73] hover:bg-[#002B54] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm shadow-[#003B73]/20 hover:shadow-md hover:shadow-[#003B73]/30 flex items-center gap-2 active:scale-95 focus:outline-none cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
@@ -92,47 +93,47 @@
                     </span>
                 </div>
 
-                <div class="flex items-baseline gap-3">
+                <div class="flex flex-wrap items-baseline gap-2.5">
                     <span id="csi-score-number" class="text-4xl md:text-5xl font-black text-[#003B73] tracking-tight">
-                        85.7%
+                        81.2%
                     </span>
                     <span class="text-xs text-slate-400 font-semibold" id="csi-target-text">
-                        / Target Perusahaan: ≥ 80.0%
+                        / Target Perusahaan: <span class="whitespace-nowrap">(≥ 80.0%)</span>
                     </span>
                 </div>
 
                 <p id="csi-interpretation-text" class="text-xs md:text-sm text-slate-600 leading-relaxed">
-                    Kinerja layanan sudah mencapai target perusahaan (≥ 80.0%).
+                    Kinerja layanan sudah mencapai target perusahaan <span class="whitespace-nowrap">(≥ 80.0%)</span>.
                 </p>
 
-                {{-- 4 Kotak Ringkasan Sejajar --}}
+                {{-- 4 Kotak Ringkasan Sejajar (Fokus Utama: Tingkat Kepuasan di Posisi 1) --}}
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
-                    {{-- 1: Tingkat Harapan --}}
-                    <div class="bg-slate-50/90 hover:bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-xs hover:border-slate-300 transition-all hover:-translate-y-0.5 text-center">
-                        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Tingkat Harapan</span>
-                        <span id="avg-kepentingan-val" class="text-base md:text-lg font-black text-[#003B73]">4.62</span>
-                        <span class="block text-[10px] text-slate-400 font-medium">dari skala 5.0</span>
+                    {{-- 1: Tingkat Kepuasan (Metrik Utama Paling Menonjol) --}}
+                    <div class="bg-gradient-to-br from-blue-50/90 via-white to-emerald-50/60 rounded-xl p-3.5 border-2 border-[#003B73]/30 ring-1 ring-[#003B73]/10 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 text-center">
+                        <span class="block text-[11px] font-extrabold text-[#003B73] uppercase tracking-wide">Tingkat Kepuasan</span>
+                        <span id="avg-kepuasan-val" class="text-lg md:text-xl font-black text-[#003B73]">82.4%</span>
+                        <span class="block text-[10px] text-slate-600 font-semibold">Rata-rata Kepuasan</span>
                     </div>
 
-                    {{-- 2: Tingkat Kepuasan --}}
+                    {{-- 2: Tingkat Kepentingan --}}
                     <div class="bg-slate-50/90 hover:bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-xs hover:border-slate-300 transition-all hover:-translate-y-0.5 text-center">
-                        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Tingkat Kepuasan</span>
-                        <span id="avg-kepuasan-val" class="text-base md:text-lg font-black text-amber-600">4.28</span>
-                        <span class="block text-[10px] text-slate-400 font-medium">dari skala 5.0</span>
+                        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Tingkat Kepentingan</span>
+                        <span id="avg-kepentingan-val" class="text-base md:text-lg font-black text-slate-700">78.0%</span>
+                        <span class="block text-[10px] text-slate-400 font-medium">Rata-rata Kepentingan</span>
                     </div>
 
-                    {{-- 3: Kesesuaian Harapan --}}
+                    {{-- 3: Selisih Kepentingan & Kepuasan --}}
                     <div class="bg-slate-50/90 hover:bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-xs hover:border-slate-300 transition-all hover:-translate-y-0.5 text-center">
-                        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Kesesuaian Harapan</span>
-                        <span id="gap-index-val" class="text-base md:text-lg font-black text-emerald-600">+0.08</span>
-                        <span id="gap-label-text" class="block text-[10px] text-emerald-600 font-bold">(Melampaui Harapan)</span>
+                        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Selisih Kepentingan &amp; Kepuasan</span>
+                        <span id="gap-index-val" class="text-base md:text-lg font-black text-emerald-600">+4.4%</span>
+                        <span id="gap-label-text" class="block text-[10px] text-emerald-600 font-bold">Melampaui Kepentingan</span>
                     </div>
 
                     {{-- 4: Partisipasi Responden --}}
                     <div id="card-partisipasi-responden" class="bg-slate-50/90 hover:bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-xs hover:border-slate-300 transition-all hover:-translate-y-0.5 text-center flex flex-col justify-between">
                         <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide">Partisipasi Responden</span>
-                        <span id="participation-ratio-val" class="text-base md:text-lg font-black text-slate-800">50%</span>
-                        <span id="participation-subtext" class="block text-[10px] text-slate-400 font-medium">6 dari 12 PIC • 3/5 Proyek Aktif</span>
+                        <span id="participation-ratio-val" class="text-base md:text-lg font-black text-slate-800">58%</span>
+                        <span id="participation-subtext" class="block text-[10px] text-slate-400 font-medium">7 dari 12 PIC • 3/5 Proyek Aktif</span>
                     </div>
                 </div>
             </div>
@@ -147,9 +148,6 @@
         <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.09)] hover:-translate-y-0.5 hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3">
-                    <span class="w-10 h-10 rounded-xl bg-blue-50 text-[#003B73] font-bold flex items-center justify-center text-xl shadow-2xs border border-blue-100">
-                        🤝
-                    </span>
                     <span id="dim-badge-A" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-emerald-700 bg-emerald-50 border-emerald-200 shadow-2xs">
                         Sangat Memuaskan
                     </span>
@@ -157,8 +155,14 @@
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Layanan & Dukungan
                 </h3>
-                <div class="flex items-baseline gap-2 mt-1 mb-2">
-                    <span id="dim-score-A" class="text-2xl md:text-3xl font-black text-[#003B73]">88.2%</span>
+                <div class="flex items-baseline justify-between gap-2 mt-1 mb-2 flex-wrap">
+                    <div class="flex items-baseline gap-1.5">
+                        <span id="dim-score-A" class="text-2xl md:text-3xl font-black text-[#003B73]">88.2%</span>
+                        <span class="text-[10px] font-bold uppercase text-slate-400">Kepuasan</span>
+                    </div>
+                    <span id="dim-imp-A" class="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/70">
+                        Kepentingan: 93.0%
+                    </span>
                 </div>
                 {{-- Mini Progress --}}
                 <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/40">
@@ -175,9 +179,6 @@
         <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.09)] hover:-translate-y-0.5 hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3">
-                    <span class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 font-bold flex items-center justify-center text-xl shadow-2xs border border-amber-100">
-                        🏗️
-                    </span>
                     <span id="dim-badge-B" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-blue-700 bg-blue-50 border-blue-200 shadow-2xs">
                         Memuaskan
                     </span>
@@ -185,8 +186,14 @@
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Pelaksanaan Proyek
                 </h3>
-                <div class="flex items-baseline gap-2 mt-1 mb-2">
-                    <span id="dim-score-B" class="text-2xl md:text-3xl font-black text-[#003B73]">84.6%</span>
+                <div class="flex items-baseline justify-between gap-2 mt-1 mb-2 flex-wrap">
+                    <div class="flex items-baseline gap-1.5">
+                        <span id="dim-score-B" class="text-2xl md:text-3xl font-black text-[#003B73]">84.6%</span>
+                        <span class="text-[10px] font-bold uppercase text-slate-400">Kepuasan</span>
+                    </div>
+                    <span id="dim-imp-B" class="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/70">
+                        Kepentingan: 92.0%
+                    </span>
                 </div>
                 <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/40">
                     <div id="dim-bar-B" class="h-full bg-amber-500 rounded-full transition-all duration-500" style="width: 84.6%;"></div>
@@ -201,9 +208,6 @@
         <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.09)] hover:-translate-y-0.5 hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3">
-                    <span class="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 font-bold flex items-center justify-center text-xl shadow-2xs border border-purple-100">
-                        🔧
-                    </span>
                     <span id="dim-badge-C" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md border text-blue-700 bg-blue-50 border-blue-200 shadow-2xs">
                         Memuaskan
                     </span>
@@ -211,8 +215,14 @@
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Masa Pemeliharaan
                 </h3>
-                <div class="flex items-baseline gap-2 mt-1 mb-2">
-                    <span id="dim-score-C" class="text-2xl md:text-3xl font-black text-[#003B73]">83.5%</span>
+                <div class="flex items-baseline justify-between gap-2 mt-1 mb-2 flex-wrap">
+                    <div class="flex items-baseline gap-1.5">
+                        <span id="dim-score-C" class="text-2xl md:text-3xl font-black text-[#003B73]">83.5%</span>
+                        <span class="text-[10px] font-bold uppercase text-slate-400">Kepuasan</span>
+                    </div>
+                    <span id="dim-imp-C" class="text-[11px] font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/70">
+                        Kepentingan: 89.0%
+                    </span>
                 </div>
                 <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/40">
                     <div id="dim-bar-C" class="h-full bg-purple-600 rounded-full transition-all duration-500" style="width: 83.5%;"></div>
@@ -230,7 +240,6 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-amber-50 text-amber-600 font-black text-xs border border-amber-200">⚠️</span>
                     <h2 class="text-base font-extrabold text-slate-800 tracking-tight">
                         Area Prioritas Perbaikan
                     </h2>
@@ -246,28 +255,28 @@
         </div>
     </div>
 
-    {{-- 4. ANALITIK: HARAPAN VS KENYATAAN & PEMANTAUAN (GRID 12 KOLOM) --}}
+    {{-- 4. ANALITIK: KEPENTINGAN DAN KEPUASAN & PEMANTAUAN (GRID 12 KOLOM) --}}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        {{-- Kiri (lg:col-span-7): Grafik Harapan vs. Kenyataan --}}
+        {{-- Kiri (lg:col-span-7): Grafik Kepentingan dan Kepuasan --}}
         <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.05),0_1px_3px_rgba(15,23,42,0.03)] flex flex-col justify-between">
             <div>
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                     <div>
                         <h2 class="text-base font-extrabold text-slate-800 tracking-tight">
-                            Harapan vs. Kenyataan
+                            Kepentingan dan Kepuasan
                         </h2>
                         <p class="text-xs text-slate-500">
-                            Membandingkan hal yang dianggap penting oleh klien (batang biru) dengan kepuasan yang dirasakan (garis kuning).
+                            Menonjolkan tingkat kepuasan klien (batang biru utama) dibandingkan tingkat kepentingan yang diharapkan (garis amber pembanding).
                         </p>
                     </div>
-                    {{-- Legend --}}
+                    {{-- Legend (Kepuasan paling utama & kontras) --}}
                     <div class="flex items-center gap-3 text-xs font-semibold shrink-0">
-                        <span class="inline-flex items-center gap-1.5 text-[#003B73]">
-                            <span class="w-3 h-3 rounded-sm bg-[#003B73]"></span> Harapan
+                        <span class="inline-flex items-center gap-1.5 text-[#003B73] font-extrabold">
+                            <span class="w-3 h-3 rounded-sm bg-[#003B73]"></span> Kepuasan
                         </span>
                         <span class="inline-flex items-center gap-1.5 text-amber-600">
-                            <span class="w-3 h-3 rounded-full bg-amber-500"></span> Kepuasan
+                            <span class="w-3 h-3 rounded-full bg-amber-500"></span> Kepentingan
                         </span>
                     </div>
                 </div>
@@ -281,11 +290,10 @@
             {{-- Kotak Kesimpulan Utama (Dihitung Otomatis oleh JavaScript) --}}
             <div class="mt-4 bg-amber-50/80 border border-amber-200/80 border-l-4 border-l-amber-500 p-3.5 rounded-r-xl shadow-2xs">
                 <div class="flex items-start gap-2.5">
-                    <span class="text-base">💡</span>
                     <div>
                         <span class="text-xs font-bold text-slate-700 block mb-0.5">Kesimpulan Utama</span>
                         <p id="chart-main-conclusion" class="text-xs text-slate-600 leading-relaxed">
-                            Memuat analisis perbandingan harapan dan kepuasan klien...
+                            Memuat analisis perbandingan kepentingan dan kepuasan klien...
                         </p>
                     </div>
                 </div>
@@ -304,9 +312,6 @@
                             Kecepatan penanganan keluhan dan daftar masalah prioritas
                         </p>
                     </div>
-                    <span class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-sm shadow-2xs border border-slate-200/80">
-                        ⚡
-                    </span>
                 </div>
 
                 {{-- Bagian Ketepatan Waktu Penanganan --}}

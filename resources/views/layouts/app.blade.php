@@ -26,7 +26,7 @@
 
     {{-- =========================================================================
          HIASAN BACKGROUND GLOBAL (Senada di Halaman Klien & Admin)
-         - Siluet Ilustrasi Operation Control Center (OCC) PT Len Railways Systems
+         - Siluet Ilustrasi Operation Control Center (OCC) PT Len Railway Systems
          - Ambient Glowing Orbs Khas LRS (Corporate Navy & High-Tech Sky Blue)
          - Engineering Dot Matrix Grid
          ========================================================================= --}}

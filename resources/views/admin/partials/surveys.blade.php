@@ -30,11 +30,22 @@
                 </svg>
             </div>
 
+            {{-- Filter Proyek --}}
+            <div class="relative w-full sm:w-auto">
+                <select id="filter-surveys-project"
+                        onchange="onSurveyFilterChange()"
+                        class="w-full sm:w-auto appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                    <option value="all">Semua Proyek</option>
+                    <option value="GENERAL">Survei Umum (Non-Kontrak)</option>
+                </select>
+                <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">▼</div>
+            </div>
+
             {{-- Filter Kategori --}}
-            <div class="relative">
+            <div class="relative w-full sm:w-auto">
                 <select id="filter-surveys-category"
                         onchange="onSurveyFilterChange()"
-                        class="appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                        class="w-full sm:w-auto appearance-none bg-slate-50/90 hover:bg-white border border-slate-200/90 rounded-xl px-3 py-2 pr-7 text-xs font-semibold text-slate-700 shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                     <option value="all">Semua Kategori</option>
                     <option value="A">Kategori A · Layanan & Dukungan</option>
                     <option value="B">Kategori B · Pelaksanaan Proyek</option>
@@ -46,7 +57,7 @@
             {{-- Tombol Ekspor CSV --}}
             <button type="button"
                     onclick="exportSurveysCsv()"
-                    class="bg-[#003B73] hover:bg-[#002B54] text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm shadow-[#003B73]/20 hover:shadow-md hover:shadow-[#003B73]/30 flex items-center gap-1.5 active:scale-95 focus:outline-none cursor-pointer">
+                    class="w-full sm:w-auto justify-center bg-[#003B73] hover:bg-[#002B54] text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm shadow-[#003B73]/20 hover:shadow-md hover:shadow-[#003B73]/30 flex items-center gap-1.5 active:scale-95 focus:outline-none cursor-pointer">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
@@ -90,7 +101,7 @@
                         <th class="py-3.5 px-4">Proyek & Klien</th>
                         <th class="py-3.5 px-4">Kategori Survei</th>
                         <th class="py-3.5 px-4">Personel Pendamping</th>
-                        <th class="py-3.5 px-4">Skor Rata-rata</th>
+                        <th class="py-3.5 px-4">Kepuasan &amp; Kepentingan</th>
                         <th class="py-3.5 px-4 text-center">Aksi</th>
                     </tr>
                 </thead>
