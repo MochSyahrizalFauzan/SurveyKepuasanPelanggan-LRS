@@ -121,20 +121,6 @@
                         <div class="absolute inset-0 bg-gradient-to-t from-[#001A38]/95 via-[#002E63]/70 via-45% to-transparent transition-opacity duration-500 pointer-events-none"></div>
 
                         {{-- LAPISAN 3 — KONTEN CARD (relative z-10) --}}
-                        {{-- Bagian Atas: Badge Glassmorphism --}}
-                        <!-- <div class="relative z-10 flex justify-end gap-2 items-center">
-                            {{-- Badge Jumlah Indikator --}}
-                            <span class="bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-semibold px-3.5 py-1 rounded-full shadow-xs">
-                                {{ count($cat['indicators']) }} Indikator
-                            </span>
-
-                            {{-- Badge Status Selesai / Terisi (Diperbarui via JS) --}}
-                            <span class="cat-completed-badge hidden bg-emerald-500/90 text-white border border-emerald-400/50 text-xs font-semibold px-3 py-1 rounded-full shadow-xs flex items-center gap-1"
-                                  id="cat-status-{{ $cat['code'] }}">
-                                ✓ Sudah Diisi
-                            </span>
-                        </div> -->
-
                         {{-- Bagian Tengah & Bawah: Informasi Kategori & Tombol Aksi --}}
                         <div class="relative z-10 mt-auto pt-6">
                             {{-- Judul Kategori --}}

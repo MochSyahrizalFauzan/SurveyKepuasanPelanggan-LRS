@@ -104,18 +104,24 @@
 
         {{-- Blok Keterangan Wajib Kondisional (Muncul jika Skor Kepuasan < 4: 1, 2, atau 3) --}}
         <div class="reason-block hidden mt-3 pt-3 border-t border-rose-100 transition-all duration-300" id="reason-block-{{ $indicator['code'] }}">
-            <label class="block text-xs font-bold text-rose-600 mb-1.5 flex items-center gap-1.5" for="reason-{{ $indicator['code'] }}">
-                <span class="reason-label-req text-rose-600 font-extrabold">*Keterangan Wajib Diisi</span>
-                <span class="reason-label-hint text-slate-400 font-normal text-[11px]">(nilai kepuasan rendah)</span>
-            </label>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                <label class="text-xs font-bold text-rose-600 flex flex-wrap items-center gap-1.5" for="reason-{{ $indicator['code'] }}">
+                    <span class="reason-label-req text-rose-600 font-extrabold">*Keterangan Wajib Diisi</span>
+                    <span class="reason-label-hint text-slate-400 font-normal text-[11px]">(nilai kepuasan rendah · minimal 10 karakter)</span>
+                </label>
+                <span class="reason-char-count text-[11px] font-bold text-slate-400 tabular-nums" id="reason-count-{{ $indicator['code'] }}">
+                    0 / min. 10 karakter
+                </span>
+            </div>
             <textarea id="reason-{{ $indicator['code'] }}"
                       rows="2"
+                      minlength="10"
                       oninput="handleReasonInput('{{ $indicator['code'] }}', this.value)"
                       class="reason-textarea w-full rounded-xl border border-rose-300 bg-rose-50/30 p-3 text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-100 shadow-2xs outline-none transition-all resize-y leading-relaxed"
-                      placeholder="Mohon berikan penjelasan singkat mengenai kendala yang menyebabkan penilaian rendah ini..."></textarea>
+                      placeholder="Mohon berikan penjelasan singkat mengenai kendala yang menyebabkan penilaian rendah ini (min. 10 karakter)..."></textarea>
             <p class="reason-err hidden text-xs font-bold text-rose-600 mt-1 flex items-center gap-1" id="reason-err-{{ $indicator['code'] }}">
                 <span>⚠️</span>
-                <span class="reason-err-text">Penjelasan kendala wajib diisi untuk nilai kepuasan rendah.</span>
+                <span class="reason-err-text">Penjelasan kendala wajib diisi minimal 10 karakter untuk nilai kepuasan rendah.</span>
             </p>
         </div>
 

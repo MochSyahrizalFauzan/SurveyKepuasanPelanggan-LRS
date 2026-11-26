@@ -21,6 +21,8 @@
     if (window.__lrs_portal_initialized) return;
     window.__lrs_portal_initialized = true;
 
+    const MIN_REASON_LENGTH = 10;
+
     // Metadata Kategori Sesuai PRD.md (3 Kategori, 21 Indikator Total) - Bilingual
     const CATEGORY_MAP = {
         'A': {
@@ -93,9 +95,10 @@
 
             // Reason Block
             reasonReq: '*Keterangan Wajib Diisi',
-            reasonHint: '(nilai kepuasan rendah)',
-            reasonPlaceholder: 'Mohon berikan penjelasan singkat mengenai kendala yang menyebabkan penilaian rendah ini...',
-            reasonError: 'Penjelasan kendala wajib diisi untuk nilai kepuasan rendah.',
+            reasonHint: '(nilai kepuasan rendah · minimal 10 karakter)',
+            reasonPlaceholder: 'Mohon berikan penjelasan singkat mengenai kendala yang menyebabkan penilaian rendah ini (min. 10 karakter)...',
+            reasonError: 'Penjelasan kendala wajib diisi minimal 10 karakter untuk nilai kepuasan rendah.',
+            reasonMinSuffix: 'karakter',
             cardErrorHint: 'Mohon pilih penilaian Kepentingan dan Kepuasan (skala 1-5).',
 
             // General notes
@@ -223,9 +226,10 @@
 
             // Reason Block
             reasonReq: '*Required Explanation',
-            reasonHint: '(low satisfaction score)',
-            reasonPlaceholder: 'Please provide a brief explanation of the issue causing this low rating...',
-            reasonError: 'Explanation is required for low satisfaction score.',
+            reasonHint: '(low satisfaction score · min. 10 characters)',
+            reasonPlaceholder: 'Please provide a brief explanation of the issue causing this low rating (min. 10 characters)...',
+            reasonError: 'Explanation must be at least 10 characters for a low satisfaction score.',
+            reasonMinSuffix: 'chars',
             cardErrorHint: 'Please select both Importance and Satisfaction ratings (scale 1-5).',
 
             // General notes
@@ -372,17 +376,43 @@
             localStorage.setItem('lrs_client_lang', currentLang);
         } catch (e) {}
 
-        // 1. Update State Tombol Toggle ID | EN
+        // 1. Update State Toggle Switcher Bendera ID | EN
+        const pill = document.getElementById('lang-switcher-pill');
+        const knob = document.getElementById('lang-flag-knob');
+        const flagId = document.getElementById('lang-flag-id');
+        const flagEn = document.getElementById('lang-flag-en');
         const btnId = document.getElementById('btn-lang-id');
         const btnEn = document.getElementById('btn-lang-en');
 
+        if (pill) {
+            pill.dataset.activeLang = currentLang;
+        }
+
+        if (knob && flagId && flagEn) {
+            if (currentLang === 'en') {
+                knob.classList.remove('translate-x-10');
+                knob.classList.add('translate-x-0');
+                flagId.classList.add('hidden');
+                flagEn.classList.remove('hidden');
+            } else {
+                knob.classList.remove('translate-x-0');
+                knob.classList.add('translate-x-10');
+                flagEn.classList.add('hidden');
+                flagId.classList.remove('hidden');
+            }
+        }
+
         if (btnId && btnEn) {
             if (currentLang === 'en') {
-                btnEn.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs';
-                btnId.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+                btnId.setAttribute('aria-pressed', 'false');
+                btnEn.setAttribute('aria-pressed', 'true');
+                btnId.classList.add('opacity-0');
+                btnEn.classList.remove('opacity-0');
             } else {
-                btnId.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs';
-                btnEn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+                btnId.setAttribute('aria-pressed', 'true');
+                btnEn.setAttribute('aria-pressed', 'false');
+                btnId.classList.remove('opacity-0');
+                btnEn.classList.add('opacity-0');
             }
         }
 
@@ -510,6 +540,9 @@
             if (reasonTextarea) reasonTextarea.placeholder = t.reasonPlaceholder;
             if (reasonErr) reasonErr.textContent = t.reasonError;
             if (errorHint) errorHint.textContent = t.cardErrorHint;
+            if (card.dataset.id) {
+                updateReasonCounter(card.dataset.id, reasonTextarea ? reasonTextarea.value : '');
+            }
         });
 
         // Saran / Inputan Umum
@@ -780,7 +813,9 @@
                 if (reasonBlock) {
                     reasonBlock.classList.remove('hidden');
                 }
-                surveiState[id].reason = reasonTextarea ? reasonTextarea.value.trim() : (surveiState[id].reason || '');
+                const currentReasonVal = reasonTextarea ? reasonTextarea.value : (surveiState[id].reason || '');
+                surveiState[id].reason = currentReasonVal.trim();
+                updateReasonCounter(id, currentReasonVal);
             } else {
                 // Sembunyikan jika kepuasan >= 4
                 if (reasonBlock) {
@@ -793,6 +828,7 @@
                     reasonTextarea.classList.remove('error');
                 }
                 surveiState[id].reason = null;
+                updateReasonCounter(id, '');
             }
         }
 
@@ -808,19 +844,45 @@
     };
 
     /**
-     * Handler Input Penjelasan Kendala (Keterangan Nilai < 4)
+     * Perbarui indikator jumlah karakter pada input keterangan kendala (min. 10 karakter)
+     */
+    function updateReasonCounter(id, val) {
+        const countEl = document.getElementById(`reason-count-${id}`);
+        if (!countEl) return;
+
+        const len = (val || '').trim().length;
+        const suffix = I18N[currentLang]?.reasonMinSuffix || 'karakter';
+        countEl.textContent = `${len} / min. ${MIN_REASON_LENGTH} ${suffix}`;
+
+        countEl.classList.remove('text-slate-400', 'text-rose-500', 'text-emerald-600');
+        if (len >= MIN_REASON_LENGTH) {
+            countEl.classList.add('text-emerald-600');
+        } else if (len > 0) {
+            countEl.classList.add('text-rose-500');
+        } else {
+            countEl.classList.add('text-slate-400');
+        }
+    }
+
+    /**
+     * Handler Input Penjelasan Kendala (Keterangan Nilai < 4, Minimal 10 Karakter)
      */
     window.handleReasonInput = function (id, val) {
         if (!surveiState[id]) return;
-        surveiState[id].reason = val.trim();
+        const trimmed = val.trim();
+        surveiState[id].reason = trimmed;
+
+        updateReasonCounter(id, val);
 
         const reasonTextarea = document.getElementById(`reason-${id}`);
         const reasonErr = document.getElementById(`reason-err-${id}`);
 
-        if (val.trim()) {
+        if (trimmed.length >= MIN_REASON_LENGTH) {
             if (reasonTextarea) reasonTextarea.classList.remove('error');
             if (reasonErr) reasonErr.classList.add('hidden');
         }
+
+        updateCategoryProgress();
     };
 
     /**
@@ -837,9 +899,9 @@
             const id = card.dataset.id;
             const state = surveiState[id];
             if (state && state.imp > 0 && state.sat > 0) {
-                // Jika sat < 4, cek apakah reason sudah diisi
+                // Jika sat < 4, cek apakah reason sudah diisi minimal 10 karakter
                 if (state.sat < 4) {
-                    if (state.reason && state.reason.trim()) {
+                    if (state.reason && state.reason.trim().length >= MIN_REASON_LENGTH) {
                         fullyFilledCards++;
                     }
                 } else {
@@ -946,24 +1008,26 @@
                 return;
             }
 
-            // 2. Keterangan Wajib jika Kepuasan < 4 (1, 2, atau 3)
+            // 2. Keterangan Wajib jika Kepuasan < 4 (1, 2, atau 3) — minimal 10 karakter
             if (item.sat < 4) {
-                const reasonVal = item.reason ? item.reason.trim() : '';
-                if (!reasonVal) {
+                const reasonTextarea = document.getElementById(`reason-${id}`);
+                const reasonVal = (reasonTextarea ? reasonTextarea.value : (item.reason || '')).trim();
+                item.reason = reasonVal;
+
+                if (reasonVal.length < MIN_REASON_LENGTH) {
                     card.classList.add('error');
                     const reasonBlock = document.getElementById(`reason-block-${id}`);
-                    const reasonTextarea = document.getElementById(`reason-${id}`);
                     const reasonErr = document.getElementById(`reason-err-${id}`);
 
                     if (reasonBlock) reasonBlock.classList.remove('hidden');
                     if (reasonTextarea) {
                         reasonTextarea.classList.add('error');
-                        reasonTextarea.focus();
                     }
                     if (reasonErr) reasonErr.classList.remove('hidden');
 
                     if (!firstIncompleteCard) {
                         firstIncompleteCard = card;
+                        if (reasonTextarea) reasonTextarea.focus();
                     }
                     isValid = false;
                 }
@@ -994,7 +1058,7 @@
             }
 
             if (!validateActiveCategory()) {
-                window.showToast('⚠️', (currentLang === 'en' ? 'Incomplete Form' : 'Formulir Belum Lengkap'), (currentLang === 'en' ? 'Please complete all indicators and required explanations for low scores.' : 'Mohon lengkapi seluruh indikator serta keterangan wajib untuk nilai kepuasan rendah.'), '#DC2626');
+                window.showToast('⚠️', (currentLang === 'en' ? 'Incomplete Form' : 'Formulir Belum Lengkap'), (currentLang === 'en' ? `Please complete all indicators and provide at least ${MIN_REASON_LENGTH} characters for low score explanations.` : `Mohon lengkapi seluruh indikator serta keterangan wajib minimal ${MIN_REASON_LENGTH} karakter untuk nilai kepuasan rendah.`), '#DC2626');
                 return;
             }
 

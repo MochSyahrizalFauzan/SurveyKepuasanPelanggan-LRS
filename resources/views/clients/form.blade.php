@@ -35,21 +35,8 @@
 
             {{-- Tautan Singkat ke Admin Dashboard & Switcher Bahasa ID | EN --}}
             <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-2.5">
-                {{-- Switcher Bahasa ID | EN --}}
-                <div class="inline-flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200/80 shadow-2xs" role="group" aria-label="Language Selector">
-                    <button type="button"
-                            id="btn-lang-id"
-                            onclick="setLanguage('id')"
-                            class="px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs">
-                        ID
-                    </button>
-                    <button type="button"
-                            id="btn-lang-en"
-                            onclick="setLanguage('en')"
-                            class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">
-                        EN
-                    </button>
-                </div>
+                {{-- Switcher Bahasa ID | EN (Toggle Bendera) --}}
+                <x-clients::language-switcher />
 
                 <div class="flex items-center gap-2">
                     <a href="{{ route('client.complaint') }}"
@@ -57,12 +44,6 @@
                        class="text-xs px-3 py-1.5 justify-center rounded-xl font-bold transition-all bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-2xs flex items-center gap-1.5">
                         <span id="txt-btn-header-complaint" class="truncate">Sampaikan Keluhan</span>
                     </a>
-                    <!-- <div class="flex items-center p-1 rounded-2xl bg-slate-200/70 border border-slate-200">
-                        <a href="{{ route('admin.dashboard') }}#overview"
-                           class="text-xs px-3 py-1.5 justify-center rounded-xl font-bold transition-all bg-[#003B73] text-white shadow-sm flex items-center gap-1.5">
-                            <span class="truncate">Admin Page</span>
-                        </a>
-                    </div> -->
                 </div>
             </div>
         </div>

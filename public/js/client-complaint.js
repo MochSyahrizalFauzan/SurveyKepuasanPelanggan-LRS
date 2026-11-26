@@ -374,15 +374,40 @@
             localStorage.setItem('lrs_client_lang', currentLang);
         } catch (e) {}
 
+        const pill = document.getElementById('lang-switcher-pill');
+        const knob = document.getElementById('lang-flag-knob');
+        const flagId = document.getElementById('lang-flag-id');
+        const flagEn = document.getElementById('lang-flag-en');
         const btnId = document.getElementById('btn-lang-id');
         const btnEn = document.getElementById('btn-lang-en');
+
+        if (pill) {
+            pill.dataset.activeLang = currentLang;
+        }
+        if (knob && flagId && flagEn) {
+            if (currentLang === 'en') {
+                knob.classList.remove('translate-x-10');
+                knob.classList.add('translate-x-0');
+                flagId.classList.add('hidden');
+                flagEn.classList.remove('hidden');
+            } else {
+                knob.classList.remove('translate-x-0');
+                knob.classList.add('translate-x-10');
+                flagEn.classList.add('hidden');
+                flagId.classList.remove('hidden');
+            }
+        }
         if (btnId && btnEn) {
             if (currentLang === 'en') {
-                btnEn.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs cursor-pointer';
-                btnId.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all cursor-pointer';
+                btnId.setAttribute('aria-pressed', 'false');
+                btnEn.setAttribute('aria-pressed', 'true');
+                btnId.classList.add('opacity-0');
+                btnEn.classList.remove('opacity-0');
             } else {
-                btnId.className = 'px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs cursor-pointer';
-                btnEn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all cursor-pointer';
+                btnId.setAttribute('aria-pressed', 'true');
+                btnEn.setAttribute('aria-pressed', 'false');
+                btnId.classList.remove('opacity-0');
+                btnEn.classList.add('opacity-0');
             }
         }
 

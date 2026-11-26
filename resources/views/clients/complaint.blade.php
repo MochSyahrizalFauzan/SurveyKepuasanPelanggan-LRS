@@ -46,21 +46,8 @@
                     <span id="txt-link-back-survey">Survei Kepuasan</span>
                 </a>
 
-                {{-- Switcher Bahasa ID | EN --}}
-                <div class="inline-flex items-center p-0.5 rounded-xl bg-slate-100 border border-slate-200/80 shadow-2xs" role="group" aria-label="Language Selector">
-                    <button type="button"
-                            id="btn-lang-id"
-                            onclick="setLanguage('id')"
-                            class="px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-[#003B73] text-white shadow-xs cursor-pointer">
-                        ID
-                    </button>
-                    <button type="button"
-                            id="btn-lang-en"
-                            onclick="setLanguage('en')"
-                            class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all cursor-pointer">
-                        EN
-                    </button>
-                </div>
+                {{-- Switcher Bahasa ID | EN (Toggle Bendera) --}}
+                <x-clients::language-switcher />
             </div>
 
         </div>

@@ -126,10 +126,13 @@ class ProgressiveSurveyTest extends TestCase
         $response->assertDontSee('ket-wrap-B1');
         $response->assertDontSee('ket-wrap-C1');
 
-        // Pastikan blok keterangan wajib kondisional ada di setiap indikator
+        // Pastikan blok keterangan wajib kondisional & validasi minimal 10 karakter ada di setiap indikator
         $response->assertSee('*Keterangan Wajib Diisi');
+        $response->assertSee('minlength="10"', false);
+        $response->assertSee('Penjelasan kendala wajib diisi minimal 10 karakter untuk nilai kepuasan rendah.');
         $response->assertSee('id="reason-block-A1"', false);
         $response->assertSee('id="reason-A1"', false);
+        $response->assertSee('id="reason-count-A1"', false);
         $response->assertSee('id="reason-block-B1"', false);
         $response->assertSee('id="reason-block-C1"', false);
     }
@@ -223,7 +226,11 @@ class ProgressiveSurveyTest extends TestCase
 
         $response->assertStatus(200);
 
-        // Switcher ID | EN
+        // Switcher ID | EN (Toggle Bendera)
+        $response->assertSee('id="lang-switcher-pill"', false);
+        $response->assertSee('id="lang-flag-knob"', false);
+        $response->assertSee('id="lang-flag-id"', false);
+        $response->assertSee('id="lang-flag-en"', false);
         $response->assertSee('id="btn-lang-id"', false);
         $response->assertSee('id="btn-lang-en"', false);
 
