@@ -162,7 +162,7 @@
         <div class="border-t border-white/10 pt-6 pb-2">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="text-xs font-semibold text-slate-300 uppercase tracking-wider text-center sm:text-left">
-                    Standar Mutu & Keselamatan Terakreditasi
+             
                 </div>
 
                 <div class="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-4">
