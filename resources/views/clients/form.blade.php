@@ -75,9 +75,6 @@
 
 </div>
 
-{{-- Modal Dialog Sukses & Toast Notification --}}
-@include('clients.portal.partials.modals')
-
 @endsection
 
 @push('scripts')
